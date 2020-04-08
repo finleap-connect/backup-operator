@@ -11,6 +11,11 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+KUBEBUILDER_VERSION ?= 2.3.1
+KUBEBUILDER_ASSETS ?= $(shell pwd)/tools/kubebuilder_$(KUBEBUILDER_VERSION)_$(shell go env GOOS)_$(shell go env GOARCH)/bin
+
+export
+
 all: manager
 
 # Run tests

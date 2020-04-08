@@ -1,2 +1,4 @@
 /tools/kubebuilder_*
 /bin
+
+cover.out
