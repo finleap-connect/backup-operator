@@ -1,4 +1,5 @@
 /tools/kubebuilder_*
 /bin
+/reports
 
 cover.out
