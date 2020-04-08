@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+wd=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
+
+os=$(go env GOOS)
+arch=$(go env GOARCH)
+version=2.3.1
+
+dir="${wd}/kubebuilder_${version}_${os}_${arch}"
+
+if [[ ! -d "${dir}" ]]; then
+  curl -L https://go.kubebuilder.io/dl/${version}/${os}/${arch} | tar -xz -C ${wd}
+fi
+
+${dir}/bin/kubebuilder $@
+
