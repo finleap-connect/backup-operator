@@ -13,5 +13,18 @@ if [[ ! -d "${dir}" ]]; then
   curl -L https://go.kubebuilder.io/dl/${version}/${os}/${arch} | tar -xz -C ${wd}
 fi
 
-${dir}/bin/kubebuilder $@
+function setup_kubebuilder_scaffolding {
+  mv ${wd}/../pkg/controllers ${wd}/../controllers
+  mv ${wd}/../cmd/backup-operator/main.go ${wd}/../main.go
+}
+
+function restore_project_scaffolding {
+  mv ${wd}/../controllers ${wd}/../pkg/controllers
+  mv ${wd}/../main.go ${wd}/../cmd/backup-operator/main.go
+}
+
+setup_kubebuilder_scaffolding
+trap restore_project_scaffolding EXIT
+
+${dir}/bin/kubebuilder $@ --make=false
 
