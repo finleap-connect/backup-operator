@@ -15,12 +15,12 @@ fi
 
 function setup_kubebuilder_scaffolding {
   mv ${wd}/../pkg/controllers ${wd}/../controllers
-  mv ${wd}/../cmd/backup-operator/main.go ${wd}/../main.go
+  mv ${wd}/../cmd/manager/main.go ${wd}/../main.go
 }
 
 function restore_project_scaffolding {
   mv ${wd}/../controllers ${wd}/../pkg/controllers
-  mv ${wd}/../main.go ${wd}/../cmd/backup-operator/main.go
+  mv ${wd}/../main.go ${wd}/../cmd/manager/main.go
 }
 
 setup_kubebuilder_scaffolding

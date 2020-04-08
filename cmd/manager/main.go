@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	backupv1alpha1 "github.com/kubism-io/backup-operator/api/v1alpha1"
-	"github.com/kubism-io/backup-operator/controllers"
+	"github.com/kubism-io/backup-operator/pkg/controllers"
 	// +kubebuilder:scaffold:imports
 )
 
