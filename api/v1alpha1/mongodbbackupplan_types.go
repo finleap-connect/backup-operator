@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,8 +29,29 @@ type MongoDBBackupPlanSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of MongoDBBackupPlan. Edit MongoDBBackupPlan_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Schedule in cron format
+	Schedule string `json:"schedule"`
+
+	// +kubebuilder:validation:Minimum=1
+	//
+	ActiveDeadlineSeconds int64 `json:"activeDeadlineSeconds"`
+
+	// +kubebuilder:validation:Minimum=1
+	// Number of backups to keep
+	Retention int64 `json:"retention"`
+
+	// +optional
+	// Environments for the CronJob
+	Env []corev1.EnvVar `json:"env,omitempty"`
+
+	// Fully qualifying MongoDB URI connection string. Environment variables
+	// will be evaluated before usage.
+	URI string `json:"uri"`
+
+	// +optional
+	// Destination for the backup. If none is provided the default destination
+	// will be tried.
+	Destination *Destination `json:"destination,omitempty"`
 }
 
 // MongoDBBackupPlanStatus defines the observed state of MongoDBBackupPlan
