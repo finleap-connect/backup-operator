@@ -1,3 +1,7 @@
 domain: kubism.io
 repo: github.com/kubism-io/backup-operator
+resources:
+- group: backup
+  kind: MongoDBBackupPlan
+  version: v1alpha1
 version: "2"
