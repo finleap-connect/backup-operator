@@ -31,6 +31,7 @@ var _ = Describe("MongoDBSource", func() {
 		Expect(dst).ToNot(BeNil())
 		err = src.Stream(dst)
 		Expect(err).ToNot(HaveOccurred())
-		// TODO: check database
+		err = findTestData(dstURI)
+		Expect(err).ToNot(HaveOccurred())
 	})
 })
