@@ -14,26 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package mongodb
+package testutil
 
 import (
-	"github.com/kubism-io/backup-operator/pkg/testutil"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/minio/minio-go/v6"
+	"github.com/ory/dockertest/v3"
 )
 
-var _ = Describe("MongoDBSource", func() {
-	It("should dump to file", func() {
-		src, err := NewMongoDBSource(srcURI, "")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(src).ToNot(BeNil())
-		dst, err := NewMongoDBDestination(dstURI)
-		Expect(err).ToNot(HaveOccurred())
-		Expect(dst).ToNot(BeNil())
-		err = src.Stream(dst)
-		Expect(err).ToNot(HaveOccurred())
-		err = testutil.FindTestData(dstURI)
-		Expect(err).ToNot(HaveOccurred())
+func WaitForS3(pool *dockertest.Pool, endpoint, accessKeyID, secretAccessKey string) error {
+	return pool.Retry(func() error {
+		_, err := minio.New(endpoint, accessKeyID, secretAccessKey, false)
+		if err != nil {
+			return err
+		}
+		return nil
 	})
-})
+}

@@ -23,7 +23,6 @@ import (
 
 	"github.com/kubism-io/backup-operator/pkg/backup"
 	"github.com/kubism-io/backup-operator/pkg/logger"
-
 	"github.com/mongodb/mongo-tools-common/options"
 	"github.com/mongodb/mongo-tools/mongodump"
 )

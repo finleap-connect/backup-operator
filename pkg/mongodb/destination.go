@@ -22,7 +22,6 @@ import (
 
 	"github.com/kubism-io/backup-operator/pkg/backup"
 	"github.com/kubism-io/backup-operator/pkg/logger"
-
 	"github.com/mongodb/mongo-tools/mongorestore"
 )
 
