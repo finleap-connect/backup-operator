@@ -1,4 +1,4 @@
-package mongodb
+package fs
 
 import (
 	"github.com/onsi/ginkgo/reporters"
@@ -10,6 +10,6 @@ import (
 
 func TestSecrets(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("../../reports/mongodb-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "MongoDB", []Reporter{junitReporter})
+	junitReporter := reporters.NewJUnitReporter("../../reports/fs-junit.xml")
+	RunSpecsWithDefaultAndCustomReporters(t, "FS", []Reporter{junitReporter})
 }
