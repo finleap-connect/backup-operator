@@ -16,10 +16,12 @@ KUBEBUILDER_ASSETS ?= $(shell pwd)/tools/kubebuilder_$(KUBEBUILDER_VERSION)_$(sh
 
 export
 
+.PHONY: all test manager run install uninstall deploy manifests tools fmt vet generate docker-build docker-push controller-gen
+
 all: manager
 
 # Run tests
-test: generate fmt vet manifests
+test: generate fmt vet manifests tools
 	go test ./... -coverprofile cover.out
 
 # Build manager binary
@@ -46,6 +48,11 @@ deploy: manifests
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+
+tools:
+	@{ \
+	./tools/kubebuilder > /dev/null 2>&1 || true; \
+	}
 
 # Run go fmt against code
 fmt:
