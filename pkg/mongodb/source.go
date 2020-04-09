@@ -19,6 +19,7 @@ package mongodb
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/kubism-io/backup-operator/pkg/backup"
 
@@ -37,7 +38,6 @@ type mongoDBSource struct {
 }
 
 func (m *mongoDBSource) Backup(dst backup.Destination) error {
-
 	opts := options.New("mongodump", "custom", "custom", mongodump.Usage, options.EnabledOptions{Auth: true, Connection: true, Namespace: true, URI: true})
 	inputOpts := &mongodump.InputOptions{}
 	opts.AddOptions(inputOpts)
@@ -77,12 +77,13 @@ func (m *mongoDBSource) Backup(dst backup.Destination) error {
 		}
 	}()
 	// process output with destination implementation
-	err = dst.Store(pr)
-	// TODO: ...
-	err = <-errc
-	// TODO: ...
-
-	return nil
+	dsterr := dst.Store(pr)
+	select {
+	case srcerr := <-errc: // return src error if possible as well
+		return fmt.Errorf("dst error: %v; src error: %v", dsterr, srcerr)
+	case <-time.After(1 * time.Second):
+		return dsterr
+	}
 }
 
 func (m *mongoDBSource) Close() error {

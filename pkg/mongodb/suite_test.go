@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestSecrets(t *testing.T) {
+func TestMongoDB(t *testing.T) {
 	RegisterFailHandler(Fail)
 	junitReporter := reporters.NewJUnitReporter("../../reports/mongodb-junit.xml")
 	RunSpecsWithDefaultAndCustomReporters(t, "MongoDB", []Reporter{junitReporter})
