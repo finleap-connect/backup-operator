@@ -14,16 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package backup
+package mongodb
 
 import (
-	"io"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-type Destination interface {
-	Store(data io.Reader) error
-}
-
-type Source interface {
-	Stream(dst Destination) error
-}
+var _ = Describe("MongoDBSource", func() {
+	It("should dump to file", func() {
+		src, err := NewMongoDBSource(srcURI, "")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(src).ToNot(BeNil())
+		dst, err := NewMongoDBDestination(dstURI)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dst).ToNot(BeNil())
+		err = src.Stream(dst)
+		Expect(err).ToNot(HaveOccurred())
+		// TODO: check database
+	})
+})

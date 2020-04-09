@@ -32,7 +32,7 @@ type fileSource struct {
 	filepath string
 }
 
-func (f *fileSource) Backup(dst backup.Destination) error {
+func (f *fileSource) Stream(dst backup.Destination) error {
 	file, err := os.Open(f.filepath)
 	if err != nil {
 		return err

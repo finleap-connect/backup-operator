@@ -43,7 +43,7 @@ type mongoDBSource struct {
 	log      logger.Logger
 }
 
-func (m *mongoDBSource) Backup(dst backup.Destination) error {
+func (m *mongoDBSource) Stream(dst backup.Destination) error {
 	log := m.log
 	opts := options.New("mongodump", "custom", "custom", mongodump.Usage, options.EnabledOptions{Auth: true, Connection: true, Namespace: true, URI: true})
 	inputOpts := &mongodump.InputOptions{}

@@ -25,6 +25,7 @@ import (
 	"github.com/kubism-io/backup-operator/pkg/logger"
 	"github.com/onsi/ginkgo/reporters"
 	"github.com/ory/dockertest/v3"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -34,9 +35,11 @@ import (
 )
 
 var (
-	pool     *dockertest.Pool
-	resource *dockertest.Resource
-	uri      string
+	pool        *dockertest.Pool
+	srcResource *dockertest.Resource
+	dstResource *dockertest.Resource
+	srcURI      string
+	dstURI      string
 )
 
 func TestMongoDB(t *testing.T) {
@@ -51,14 +54,49 @@ var _ = BeforeSuite(func(done Done) {
 	By("bootstrapping mongodb")
 	pool, err = dockertest.NewPool("")
 	Expect(err).ToNot(HaveOccurred())
+	// src
 	log.Info("spawn mongo container")
-	resource, err = pool.Run("mongo", "4.2", nil)
+	srcResource, err = pool.Run("mongo", "4.2", nil)
 	Expect(err).ToNot(HaveOccurred())
-	uri = fmt.Sprintf("mongodb://localhost:%s", resource.GetPort("27017/tcp"))
-	log.Info("retry mongo connection", "uri", uri)
+	srcURI = fmt.Sprintf("mongodb://localhost:%s", srcResource.GetPort("27017/tcp"))
+	log.Info("retry mongo connection", "uri", srcURI)
 	err = pool.Retry(func() error {
 		var err error
-		client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+		client, err := mongo.NewClient(options.Client().ApplyURI(srcURI))
+		if err != nil {
+			return err
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		err = client.Connect(ctx)
+		if err != nil {
+			return err
+		}
+		ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		err = client.Ping(ctx, readpref.Primary())
+		if err != nil {
+			return err
+		}
+		collection := client.Database("testing").Collection("numbers")
+		ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_, err = collection.InsertOne(ctx, bson.M{"name": "pi", "value": 3.14159})
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	Expect(err).ToNot(HaveOccurred())
+	// dst
+	log.Info("spawn mongo container")
+	dstResource, err = pool.Run("mongo", "4.2", nil)
+	Expect(err).ToNot(HaveOccurred())
+	dstURI = fmt.Sprintf("mongodb://localhost:%s", dstResource.GetPort("27017/tcp"))
+	log.Info("retry mongo connection", "uri", dstURI)
+	err = pool.Retry(func() error {
+		var err error
+		client, err := mongo.NewClient(options.Client().ApplyURI(dstURI))
 		if err != nil {
 			return err
 		}
@@ -77,12 +115,14 @@ var _ = BeforeSuite(func(done Done) {
 		return nil
 	})
 	Expect(err).ToNot(HaveOccurred())
-	log.Info("mongo ready")
+	log.Info("mongo databases ready")
 	close(done)
 }, 60)
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
-	err := pool.Purge(resource)
+	err := pool.Purge(srcResource)
+	Expect(err).ToNot(HaveOccurred())
+	err = pool.Purge(dstResource)
 	Expect(err).ToNot(HaveOccurred())
 })

@@ -29,7 +29,7 @@ import (
 
 var _ = Describe("MongoDBSource", func() {
 	It("should dump to file", func() {
-		src, err := NewMongoDBSource(uri, "")
+		src, err := NewMongoDBSource(srcURI, "")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
 		dir, err := ioutil.TempDir("", "mongosrc")
@@ -38,7 +38,7 @@ var _ = Describe("MongoDBSource", func() {
 		fp := filepath.Join(dir, "dump.tgz")
 		dst, err := fs.NewFileDestination(fp)
 		Expect(err).ToNot(HaveOccurred())
-		err = src.Backup(dst)
+		err = src.Stream(dst)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(fp).Should(BeAnExistingFile())
 		fi, err := os.Stat(fp)
