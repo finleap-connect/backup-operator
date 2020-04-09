@@ -20,10 +20,10 @@ import (
 	"io"
 	"os"
 
-	"github.com/kubism-io/backup-operator/pkg/backup"
+	"github.com/kubism-io/backup-operator/pkg/stream"
 )
 
-func NewFileDestination(filepath string) (backup.Destination, error) {
+func NewFileDestination(filepath string) (stream.Destination, error) {
 	return &fileDestination{
 		filepath: filepath,
 	}, nil
@@ -33,12 +33,12 @@ type fileDestination struct {
 	filepath string
 }
 
-func (f *fileDestination) Store(data io.Reader) error {
+func (f *fileDestination) Store(obj stream.Object) error {
 	file, err := os.Create(f.filepath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	_, err = io.Copy(file, data)
+	_, err = io.Copy(file, obj.Data)
 	return err
 }

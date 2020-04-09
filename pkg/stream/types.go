@@ -14,16 +14,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package backup
+package stream
 
 import (
 	"io"
 )
 
+type Object struct {
+	ID   string // Only used by *Many use-cases for determine filenames
+	Data io.Reader
+}
+
 type Destination interface {
-	Store(data io.Reader) error
+	Store(obj Object) error
 }
 
 type Source interface {
 	Stream(dst Destination) error
+}
+
+// NOTE: *Many interface not yet used, but use case for them include backups
+//       of directories in S3 etc.
+
+type DestinationMany interface {
+	Store(data chan Object) error
+}
+
+type SourceMany interface {
+	Stream(dst DestinationMany) error
 }

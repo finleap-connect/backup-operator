@@ -21,13 +21,13 @@ import (
 	"io"
 	"time"
 
-	"github.com/kubism-io/backup-operator/pkg/backup"
 	"github.com/kubism-io/backup-operator/pkg/logger"
+	"github.com/kubism-io/backup-operator/pkg/stream"
 	"github.com/mongodb/mongo-tools-common/options"
 	"github.com/mongodb/mongo-tools/mongodump"
 )
 
-func NewMongoDBSource(uri, database string) (backup.Source, error) {
+func NewMongoDBSource(uri, database string) (stream.Source, error) {
 	return &mongoDBSource{
 		URI:      uri,
 		Database: database,
@@ -42,7 +42,7 @@ type mongoDBSource struct {
 	log      logger.Logger
 }
 
-func (m *mongoDBSource) Stream(dst backup.Destination) error {
+func (m *mongoDBSource) Stream(dst stream.Destination) error {
 	log := m.log
 	opts := options.New("mongodump", "custom", "custom", mongodump.Usage, options.EnabledOptions{Auth: true, Connection: true, Namespace: true, URI: true})
 	inputOpts := &mongodump.InputOptions{}
@@ -86,7 +86,10 @@ func (m *mongoDBSource) Stream(dst backup.Destination) error {
 	}()
 	// process output with destination implementation
 	log.Info("start storing dump")
-	dsterr := dst.Store(pr)
+	dsterr := dst.Store(stream.Object{
+		ID:   "",
+		Data: pr,
+	})
 	select {
 	case srcerr := <-errc: // return src error if possible as well
 		return fmt.Errorf("dst error: %v; src error: %v", dsterr, srcerr)

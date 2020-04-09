@@ -4,6 +4,10 @@ IMG ?= controller:latest
 # Produce CRDs that do NOT work back to Kubernetes 1.11 (allows version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=false"
 
+GINKGO ?= ginkgo
+LINTER ?= golangci-lint
+GO ?= go
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -23,18 +27,23 @@ all: manager
 # Run tests
 test: generate fmt vet manifests tools
 ifeq (, $(shell which ginkgo))
-	go test -v ./... -coverprofile cover.out -ginkgo.v
+	$(GO) test -v ./... -coverprofile cover.out -ginkgo.v
 else
-	ginkgo -r -v -coverprofile cover.out
+	$(GINKGO) -r -v -coverprofile cover.out
 endif
+
+
+lint:
+	$(GO) mod verify
+	$(LINTER) run -v --no-config --deadline=5m
 
 # Build manager binary
 manager: generate fmt vet
-	go build -o bin/manager ./cmd/manager/main.go
+	$(GO) build -o bin/manager ./cmd/manager/main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
-	go run ./cmd/manager/main.go
+	$(GO) run ./cmd/manager/main.go
 
 # Install CRDs into a cluster
 install: manifests
@@ -60,11 +69,11 @@ tools:
 
 # Run go fmt against code
 fmt:
-	go fmt ./...
+	$(GO) fmt ./...
 
 # Run go vet against code
 vet:
-	go vet ./...
+	$(GO) vet ./...
 
 # Generate code
 generate: controller-gen

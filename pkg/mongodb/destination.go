@@ -18,14 +18,13 @@ package mongodb
 
 import (
 	"fmt"
-	"io"
 
-	"github.com/kubism-io/backup-operator/pkg/backup"
 	"github.com/kubism-io/backup-operator/pkg/logger"
+	"github.com/kubism-io/backup-operator/pkg/stream"
 	"github.com/mongodb/mongo-tools/mongorestore"
 )
 
-func NewMongoDBDestination(uri string) (backup.Destination, error) {
+func NewMongoDBDestination(uri string) (stream.Destination, error) {
 	return &mongoDBDestination{
 		URI: uri,
 		log: logger.WithName("mongodst"),
@@ -38,7 +37,7 @@ type mongoDBDestination struct {
 	log     logger.Logger
 }
 
-func (m *mongoDBDestination) Store(data io.Reader) error {
+func (m *mongoDBDestination) Store(obj stream.Object) error {
 	log := m.log
 	args := []string{
 		fmt.Sprintf("--uri=\"%s\"", m.URI),
@@ -54,7 +53,7 @@ func (m *mongoDBDestination) Store(data io.Reader) error {
 		return err
 	}
 	defer m.restore.Close()
-	m.restore.InputReader = data
+	m.restore.InputReader = obj.Data
 	// start the restoral
 	result := m.restore.Restore()
 	if result.Err != nil {

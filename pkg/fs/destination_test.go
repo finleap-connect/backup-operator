@@ -22,6 +22,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/kubism-io/backup-operator/pkg/stream"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -38,7 +40,7 @@ var _ = Describe("FileDestination", func() {
 		Expect(dst).ToNot(BeNil())
 		buf := bytes.NewBuffer(data)
 		Expect(buf).ToNot(BeNil())
-		err = dst.Store(buf)
+		err = dst.Store(stream.Object{ID: "", Data: buf})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(fp).Should(BeAnExistingFile())
 		res, err := ioutil.ReadFile(fp)

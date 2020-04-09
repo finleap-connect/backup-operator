@@ -19,10 +19,10 @@ package fs
 import (
 	"os"
 
-	"github.com/kubism-io/backup-operator/pkg/backup"
+	"github.com/kubism-io/backup-operator/pkg/stream"
 )
 
-func NewFileSource(filepath string) (backup.Source, error) {
+func NewFileSource(filepath string) (stream.Source, error) {
 	return &fileSource{
 		filepath: filepath,
 	}, nil
@@ -32,11 +32,14 @@ type fileSource struct {
 	filepath string
 }
 
-func (f *fileSource) Stream(dst backup.Destination) error {
+func (f *fileSource) Stream(dst stream.Destination) error {
 	file, err := os.Open(f.filepath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	return dst.Store(file)
+	return dst.Store(stream.Object{
+		ID:   "",
+		Data: file,
+	})
 }

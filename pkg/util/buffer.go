@@ -17,8 +17,9 @@ limitations under the License.
 package util
 
 import (
-	"io"
 	"io/ioutil"
+
+	"github.com/kubism-io/backup-operator/pkg/stream"
 )
 
 func NewBufferDestination() (*BufferDestination, error) {
@@ -29,8 +30,8 @@ type BufferDestination struct {
 	Data []byte
 }
 
-func (b *BufferDestination) Store(data io.Reader) error {
+func (b *BufferDestination) Store(obj stream.Object) error {
 	var err error
-	b.Data, err = ioutil.ReadAll(data)
+	b.Data, err = ioutil.ReadAll(obj.Data)
 	return err
 }
