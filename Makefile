@@ -22,7 +22,11 @@ all: manager
 
 # Run tests
 test: generate fmt vet manifests tools
+ifeq (, $(shell which ginkgo))
 	go test -v ./... -coverprofile cover.out -ginkgo.v
+else
+	ginkgo -r -v -coverprofile cover.out
+endif
 
 # Build manager binary
 manager: generate fmt vet

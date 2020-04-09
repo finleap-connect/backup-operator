@@ -17,14 +17,32 @@ limitations under the License.
 package mongodb
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
+	"github.com/kubism-io/backup-operator/pkg/fs"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("MongoDBSource", func() {
-	It("should dump to buffer", func() {
-		src, err := NewMongoDBSource("", "")
+	It("should dump to file", func() {
+		src, err := NewMongoDBSource(uri, "")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
+		dir, err := ioutil.TempDir("", "mongosrc")
+		Expect(err).ToNot(HaveOccurred())
+		defer os.RemoveAll(dir)
+		fp := filepath.Join(dir, "dump.tgz")
+		dst, err := fs.NewFileDestination(fp)
+		Expect(err).ToNot(HaveOccurred())
+		err = src.Backup(dst)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(fp).Should(BeAnExistingFile())
+		fi, err := os.Stat(fp)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(fi.Size()).Should(BeNumerically(">", 0))
 	})
 })

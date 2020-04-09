@@ -22,33 +22,42 @@ import (
 	"time"
 
 	"github.com/kubism-io/backup-operator/pkg/backup"
+	"github.com/kubism-io/backup-operator/pkg/logger"
 
 	"github.com/mongodb/mongo-tools-common/options"
 	"github.com/mongodb/mongo-tools/mongodump"
 )
 
 func NewMongoDBSource(uri, database string) (backup.Source, error) {
-	return &mongoDBSource{}, nil
+	return &mongoDBSource{
+		URI:      uri,
+		Database: database,
+		log:      logger.WithName("mongosrc"),
+	}, nil
 }
 
 type mongoDBSource struct {
 	URI      string
-	Database string
+	Database string // TODO: implement
 	dump     *mongodump.MongoDump
+	log      logger.Logger
 }
 
 func (m *mongoDBSource) Backup(dst backup.Destination) error {
+	log := m.log
 	opts := options.New("mongodump", "custom", "custom", mongodump.Usage, options.EnabledOptions{Auth: true, Connection: true, Namespace: true, URI: true})
 	inputOpts := &mongodump.InputOptions{}
 	opts.AddOptions(inputOpts)
 	outputOpts := &mongodump.OutputOptions{}
 	opts.AddOptions(outputOpts)
-	opts.URI.AddKnownURIParameters(options.KnownURIOptionsReadPreference)
-	_, err := opts.ParseArgs([]string{
+	args := []string{
 		fmt.Sprintf("--uri=\"%s\"", m.URI),
 		"--archive",
 		"--gzip",
-	})
+	}
+	log.Info("configuring mongodump", "args", args)
+	opts.URI.AddKnownURIParameters(options.KnownURIOptionsReadPreference)
+	_, err := opts.ParseArgs(args)
 	if err != nil {
 		return err
 	}
@@ -66,17 +75,18 @@ func (m *mongoDBSource) Backup(dst backup.Destination) error {
 	pr, pw := io.Pipe()
 	m.dump.OutputWriter = pw
 	// start the backup in a separate routine
-	errc := make(chan error)
+	errc := make(chan error, 1)
 	defer close(errc)
 	go func() {
 		defer pw.Close()
+		log.Info("starting dump")
 		if err = m.dump.Dump(); err != nil {
 			errc <- err
-		} else {
-			errc <- nil
 		}
+		log.Info("finished dump")
 	}()
 	// process output with destination implementation
+	log.Info("start storing dump")
 	dsterr := dst.Store(pr)
 	select {
 	case srcerr := <-errc: // return src error if possible as well
