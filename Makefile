@@ -1,6 +1,4 @@
-
-# Image URL to use all building/pushing image targets
-
+# Directory, where all required tools are located (absolute path required)
 TOOLS_DIR ?= $(shell cd tools && pwd)
 
 GO ?= go
@@ -30,11 +28,9 @@ lint: $(LINTER)
 	$(GO) mod verify
 	$(LINTER) run -v --no-config --deadline=5m
 
-# Run go fmt against code
 fmt:
 	$(GO) fmt ./...
 
-# Run go vet against code
 vet:
 	$(GO) vet ./...
 
@@ -59,16 +55,16 @@ manifests: $(CONTROLLER_GEN)
 generate: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-# Build the docker image
 docker-build: test
 	docker build . -t ${MANAGER_IMG}
 
-# Push the docker image
 docker-push:
 	docker push ${MANAGER_IMG}
 
+# Phony target to install all required tools into ${TOOLS_DIR}
 tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder
 
+# Helper function which will go get $(1) binaries into ${TOOLS_DIR}
 define gogettool
 	{ \
 		set -euo pipefail;\
