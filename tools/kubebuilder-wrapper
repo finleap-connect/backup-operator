@@ -4,8 +4,7 @@ set -euo pipefail
 wd=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
 
 if [[ ! -f ${wd}/kubebuilder ]]; then
-  echo "Please run 'make tools' first to install prerequisites"
-  exit 1
+  ${wd}/kubebuilder-install
 fi
 
 function setup_kubebuilder_scaffolding {

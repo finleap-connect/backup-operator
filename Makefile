@@ -64,43 +64,18 @@ docker-push:
 # Phony target to install all required tools into ${TOOLS_DIR}
 tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder
 
-# Helper function which will go get $(1) binaries into ${TOOLS_DIR}
-define gogettool
-	{ \
-		set -euo pipefail;\
-		tmp_dir=$$(mktemp -d);\
-		function rm_tmp_dir {\
-			rm -rf $$tmp_dir;\
-		}; \
-		trap rm_tmp_dir EXIT;\
-		cd $${tmp_dir};\
-		go mod init tmp;\
-		export GOBIN=$(TOOLS_DIR);\
-		go get $(1);\
-	}
-endef
-
 $(TOOLS_DIR)/kind:
-	$(call gogettool,sigs.k8s.io/kind@v0.7.0)
+	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/kind@v0.7.0)
 
 $(TOOLS_DIR)/ginkgo:
-	$(call gogettool,github.com/onsi/ginkgo/ginkgo@v1.12.0)
+	$(shell $(TOOLS_DIR)/goget-wrapper github.com/onsi/ginkgo/ginkgo@v1.12.0)
 
 $(TOOLS_DIR)/controller-gen:
-	$(call gogettool,sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5)
+	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5)
 
 $(TOOLS_DIR)/golangci-lint:
 	$(shell curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TOOLS_DIR) v1.24.0)
 
 $(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/kubectl $(TOOLS_DIR)/kube-apiserver $(TOOLS_DIR)/etcd:
-	{ \
-		set -euo pipefail;\
-		tmp_dir=$$(mktemp -d);\
-		function rm_tmp_dir {\
-			rm -rf $$tmp_dir;\
-		}; \
-		trap rm_tmp_dir EXIT;\
-		curl -L https://go.kubebuilder.io/dl/2.3.1/$$($(GO) env GOOS)/$$($(GO) env GOARCH) | tar -xz -C $${tmp_dir};\
-		find $${tmp_dir}/kubebuilder_2.3.1_$$($(GO) env GOOS)_$$($(GO) env GOARCH) -type f -print0 | xargs -0 mv -t $(TOOLS_DIR);\
-	}
+	$(shell $(TOOLS_DIR)/kubebuilder-install)
 
