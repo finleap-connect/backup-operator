@@ -3,14 +3,9 @@
 set -euo pipefail
 wd=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
 
-os=$(go env GOOS)
-arch=$(go env GOARCH)
-version=2.3.1
-
-dir="${wd}/kubebuilder_${version}_${os}_${arch}"
-
-if [[ ! -d "${dir}" ]]; then
-  curl -L https://go.kubebuilder.io/dl/${version}/${os}/${arch} | tar -xz -C ${wd}
+if [[ ! -f ${wd}/kubebuilder ]]; then
+  echo "Please run 'make tools' first to install prerequisites"
+  exit 1
 fi
 
 function setup_kubebuilder_scaffolding {
@@ -26,5 +21,5 @@ function restore_project_scaffolding {
 setup_kubebuilder_scaffolding
 trap restore_project_scaffolding EXIT
 
-${dir}/bin/kubebuilder $@ --make=false
+${wd}/kubebuilder $@ --make=false
 

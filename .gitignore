@@ -1,3 +1,5 @@
+/tools
+!/tools/kubebuilder-wrapper
 /bin
 /reports
 
