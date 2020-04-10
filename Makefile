@@ -1,41 +1,42 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
-# Produce CRDs that do NOT work back to Kubernetes 1.11 (allows version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=false"
 
-TOOLS ?= $(shell cd tools && pwd)
+TOOLS_DIR ?= $(shell cd tools && pwd)
 
 GO ?= go
-GINKGO ?= $(TOOLS)/ginkgo
-LINTER ?= $(TOOLS)/golangci-lint
-KIND ?= $(TOOLS)/kind
-CONTROLLER_GEN ?= $(TOOLS)/controller-gen
-KUBEBUILDER ?= $(TOOLS)/kubebuilder
-KUBEBUILDER_ASSETS ?= $(TOOLS)
+GINKGO ?= $(TOOLS_DIR)/ginkgo
+LINTER ?= $(TOOLS_DIR)/golangci-lint
+KIND ?= $(TOOLS_DIR)/kind
+CONTROLLER_GEN ?= $(TOOLS_DIR)/controller-gen
+KUBEBUILDER ?= $(TOOLS_DIR)/kubebuilder
+KUBEBUILDER_ASSETS ?= $(TOOLS_DIR)
+
+MANAGER_BIN ?= bin/manager
+MANAGER_IMG ?= manager:latest
 
 export
 
-.PHONY: all test manager run install uninstall deploy manifests tools fmt vet generate docker-build docker-push controller-gen
+.PHONY: all test lint fmt vet install uninstall deploy manifests docker-build docker-push tools
 
-all: manager
+all: $(MANAGER_BIN) tools
 
-# Run tests
+$(MANAGER_BIN): generate fmt vet
+	$(GO) build -o $(MANAGER_BIN) ./cmd/manager/main.go
+
 test: generate fmt vet manifests $(GINKGO) $(KUBEBUILDER)
 	$(GINKGO) -r -v -coverprofile cover.out
-
 
 lint: $(LINTER)
 	$(GO) mod verify
 	$(LINTER) run -v --no-config --deadline=5m
 
-# Build manager binary
-manager: generate fmt vet
-	$(GO) build -o bin/manager ./cmd/manager/main.go
+# Run go fmt against code
+fmt:
+	$(GO) fmt ./...
 
-# Run against the configured Kubernetes cluster in ~/.kube/config
-run: generate fmt vet manifests
-	$(GO) run ./cmd/manager/main.go
+# Run go vet against code
+vet:
+	$(GO) vet ./...
 
 # Install CRDs into a cluster
 install: manifests
@@ -52,15 +53,7 @@ deploy: manifests
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: $(CONTROLLER_GEN)
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-
-# Run go fmt against code
-fmt:
-	$(GO) fmt ./...
-
-# Run go vet against code
-vet:
-	$(GO) vet ./...
+	$(CONTROLLER_GEN) crd:trivialVersions=false rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # Generate code
 generate: $(CONTROLLER_GEN)
@@ -68,13 +61,13 @@ generate: $(CONTROLLER_GEN)
 
 # Build the docker image
 docker-build: test
-	docker build . -t ${IMG}
+	docker build . -t ${MANAGER_IMG}
 
 # Push the docker image
 docker-push:
-	docker push ${IMG}
+	docker push ${MANAGER_IMG}
 
-tools: $(TOOLS)/kind $(TOOLS)/ginkgo $(TOOLS)/controller-gen $(TOOLS)/golangci-lint $(TOOLS)/kubebuilder
+tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder
 
 define gogettool
 	{ \
@@ -86,24 +79,24 @@ define gogettool
 		trap rm_tmp_dir EXIT;\
 		cd $${tmp_dir};\
 		go mod init tmp;\
-		export GOBIN=$(TOOLS);\
+		export GOBIN=$(TOOLS_DIR);\
 		go get $(1);\
 	}
 endef
 
-$(TOOLS)/kind:
+$(TOOLS_DIR)/kind:
 	$(call gogettool,sigs.k8s.io/kind@v0.7.0)
 
-$(TOOLS)/ginkgo:
+$(TOOLS_DIR)/ginkgo:
 	$(call gogettool,github.com/onsi/ginkgo/ginkgo@v1.12.0)
 
-$(TOOLS)/controller-gen:
+$(TOOLS_DIR)/controller-gen:
 	$(call gogettool,sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5)
 
-$(TOOLS)/golangci-lint:
-	$(shell curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TOOLS) v1.24.0)
+$(TOOLS_DIR)/golangci-lint:
+	$(shell curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TOOLS_DIR) v1.24.0)
 
-$(TOOLS)/kubebuilder $(TOOLS)/kubectl $(TOOLS)/kube-apiserver $(TOOLS)/etcd:
+$(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/kubectl $(TOOLS_DIR)/kube-apiserver $(TOOLS_DIR)/etcd:
 	{ \
 		set -euo pipefail;\
 		tmp_dir=$$(mktemp -d);\
@@ -112,6 +105,6 @@ $(TOOLS)/kubebuilder $(TOOLS)/kubectl $(TOOLS)/kube-apiserver $(TOOLS)/etcd:
 		}; \
 		trap rm_tmp_dir EXIT;\
 		curl -L https://go.kubebuilder.io/dl/2.3.1/$$($(GO) env GOOS)/$$($(GO) env GOARCH) | tar -xz -C $${tmp_dir};\
-		find $${tmp_dir}/kubebuilder_2.3.1_$$($(GO) env GOOS)_$$($(GO) env GOARCH) -type f -print0 | xargs -0 mv -t $(TOOLS);\
+		find $${tmp_dir}/kubebuilder_2.3.1_$$($(GO) env GOOS)_$$($(GO) env GOARCH) -type f -print0 | xargs -0 mv -t $(TOOLS_DIR);\
 	}
 
