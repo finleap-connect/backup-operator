@@ -1,4 +1,4 @@
-/tools/kubebuilder_*
+/tools/dl
 /bin
 /reports
 
