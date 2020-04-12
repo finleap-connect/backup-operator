@@ -2,6 +2,9 @@
 TOOLS_DIR ?= $(shell cd tools && pwd)
 
 GO ?= go
+DOCKER ?= docker
+KUBECTL ?= kubectl
+KUSTOMIZE ?= kustomize
 GINKGO ?= $(TOOLS_DIR)/ginkgo
 LINTER ?= $(TOOLS_DIR)/golangci-lint
 KIND ?= $(TOOLS_DIR)/kind
@@ -36,16 +39,16 @@ vet:
 
 # Install CRDs into a cluster
 install: manifests
-	kustomize build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
 
 # Uninstall CRDs from a cluster
 uninstall: manifests
-	kustomize build config/crd | kubectl delete -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests
-	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default | kubectl apply -f -
+	cd config/manager && $(KUSTOMIZE) edit set image controller=$(MANAGER_IMG)
+	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: $(CONTROLLER_GEN)
@@ -56,10 +59,10 @@ generate: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 docker-build: test
-	docker build . -t ${MANAGER_IMG}
+	$(DOCKER) build . -t $(MANAGER_IMG)
 
 docker-push:
-	docker push ${MANAGER_IMG}
+	$(DOCKER) push $(MANAGER_IMG)
 
 # Phony target to install all required tools into ${TOOLS_DIR}
 tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder
