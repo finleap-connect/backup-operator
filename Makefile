@@ -1,14 +1,17 @@
 # Directory, where all required tools are located (absolute path required)
 TOOLS_DIR ?= $(shell cd tools && pwd)
 
+# Prerequisite tools
 GO ?= go
 DOCKER ?= docker
 KUBECTL ?= kubectl
-KUSTOMIZE ?= kustomize
+
+# Managed by this project
 GINKGO ?= $(TOOLS_DIR)/ginkgo
 LINTER ?= $(TOOLS_DIR)/golangci-lint
 KIND ?= $(TOOLS_DIR)/kind
 CONTROLLER_GEN ?= $(TOOLS_DIR)/controller-gen
+KUSTOMIZE ?= $(TOOLS_DIR)/kustomize
 KUBEBUILDER ?= $(TOOLS_DIR)/kubebuilder
 KUBEBUILDER_ASSETS ?= $(TOOLS_DIR)
 
@@ -38,15 +41,15 @@ vet:
 	$(GO) vet ./...
 
 # Install CRDs into a cluster
-install: manifests
+install: manifests $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
 
 # Uninstall CRDs from a cluster
-uninstall: manifests
+uninstall: manifests $(KUSTOMIZE)
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests
+deploy: manifests $(KUSTOMIZE)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(MANAGER_IMG)
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
@@ -65,7 +68,7 @@ docker-push:
 	$(DOCKER) push $(MANAGER_IMG)
 
 # Phony target to install all required tools into ${TOOLS_DIR}
-tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder
+tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/kustomize $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder
 
 $(TOOLS_DIR)/kind:
 	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/kind@v0.7.0)
@@ -75,6 +78,9 @@ $(TOOLS_DIR)/ginkgo:
 
 $(TOOLS_DIR)/controller-gen:
 	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5)
+
+$(TOOLS_DIR)/kustomize:
+	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/kustomize/kustomize/v3@v3.5.3)
 
 $(TOOLS_DIR)/golangci-lint:
 	$(shell curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TOOLS_DIR) v1.24.0)
