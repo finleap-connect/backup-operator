@@ -33,7 +33,7 @@ import (
 )
 
 func NewS3Source(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket, key string) (*S3Source, error) {
-	session, err := session.NewSession(&aws.Config{
+	newSession, err := session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 		Endpoint:         aws.String(endpoint),
 		Region:           aws.String("us-east-1"),
@@ -43,7 +43,7 @@ func NewS3Source(endpoint, accessKeyID, secretAccessKey string, useSSL bool, buc
 	if err != nil {
 		return nil, err
 	}
-	client := s3.New(session)
+	client := s3.New(newSession)
 	// Create bucket, if not exists
 	_, err = client.CreateBucket(&s3.CreateBucketInput{
 		Bucket: aws.String(bucket),
@@ -58,12 +58,12 @@ func NewS3Source(endpoint, accessKeyID, secretAccessKey string, useSSL bool, buc
 		}
 	}
 	return &S3Source{
-		Session:    session,
+		Session:    newSession,
 		Client:     client,
-		Downloader: s3manager.NewDownloader(session),
+		Downloader: s3manager.NewDownloader(newSession),
 		Bucket:     bucket,
 		Key:        key,
-		log:        logger.WithName("s3dst"),
+		log:        logger.WithName("s3src"),
 	}, nil
 }
 
@@ -89,7 +89,7 @@ func (s *S3Source) Stream(dst stream.Destination) error {
 	defer close(errc)
 	go func() {
 		defer pw.Close()
-		log.Info("download starting", "endpoint", "bucket", s.Bucket, "key", s.Key)
+		log.Info("download starting", "bucket", s.Bucket, "key", s.Key)
 		numBytes, err := s.Downloader.Download(writerAtStub{pw}, params)
 		if err != nil {
 			errc <- err

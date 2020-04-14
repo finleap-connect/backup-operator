@@ -17,13 +17,28 @@ limitations under the License.
 package testutil
 
 import (
-	"github.com/minio/minio-go/v6"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/ory/dockertest/v3"
 )
 
 func WaitForS3(pool *dockertest.Pool, endpoint, accessKeyID, secretAccessKey string) error {
 	return pool.Retry(func() error {
-		_, err := minio.New(endpoint, accessKeyID, secretAccessKey, false)
+		newSession, err := session.NewSession(&aws.Config{
+			Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
+			Endpoint:         aws.String(endpoint),
+			Region:           aws.String("us-east-1"),
+			DisableSSL:       aws.Bool(true),
+			S3ForcePathStyle: aws.Bool(true),
+		})
+		if err != nil {
+			return err
+		}
+		client := s3.New(newSession)
+		input := &s3.ListBucketsInput{}
+		_, err = client.ListBuckets(input)
 		if err != nil {
 			return err
 		}

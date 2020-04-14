@@ -29,7 +29,7 @@ import (
 )
 
 func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket string) (*S3Destination, error) {
-	session, err := session.NewSession(&aws.Config{
+	newSession, err := session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 		Endpoint:         aws.String(endpoint),
 		Region:           aws.String("us-east-1"),
@@ -39,7 +39,7 @@ func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool
 	if err != nil {
 		return nil, err
 	}
-	client := s3.New(session)
+	client := s3.New(newSession)
 	// Create bucket, if not exists
 	_, err = client.CreateBucket(&s3.CreateBucketInput{
 		Bucket: aws.String(bucket),
@@ -54,9 +54,9 @@ func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool
 		}
 	}
 	return &S3Destination{
-		Session:  session,
+		Session:  newSession,
 		Client:   client,
-		Uploader: s3manager.NewUploader(session),
+		Uploader: s3manager.NewUploader(newSession),
 		Bucket:   bucket,
 		log:      logger.WithName("s3dst"),
 	}, nil
@@ -76,7 +76,7 @@ func (s *S3Destination) Store(obj stream.Object) error {
 		Key:    &obj.ID,
 		Body:   obj.Data,
 	}
-	s.log.Info("upload starting", "endpoint", "bucket", s.Bucket, "key", obj.ID)
+	s.log.Info("upload starting", "bucket", s.Bucket, "key", obj.ID)
 	result, err := s.Uploader.Upload(params)
 	if err != nil {
 		return err
