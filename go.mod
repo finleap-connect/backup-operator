@@ -3,6 +3,7 @@ module github.com/kubism-io/backup-operator
 go 1.13
 
 require (
+	github.com/aws/aws-sdk-go v1.30.7
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
 	github.com/jessevdk/go-flags v1.4.0 // indirect

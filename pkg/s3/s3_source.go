@@ -17,6 +17,10 @@ limitations under the License.
 package s3
 
 import (
+	"fmt"
+	"io"
+	"time"
+
 	"github.com/kubism-io/backup-operator/pkg/logger"
 	"github.com/kubism-io/backup-operator/pkg/stream"
 
@@ -28,7 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket string) (*S3Destination, error) {
+func NewS3Source(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket, key string) (*S3Source, error) {
 	session, err := session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 		Endpoint:         aws.String(endpoint),
@@ -53,34 +57,61 @@ func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool
 			return nil, err
 		}
 	}
-	return &S3Destination{
-		Session:  session,
-		Client:   client,
-		Uploader: s3manager.NewUploader(session),
-		Bucket:   bucket,
-		log:      logger.WithName("s3dst"),
+	return &S3Source{
+		Session:    session,
+		Client:     client,
+		Downloader: s3manager.NewDownloader(session),
+		Bucket:     bucket,
+		Key:        key,
+		log:        logger.WithName("s3dst"),
 	}, nil
 }
 
-type S3Destination struct {
-	Session  *session.Session
-	Client   *s3.S3
-	Uploader *s3manager.Uploader
-	Bucket   string
-	log      logger.Logger
+type S3Source struct {
+	Session    *session.Session
+	Client     *s3.S3
+	Downloader *s3manager.Downloader
+	Bucket     string
+	Key        string
+	log        logger.Logger
 }
 
-func (s *S3Destination) Store(obj stream.Object) error {
-	params := &s3manager.UploadInput{
+func (s *S3Source) Stream(dst stream.Destination) error {
+	log := s.log
+	// Use sequential writes to be able tu use stub implementation
+	s.Downloader.Concurrency = 1
+	params := &s3.GetObjectInput{
 		Bucket: &s.Bucket,
-		Key:    &obj.ID,
-		Body:   obj.Data,
+		Key:    &s.Key,
 	}
-	s.log.Info("upload starting", "endpoint", "bucket", s.Bucket, "key", obj.ID)
-	result, err := s.Uploader.Upload(params)
-	if err != nil {
-		return err
+	pr, pw := io.Pipe()
+	errc := make(chan error, 1)
+	defer close(errc)
+	go func() {
+		defer pw.Close()
+		log.Info("download starting", "endpoint", "bucket", s.Bucket, "key", s.Key)
+		numBytes, err := s.Downloader.Download(writerAtStub{pw}, params)
+		if err != nil {
+			errc <- err
+		}
+		log.Info("finished download", "numBytes", numBytes)
+	}()
+	dsterr := dst.Store(stream.Object{
+		ID:   s.Key,
+		Data: pr,
+	})
+	select {
+	case srcerr := <-errc: // return src error if possible as well
+		return fmt.Errorf("dst error: %v; src error: %v", dsterr, srcerr)
+	case <-time.After(1 * time.Second):
+		return dsterr
 	}
-	s.log.Info("upload successful", "result", result)
-	return nil
+}
+
+type writerAtStub struct {
+	w io.Writer
+}
+
+func (fw writerAtStub) WriteAt(p []byte, offset int64) (n int, err error) {
+	return fw.w.Write(p) // ignore 'offset' because we forced sequential downloads
 }
