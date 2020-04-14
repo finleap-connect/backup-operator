@@ -43,10 +43,7 @@ func WaitForMongoDB(pool *dockertest.Pool, uri string) error {
 		ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 		err = client.Ping(ctx, readpref.Primary())
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	})
 }
 

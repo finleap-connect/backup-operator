@@ -17,6 +17,9 @@ limitations under the License.
 package testutil
 
 import (
+	"context"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -38,10 +41,10 @@ func WaitForS3(pool *dockertest.Pool, endpoint, accessKeyID, secretAccessKey str
 		}
 		client := s3.New(newSession)
 		input := &s3.ListBucketsInput{}
-		_, err = client.ListBuckets(input)
-		if err != nil {
-			return err
-		}
-		return nil
+		ctx := context.Background()
+		ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		defer cancel()
+		_, err = client.ListBucketsWithContext(ctx, input)
+		return err
 	})
 }

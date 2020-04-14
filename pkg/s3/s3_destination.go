@@ -46,7 +46,7 @@ func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool
 	})
 	if err != nil { // If bucket already exists ignore error
 		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() != s3.ErrCodeBucketAlreadyExists || aerr.Code() != s3.ErrCodeBucketAlreadyOwnedByYou {
+			if aerr.Code() != s3.ErrCodeBucketAlreadyExists && aerr.Code() != s3.ErrCodeBucketAlreadyOwnedByYou {
 				return nil, err
 			}
 		} else {

@@ -50,7 +50,7 @@ func NewS3Source(endpoint, accessKeyID, secretAccessKey string, useSSL bool, buc
 	})
 	if err != nil { // If bucket already exists ignore error
 		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() != s3.ErrCodeBucketAlreadyExists || aerr.Code() != s3.ErrCodeBucketAlreadyOwnedByYou {
+			if aerr.Code() != s3.ErrCodeBucketAlreadyExists && aerr.Code() != s3.ErrCodeBucketAlreadyOwnedByYou {
 				return nil, err
 			}
 		} else {
