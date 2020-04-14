@@ -19,6 +19,7 @@ package mongodb
 import (
 	"fmt"
 	"io"
+	"regexp"
 	"time"
 
 	"github.com/kubism-io/backup-operator/pkg/logger"
@@ -27,19 +28,25 @@ import (
 	"github.com/mongodb/mongo-tools/mongodump"
 )
 
-func NewMongoDBSource(uri, database string) (stream.Source, error) {
+var (
+	filter = regexp.MustCompile("[^a-zA-Z0-9]+")
+)
+
+func NewMongoDBSource(uri, database, archiveName string) (stream.Source, error) {
 	return &mongoDBSource{
-		URI:      uri,
-		Database: database,
-		log:      logger.WithName("mongosrc"),
+		URI:         uri,
+		Database:    database,
+		ArchiveName: archiveName,
+		log:         logger.WithName("mongosrc"),
 	}, nil
 }
 
 type mongoDBSource struct {
-	URI      string
-	Database string // TODO: implement
-	dump     *mongodump.MongoDump
-	log      logger.Logger
+	URI         string
+	Database    string // TODO: implement
+	ArchiveName string
+	dump        *mongodump.MongoDump
+	log         logger.Logger
 }
 
 func (m *mongoDBSource) Stream(dst stream.Destination) error {
@@ -86,8 +93,11 @@ func (m *mongoDBSource) Stream(dst stream.Destination) error {
 	}()
 	// process output with destination implementation
 	log.Info("start storing dump")
+	if m.ArchiveName == "" {
+		m.ArchiveName = filter.ReplaceAllString(m.URI+m.Database, "") + ".tgz"
+	}
 	dsterr := dst.Store(stream.Object{
-		ID:   "",
+		ID:   m.ArchiveName,
 		Data: pr,
 	})
 	select {

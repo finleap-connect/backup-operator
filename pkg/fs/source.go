@@ -18,28 +18,29 @@ package fs
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/kubism-io/backup-operator/pkg/stream"
 )
 
-func NewFileSource(filepath string) (stream.Source, error) {
+func NewFileSource(fp string) (stream.Source, error) {
 	return &fileSource{
-		filepath: filepath,
+		fp: fp,
 	}, nil
 }
 
 type fileSource struct {
-	filepath string
+	fp string
 }
 
 func (f *fileSource) Stream(dst stream.Destination) error {
-	file, err := os.Open(f.filepath)
+	file, err := os.Open(f.fp)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 	return dst.Store(stream.Object{
-		ID:   "",
+		ID:   filepath.Base(f.fp),
 		Data: file,
 	})
 }

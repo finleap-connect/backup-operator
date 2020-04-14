@@ -25,7 +25,7 @@ import (
 
 var _ = Describe("MongoDBSource", func() {
 	It("should dump to file", func() {
-		src, err := NewMongoDBSource(srcURI, "")
+		src, err := NewMongoDBSource(srcURI, "", "backup.tgz")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
 		dst, err := NewMongoDBDestination(dstURI)

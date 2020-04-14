@@ -19,22 +19,24 @@ package fs
 import (
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/kubism-io/backup-operator/pkg/stream"
 )
 
-func NewFileDestination(filepath string) (stream.Destination, error) {
-	return &fileDestination{
-		filepath: filepath,
+func NewDirDestination(dir string) (stream.Destination, error) {
+	return &dirDestination{
+		dir: dir,
 	}, nil
 }
 
-type fileDestination struct {
-	filepath string
+type dirDestination struct {
+	dir string
 }
 
-func (f *fileDestination) Store(obj stream.Object) error {
-	file, err := os.Create(f.filepath)
+func (f *dirDestination) Store(obj stream.Object) error {
+	fp := filepath.Join(f.dir, obj.ID)
+	file, err := os.Create(fp)
 	if err != nil {
 		return err
 	}

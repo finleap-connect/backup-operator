@@ -21,25 +21,14 @@ import (
 )
 
 type Object struct {
-	ID   string // Only used by *Many use-cases for determine filenames
+	ID   string // Used to determine filenames
 	Data io.Reader
 }
 
 type Destination interface {
-	Store(obj Object) error
+	Store(obj Object) error // Can be invoked multiple times
 }
 
 type Source interface {
 	Stream(dst Destination) error
-}
-
-// NOTE: *Many interface not yet used, but use case for them include backups
-//       of directories in S3 etc.
-
-type DestinationMany interface {
-	Store(data chan Object) error
-}
-
-type SourceMany interface {
-	Stream(dst DestinationMany) error
 }

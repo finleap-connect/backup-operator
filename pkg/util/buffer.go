@@ -23,15 +23,17 @@ import (
 )
 
 func NewBufferDestination() (*BufferDestination, error) {
-	return &BufferDestination{}, nil
+	return &BufferDestination{
+		Data: map[string][]byte{},
+	}, nil
 }
 
 type BufferDestination struct {
-	Data []byte
+	Data map[string][]byte
 }
 
 func (b *BufferDestination) Store(obj stream.Object) error {
 	var err error
-	b.Data, err = ioutil.ReadAll(obj.Data)
+	b.Data[obj.ID], err = ioutil.ReadAll(obj.Data)
 	return err
 }
