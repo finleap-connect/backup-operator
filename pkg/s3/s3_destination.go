@@ -28,7 +28,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket string) (*S3Destination, error) {
+func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, encryptionKey *string, useSSL bool, bucket string) (*S3Destination, error) {
 	newSession, err := session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 		Endpoint:         aws.String(endpoint),
@@ -54,27 +54,30 @@ func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool
 		}
 	}
 	return &S3Destination{
-		Session:  newSession,
-		Client:   client,
-		Uploader: s3manager.NewUploader(newSession),
-		Bucket:   bucket,
-		log:      logger.WithName("s3dst"),
+		Session:       newSession,
+		Client:        client,
+		EncryptionKey: encryptionKey,
+		Uploader:      s3manager.NewUploader(newSession),
+		Bucket:        bucket,
+		log:           logger.WithName("s3dst"),
 	}, nil
 }
 
 type S3Destination struct {
-	Session  *session.Session
-	Client   *s3.S3
-	Uploader *s3manager.Uploader
-	Bucket   string
-	log      logger.Logger
+	Session       *session.Session
+	EncryptionKey *string
+	Client        *s3.S3
+	Uploader      *s3manager.Uploader
+	Bucket        string
+	log           logger.Logger
 }
 
 func (s *S3Destination) Store(obj stream.Object) error {
 	params := &s3manager.UploadInput{
-		Bucket: &s.Bucket,
-		Key:    &obj.ID,
-		Body:   obj.Data,
+		Bucket:         &s.Bucket,
+		Key:            &obj.ID,
+		Body:           obj.Data,
+		SSECustomerKey: s.EncryptionKey,
 	}
 	s.log.Info("upload starting", "bucket", s.Bucket, "key", obj.ID)
 	result, err := s.Uploader.Upload(params)

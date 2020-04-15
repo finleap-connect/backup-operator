@@ -32,7 +32,7 @@ var _ = Describe("S3Destination", func() {
 		bucket := "bucketb"
 		key := "keyb"
 		src, _ := util.NewBufferSource(key, data)
-		dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket)
+		dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, nil, false, bucket)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dst).ToNot(BeNil())
 		err = src.Stream(dst)

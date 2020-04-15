@@ -32,7 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-func NewS3Source(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket, key string) (*S3Source, error) {
+func NewS3Source(endpoint, accessKeyID, secretAccessKey string, encryptionKey *string, useSSL bool, bucket string, keys []string) (*S3Source, error) {
 	newSession, err := session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 		Endpoint:         aws.String(endpoint),
@@ -43,6 +43,7 @@ func NewS3Source(endpoint, accessKeyID, secretAccessKey string, useSSL bool, buc
 	if err != nil {
 		return nil, err
 	}
+
 	client := s3.New(newSession)
 	// Create bucket, if not exists
 	_, err = client.CreateBucket(&s3.CreateBucketInput{
@@ -58,54 +59,105 @@ func NewS3Source(endpoint, accessKeyID, secretAccessKey string, useSSL bool, buc
 		}
 	}
 	return &S3Source{
-		Session:    newSession,
-		Client:     client,
-		Downloader: s3manager.NewDownloader(newSession),
-		Bucket:     bucket,
-		Key:        key,
-		log:        logger.WithName("s3src"),
+		Session:       newSession,
+		Client:        client,
+		EncryptionKey: encryptionKey,
+		Downloader:    s3manager.NewDownloader(newSession),
+		Bucket:        bucket,
+		Keys:          keys,
+		log:           logger.WithName("s3src"),
 	}, nil
 }
 
 type S3Source struct {
-	Session    *session.Session
-	Client     *s3.S3
-	Downloader *s3manager.Downloader
-	Bucket     string
-	Key        string
-	log        logger.Logger
+	Session       *session.Session
+	Client        *s3.S3
+	Downloader    *s3manager.Downloader
+	Bucket        string
+	Keys          []string
+	EncryptionKey *string
+	log           logger.Logger
 }
 
-func (s *S3Source) Stream(dst stream.Destination) error {
+func (s *S3Source) Stream(dst stream.Destination) (int64, error) {
 	log := s.log
+	totalNumBytes := int64(0)
+
+	if s.Keys == nil {
+		keys, err := s.listObjectsInBucket(s.Bucket)
+		if err != nil {
+			return totalNumBytes, err
+		}
+		s.Keys = keys
+	}
+
 	// Use sequential writes to be able tu use stub implementation
 	s.Downloader.Concurrency = 1
 	params := &s3.GetObjectInput{
-		Bucket: &s.Bucket,
-		Key:    &s.Key,
+		Bucket:         &s.Bucket,
+		SSECustomerKey: s.EncryptionKey,
 	}
-	pr, pw := io.Pipe()
-	errc := make(chan error, 1)
-	defer close(errc)
-	go func() {
-		defer pw.Close()
-		log.Info("download starting", "bucket", s.Bucket, "key", s.Key)
-		numBytes, err := s.Downloader.Download(writerAtStub{pw}, params)
-		if err != nil {
-			errc <- err
+
+	for _, key := range s.Keys {
+		params.Key = &key
+
+		pr, pw := io.Pipe()
+		errc := make(chan error, 1)
+		defer close(errc)
+
+		go func() {
+			defer pw.Close()
+			log.Info("download starting", "bucket", s.Bucket, "key", key)
+			numBytes, err := s.Downloader.Download(writerAtStub{pw}, params)
+			if err != nil {
+				errc <- err
+			}
+			log.Info("finished download", "numBytes", numBytes)
+			totalNumBytes += numBytes
+		}()
+		dsterr := dst.Store(stream.Object{
+			ID:   key,
+			Data: pr,
+		})
+		select {
+		case srcerr := <-errc: // return src error if possible as well
+			return totalNumBytes, fmt.Errorf("dst error: %v; src error: %v", dsterr, srcerr)
+		case <-time.After(1 * time.Second):
+			return totalNumBytes, dsterr
 		}
-		log.Info("finished download", "numBytes", numBytes)
-	}()
-	dsterr := dst.Store(stream.Object{
-		ID:   s.Key,
-		Data: pr,
-	})
-	select {
-	case srcerr := <-errc: // return src error if possible as well
-		return fmt.Errorf("dst error: %v; src error: %v", dsterr, srcerr)
-	case <-time.After(1 * time.Second):
-		return dsterr
 	}
+
+	return totalNumBytes, nil
+}
+
+func (s *S3Source) listObjectsInBucket(bucket string) ([]string, error) {
+	var continuationToken *string = nil
+	var isTruncated *bool = aws.Bool(true)
+	objectKeys := make([]string, 0)
+
+	for isTruncated != nil && *isTruncated {
+		listObjectsOutput, err := s.Client.ListObjects(&s3.ListObjectsInput{
+			Bucket: aws.String(bucket),
+			Marker: continuationToken,
+		})
+		if err != nil {
+			return nil, err
+		}
+		isTruncated = listObjectsOutput.IsTruncated
+		continuationToken = listObjectsOutput.NextMarker
+
+		if listObjectsOutput.Contents != nil {
+			for _, object := range listObjectsOutput.Contents {
+				objectKeys = append(objectKeys, *object.Key)
+			}
+		}
+	}
+
+	if len(objectKeys) < 1 {
+		return nil, fmt.Errorf("Bucket contains no objects.")
+	}
+
+	return objectKeys, nil
 }
 
 type writerAtStub struct {

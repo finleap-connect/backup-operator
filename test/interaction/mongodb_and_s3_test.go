@@ -35,7 +35,7 @@ var _ = Describe("MongoAndS3", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
 		bucket := "bucketc"
-		dst, err := s3.NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket)
+		dst, err := s3.NewS3Destination(endpoint, accessKeyID, secretAccessKey, nil, false, bucket)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dst).ToNot(BeNil())
 		err = src.Stream(dst)
@@ -49,7 +49,7 @@ var _ = Describe("MongoAndS3", func() {
 		_, err = downloader.Download(buf, &input)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(len(buf.Bytes())).Should(BeNumerically(">", 100))
-		src, err = s3.NewS3Source(endpoint, accessKeyID, secretAccessKey, false, bucket, name)
+		src, err = s3.NewS3Source(endpoint, accessKeyID, secretAccessKey, nil, false, bucket, []string{name})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
 		mdst, err := mongodb.NewMongoDBDestination(dstURI)
