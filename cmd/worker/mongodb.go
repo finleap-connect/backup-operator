@@ -34,8 +34,8 @@ var mongodbCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		name := fmt.Sprintf("%s-%s-%s", plan.ObjectMeta.Name, plan.ObjectMeta.Namespace, time.Now().Format("20060102150405"))
-		src, err := mongodb.NewMongoDBSource(plan.Spec.URI, "", name)
+		key := fmt.Sprintf("%s/%s/backup-%s.tgz", plan.ObjectMeta.Namespace, plan.ObjectMeta.Name, time.Now().Format("20060102150405"))
+		src, err := mongodb.NewMongoDBSource(plan.Spec.URI, "", key)
 		if err != nil {
 			return err
 		}
