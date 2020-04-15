@@ -41,6 +41,9 @@ var mongodbCmd = &cobra.Command{
 		}
 		c := plan.Spec.Destination.S3
 		dst, err := s3.NewS3Destination(c.Endpoint, c.AccessKeyID, c.SecretAccessKey, c.UseSSL, c.Bucket)
+		if err != nil {
+			return err
+		}
 		err = src.Stream(dst)
 		if err != nil {
 			return err
