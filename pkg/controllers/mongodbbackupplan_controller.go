@@ -38,9 +38,11 @@ const (
 // MongoDBBackupPlanReconciler reconciles a MongoDBBackupPlan object
 type MongoDBBackupPlanReconciler struct {
 	client.Client
-	Log      logr.Logger
-	Scheme   *runtime.Scheme
-	Recorder record.EventRecorder
+	Log                logr.Logger
+	Scheme             *runtime.Scheme
+	Recorder           record.EventRecorder
+	DefaultDestination *backupv1alpha1.Destination // TODO: to implement
+	WorkerImage        string
 }
 
 // +kubebuilder:rbac:groups=backup.kubism.io,resources=mongodbbackupplans,verbs=get;list;watch;create;update;patch;delete
@@ -75,6 +77,7 @@ func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 		if util.ContainsString(plan.ObjectMeta.Finalizers, finalizerName) {
 			// Finalizer is present, so let's cleanup our owned resources
 			// TODO: delete cronjob
+			// TODO: if default destination is used, check if additional resources (e.g. secret) should be freed
 			// Finally remove the finalizer
 			plan.ObjectMeta.Finalizers = util.RemoveString(plan.ObjectMeta.Finalizers, finalizerName)
 			if err := r.Update(ctx, &plan); err != nil {
@@ -89,6 +92,7 @@ func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 
 	// TODO: validate plan
 	// TODO: create or update cronjob
+	// TODO: if default destination is used, check if additional resources (e.g. secret) should be created
 
 	return ctrl.Result{}, nil
 }

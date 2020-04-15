@@ -16,16 +16,22 @@ KUBEBUILDER ?= $(TOOLS_DIR)/kubebuilder
 KUBEBUILDER_ASSETS ?= $(TOOLS_DIR)
 
 MANAGER_BIN ?= bin/manager
-MANAGER_IMG ?= manager:latest
+MANAGER_IMG ?= kubismio/manager:latest
+
+WORKER_BIN ?= bin/worker
+WORKER_IMG ?= kubismio/worker:latest
 
 export
 
 .PHONY: all test lint fmt vet install uninstall deploy manifests docker-build docker-push tools
 
-all: $(MANAGER_BIN) tools
+all: $(MANAGER_BIN) $(WORKER_BIN) tools
 
 $(MANAGER_BIN): generate fmt vet
 	$(GO) build -o $(MANAGER_BIN) ./cmd/manager/main.go
+
+$(WORKER_BIN): generate fmt vet
+	$(GO) build -o $(WORKER_BIN) ./cmd/worker/...
 
 test: generate fmt vet manifests $(GINKGO) $(KUBEBUILDER)
 	$(GINKGO) -r -v -coverprofile cover.out

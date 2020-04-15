@@ -45,8 +45,10 @@ func init() {
 
 func main() {
 	var metricsAddr string
+	var workerImage string
 	var enableLeaderElection bool
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&workerImage, "worker-image", "kubismio/worker:latest", "The image for the worker jobs.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -67,9 +69,11 @@ func main() {
 	}
 
 	if err = (&controllers.MongoDBBackupPlanReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("MongoDBBackupPlan"),
-		Scheme: mgr.GetScheme(),
+		Client:             mgr.GetClient(),
+		Log:                ctrl.Log.WithName("controllers").WithName("MongoDBBackupPlan"),
+		Scheme:             mgr.GetScheme(),
+		DefaultDestination: nil, // TODO
+		WorkerImage:        workerImage,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MongoDBBackupPlan")
 		os.Exit(1)
