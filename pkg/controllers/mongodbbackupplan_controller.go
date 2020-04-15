@@ -19,35 +19,84 @@ package controllers
 import (
 	"context"
 
+	backupv1alpha1 "github.com/kubism-io/backup-operator/api/v1alpha1"
+	"github.com/kubism-io/backup-operator/pkg/util"
+
 	"github.com/go-logr/logr"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+)
 
-	backupv1alpha1 "github.com/kubism-io/backup-operator/api/v1alpha1"
+const (
+	finalizerName = "backup.kubism.io"
 )
 
 // MongoDBBackupPlanReconciler reconciles a MongoDBBackupPlan object
 type MongoDBBackupPlanReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log      logr.Logger
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=backup.kubism.io,resources=mongodbbackupplans,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=backup.kubism.io,resources=mongodbbackupplans/status,verbs=get;update;patch
 
 func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
-	_ = r.Log.WithValues("mongodbbackupplan", req.NamespacedName)
+	ctx := context.Background()
+	log := r.Log.WithValues("mongodbbackupplan", req.NamespacedName)
 
-	// your logic here
+	var plan backupv1alpha1.MongoDBBackupPlan
+	if err := r.Get(ctx, req.NamespacedName, &plan); err != nil {
+		log.Error(err, "unable to fetch MongoDBBackupPlan")
+		// We'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	// Check whether object is being deleted
+	if plan.ObjectMeta.DeletionTimestamp.IsZero() {
+		// Object is not being deleted, but let's make sure is has our finalizer
+		if !util.ContainsString(plan.ObjectMeta.Finalizers, finalizerName) {
+			plan.ObjectMeta.Finalizers = append(plan.ObjectMeta.Finalizers, finalizerName)
+			if err := r.Update(ctx, &plan); err != nil {
+				return ctrl.Result{}, err
+			}
+			log.Info("added finalizer")
+			r.Recorder.Event(&plan, corev1.EventTypeNormal, "Updated", "Added finalizer to object")
+		}
+	} else { // Object is being deleted
+		r.Recorder.Event(&plan, corev1.EventTypeNormal, "Info", "Deletion in progress")
+		if util.ContainsString(plan.ObjectMeta.Finalizers, finalizerName) {
+			// Finalizer is present, so let's cleanup our owned resources
+			// TODO: delete cronjob
+			// Finally remove the finalizer
+			plan.ObjectMeta.Finalizers = util.RemoveString(plan.ObjectMeta.Finalizers, finalizerName)
+			if err := r.Update(ctx, &plan); err != nil {
+				log.Error(err, "failed to remove finalizer")
+				r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", "Failed to remove finalizer")
+				return ctrl.Result{}, err
+			}
+		}
+		// Cleanup was successful or not required, so let's return
+		return ctrl.Result{}, nil
+	}
+
+	// TODO: validate plan
+	// TODO: create or update cronjob
 
 	return ctrl.Result{}, nil
 }
 
 func (r *MongoDBBackupPlanReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.Recorder = mgr.GetEventRecorderFor("mongodbbackupplan-controller")
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&backupv1alpha1.MongoDBBackupPlan{}).
+		Owns(&batchv1beta1.CronJob{}).
 		Complete(r)
 }
