@@ -17,11 +17,20 @@ limitations under the License.
 package v1alpha1
 
 type Destination struct {
-
 	// +optional
 	// Configuration for S3 as backup target
 	S3 *S3 `json:"s3,omitempty"`
 }
 
 type S3 struct {
+	// +optional
+	Endpoint string `json:"endpoint,omitempty"`
+	// +optional
+	Bucket string `json:"bucket,omitempty"`
+	// +optional
+	AccessKeyID string `json:"accessKeyID,omitempty"`
+	// +optional
+	SecretAccessKey string `json:"secretAccessKey,omitempty"`
+	// +optional
+	UseSSL bool `json:"useSSL,omitempty"`
 }

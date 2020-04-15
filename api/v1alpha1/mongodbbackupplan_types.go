@@ -58,6 +58,8 @@ type MongoDBBackupPlanSpec struct {
 type MongoDBBackupPlanStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	CronJob corev1.ObjectReference `json:"cronJob,omitempty"`
+	Secret  corev1.ObjectReference `json:"secret,omitempty"`
 }
 
 // +kubebuilder:object:root=true
