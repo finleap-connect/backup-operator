@@ -1,3 +1,19 @@
+/*
+Copyright 2020 Backup Operator Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package main
 
 import (
@@ -34,13 +50,14 @@ var mongodbCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		key := fmt.Sprintf("%s/%s/backup-%s.tgz", plan.ObjectMeta.Namespace, plan.ObjectMeta.Name, time.Now().Format("20060102150405"))
-		src, err := mongodb.NewMongoDBSource(plan.Spec.URI, "", key)
+		name := fmt.Sprintf("backup-%s.tgz", time.Now().Format("20060102150405"))
+		src, err := mongodb.NewMongoDBSource(plan.Spec.URI, "", name)
 		if err != nil {
 			return err
 		}
-		c := plan.Spec.Destination.S3
-		dst, err := s3.NewS3Destination(c.Endpoint, c.AccessKeyID, c.SecretAccessKey, c.UseSSL, c.Bucket)
+		prefix := fmt.Sprintf("%s/%s", plan.ObjectMeta.Namespace, plan.ObjectMeta.Name)
+		s3c := plan.Spec.Destination.S3
+		dst, err := s3.NewS3Destination(s3c.Endpoint, s3c.AccessKeyID, s3c.SecretAccessKey, s3c.UseSSL, s3c.Bucket, prefix)
 		if err != nil {
 			return err
 		}
@@ -48,7 +65,10 @@ var mongodbCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		// TODO: retention
+		err = dst.EnsureRetention(int(plan.Spec.Retention))
+		if err != nil {
+			return err
+		}
 		return nil
 	},
 }

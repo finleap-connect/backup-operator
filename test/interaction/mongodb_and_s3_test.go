@@ -35,7 +35,7 @@ var _ = Describe("MongoAndS3", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
 		bucket := "bucketc"
-		dst, err := s3.NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket)
+		dst, err := s3.NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket, "")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dst).ToNot(BeNil())
 		err = src.Stream(dst)

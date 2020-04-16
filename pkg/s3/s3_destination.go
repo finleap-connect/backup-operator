@@ -17,6 +17,9 @@ limitations under the License.
 package s3
 
 import (
+	"path/filepath"
+	"sort"
+
 	"github.com/kubism-io/backup-operator/pkg/logger"
 	"github.com/kubism-io/backup-operator/pkg/stream"
 
@@ -28,7 +31,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket string) (*S3Destination, error) {
+func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket, prefix string) (*S3Destination, error) {
 	newSession, err := session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 		Endpoint:         aws.String(endpoint),
@@ -58,6 +61,7 @@ func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool
 		Client:   client,
 		Uploader: s3manager.NewUploader(newSession),
 		Bucket:   bucket,
+		Prefix:   prefix,
 		log:      logger.WithName("s3dst"),
 	}, nil
 }
@@ -67,20 +71,70 @@ type S3Destination struct {
 	Client   *s3.S3
 	Uploader *s3manager.Uploader
 	Bucket   string
+	Prefix   string
 	log      logger.Logger
 }
 
 func (s *S3Destination) Store(obj stream.Object) error {
+	key := filepath.Join(s.Prefix, obj.ID)
 	params := &s3manager.UploadInput{
 		Bucket: &s.Bucket,
-		Key:    &obj.ID,
+		Key:    &key,
 		Body:   obj.Data,
 	}
-	s.log.Info("upload starting", "bucket", s.Bucket, "key", obj.ID)
+	s.log.Info("upload starting", "bucket", s.Bucket, "key", key)
 	result, err := s.Uploader.Upload(params)
 	if err != nil {
 		return err
 	}
 	s.log.Info("upload successful", "result", result)
 	return nil
+}
+
+func (s *S3Destination) EnsureRetention(max int) error {
+	// NOTE: using V1 list method is intentional as V2 malfunctioned on older ceph s3 installations
+	input := &s3.ListObjectsInput{
+		Bucket: &s.Bucket,
+		Prefix: &s.Prefix,
+	}
+	objects := sortableObjectSlice{}
+	err := s.Client.ListObjectsPages(input,
+		func(page *s3.ListObjectsOutput, lastPage bool) bool {
+			objects = append(objects, page.Contents...)
+			return true
+		})
+	if err != nil {
+		return err
+	}
+	if len(objects) > max {
+		sort.Sort(objects)
+		obsolete := objects[max:]
+		if len(objects) > 0 {
+			for _, obj := range obsolete {
+				input := &s3.DeleteObjectInput{
+					Bucket: &s.Bucket,
+					Key:    obj.Key,
+				}
+				_, err := s.Client.DeleteObject(input)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+type sortableObjectSlice []*s3.Object
+
+func (s sortableObjectSlice) Len() int {
+	return len(s)
+}
+
+func (s sortableObjectSlice) Less(i, j int) bool {
+	return s[i].LastModified.After(*s[j].LastModified)
+}
+
+func (s sortableObjectSlice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
 }
