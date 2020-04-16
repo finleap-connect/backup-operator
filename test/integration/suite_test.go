@@ -31,6 +31,17 @@ var (
 	env *testutil.KindEnv
 )
 
+// TODO:
+// * setup kubeconfig in tmpdir for kind env
+// * create helm test env (make sure to override XDG_CONFIG_HOME etc
+// * install mongodb
+// * install minio
+// * creater operator helm chart
+// * make prebuild containers available
+// * install backup-operator
+// * kubectl wrapper?
+// * use ingress to check content of minio?
+
 func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
 	junitReporter := reporters.NewJUnitReporter("../../reports/integration-junit.xml")

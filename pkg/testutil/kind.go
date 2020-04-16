@@ -19,6 +19,7 @@ package testutil
 import (
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/kubism-io/backup-operator/pkg/logger"
 )
@@ -42,14 +43,23 @@ func NewKindEnv() (*KindEnv, error) {
 }
 
 func (e *KindEnv) Start(name string) error {
-	// kind create cluster --image "kindest/node:v1.13.3" --kubeconfig=.Dir --name=test --wait=2m
 	cmd := exec.Command(e.Bin, "create", "cluster", "--image", "kindest/node:v1.16.4", "--name", name, "--wait", "4m")
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	e.Name = name
+	cmd = exec.Command(e.Bin, "get", "kubeconfig", "--name", name)
 	out, err := cmd.Output()
 	if err != nil {
 		return err
 	}
-	e.log.Info(string(out))
-	e.Name = name
+	kubeconfig := strings.TrimSpace(string(out))
+	e.log.Info("cluster created", "name", name)
+	err = os.Setenv("KUBECONFIG", kubeconfig)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

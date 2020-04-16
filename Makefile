@@ -10,6 +10,7 @@ KUBECTL ?= kubectl
 GINKGO ?= $(TOOLS_DIR)/ginkgo
 LINTER ?= $(TOOLS_DIR)/golangci-lint
 KIND ?= $(TOOLS_DIR)/kind
+HELM3 ?= $(TOOLS_DIR)/helm3
 CONTROLLER_GEN ?= $(TOOLS_DIR)/controller-gen
 KUSTOMIZE ?= $(TOOLS_DIR)/kustomize
 KUBEBUILDER ?= $(TOOLS_DIR)/kubebuilder
@@ -87,7 +88,7 @@ docker-push-worker:
 	$(DOCKER) push $(WORKER_IMG)
 
 # Phony target to install all required tools into ${TOOLS_DIR}
-tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/kustomize $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder
+tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/kustomize $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/helm3
 
 $(TOOLS_DIR)/kind:
 	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/kind@v0.7.0)
@@ -106,4 +107,7 @@ $(TOOLS_DIR)/golangci-lint:
 
 $(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/kubectl $(TOOLS_DIR)/kube-apiserver $(TOOLS_DIR)/etcd:
 	$(shell $(TOOLS_DIR)/kubebuilder-install)
+
+$(TOOLS_DIR)/helm3:
+	$(shell $(TOOLS_DIR)/helm3-install)
 
