@@ -67,11 +67,21 @@ manifests: $(CONTROLLER_GEN)
 generate: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-docker-build: test
-	$(DOCKER) build . -t $(MANAGER_IMG)
+docker-build: docker-build-manager docker-build-worker
 
-docker-push:
+docker-build-manager:
+	$(DOCKER) build --target manager . -t $(MANAGER_IMG)
+
+docker-build-worker:
+	$(DOCKER) build --target worker . -t $(WORKER_IMG)
+
+docker-push: docker-push-manager docker-push-worker
+
+docker-push-manager:
 	$(DOCKER) push $(MANAGER_IMG)
+
+docker-push-worker:
+	$(DOCKER) push $(WORKER_IMG)
 
 # Phony target to install all required tools into ${TOOLS_DIR}
 tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/kustomize $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder
