@@ -17,49 +17,56 @@ limitations under the License.
 package testutil
 
 import (
+	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
+	"path/filepath"
 
 	"github.com/kubism-io/backup-operator/pkg/logger"
 )
 
 type KindEnv struct {
-	Bin  string
-	Name string
-	log  logger.Logger
+	Dir        string
+	Bin        string
+	Name       string
+	Kubeconfig string
+	log        logger.Logger
 }
 
 func NewKindEnv() (*KindEnv, error) {
-
-	bin := "kind"
+	bin := "kind" // fallback
 	if value, ok := os.LookupEnv("KIND"); ok {
 		bin = value
 	}
+	dir, err := ioutil.TempDir("", "kindenv")
+	if err != nil {
+		return nil, err
+	}
 	return &KindEnv{
+		Dir: dir,
 		Bin: bin,
 		log: logger.WithName("kindenv"),
 	}, nil
 }
 
 func (e *KindEnv) Start(name string) error {
-	cmd := exec.Command(e.Bin, "create", "cluster", "--image", "kindest/node:v1.16.4", "--name", name, "--wait", "4m")
+	cmd := exec.Command(e.Bin, "create", "cluster", "--image", "kindest/node:v1.16.4", "--name", name, "--wait", "5m")
 	err := cmd.Run()
 	if err != nil {
 		return err
 	}
-	e.Name = name
 	cmd = exec.Command(e.Bin, "get", "kubeconfig", "--name", name)
 	out, err := cmd.Output()
 	if err != nil {
 		return err
 	}
-	kubeconfig := strings.TrimSpace(string(out))
-	e.log.Info("cluster created", "name", name)
-	err = os.Setenv("KUBECONFIG", kubeconfig)
+	e.Kubeconfig = filepath.Join(e.Dir, "kubeconfig")
+	err = ioutil.WriteFile(e.Kubeconfig, out, 0644)
 	if err != nil {
 		return err
 	}
+	e.log.Info("cluster created", "name", name)
+	e.Name = name // let's remember the cluster name for cleanup
 	return nil
 }
 
@@ -77,5 +84,5 @@ func (e *KindEnv) Close() error {
 	if e.Name != "" {
 		return e.Stop()
 	}
-	return nil
+	return os.RemoveAll(e.Dir)
 }

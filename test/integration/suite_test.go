@@ -28,11 +28,11 @@ import (
 )
 
 var (
-	env *testutil.KindEnv
+	kind *testutil.KindEnv
+	helm *testutil.HelmEnv
 )
 
 // TODO:
-// * setup kubeconfig in tmpdir for kind env
 // * create helm test env (make sure to override XDG_CONFIG_HOME etc
 // * install mongodb
 // * install minio
@@ -52,18 +52,22 @@ var _ = BeforeSuite(func(done Done) {
 	var err error
 	log := logger.WithName("integrationsetup")
 	By("bootstrapping kind test cluster")
-	env, err = testutil.NewKindEnv()
+	kind, err = testutil.NewKindEnv()
 	Expect(err).ToNot(HaveOccurred())
-	err = env.Start("int-test")
+	err = kind.Start("int-test")
+	Expect(err).ToNot(HaveOccurred())
+	helm, err = testutil.NewHelmEnv(kind.Kubeconfig)
+	Expect(err).ToNot(HaveOccurred())
+	err = helm.RepoAdd("stable", "https://kubernetes-charts.storage.googleapis.com/")
 	Expect(err).ToNot(HaveOccurred())
 	log.Info("setup done")
 	close(done)
-}, 300)
+}, 600)
 
 var _ = AfterSuite(func() {
 	By("tearing down test cluster")
-	if env != nil {
-		err := env.Close()
+	if kind != nil {
+		err := kind.Close()
 		Expect(err).ToNot(HaveOccurred())
 	}
 })
