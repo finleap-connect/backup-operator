@@ -34,7 +34,10 @@ $(WORKER_BIN): generate fmt vet
 	$(GO) build -o $(WORKER_BIN) ./cmd/worker/...
 
 test: generate fmt vet manifests $(GINKGO) $(KUBEBUILDER)
-	$(GINKGO) -r -v -coverprofile cover.out
+	$(GINKGO) -r -v -coverprofile cover.out pkg test/interaction
+
+integration: generate manifests docker-build $(GINKGO) $(KIND)
+	$(GINKGO) -r -v test/integration
 
 lint: $(LINTER)
 	$(GO) mod verify
