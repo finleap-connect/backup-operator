@@ -18,6 +18,7 @@ package testutil
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -26,14 +27,21 @@ import (
 	"github.com/kubism-io/backup-operator/pkg/logger"
 )
 
-type HelmEnv struct {
-	Dir string
-	Bin string
-	Env []string
-	log logger.Logger
+type HelmEnvConfig struct {
+	Kubeconfig string
+	Stdout     io.Writer
+	Stderr     io.Writer
 }
 
-func NewHelmEnv(kubeconfig string) (*HelmEnv, error) {
+type HelmEnv struct {
+	Config *HelmEnvConfig
+	Dir    string
+	Bin    string
+	Env    []string
+	log    logger.Logger
+}
+
+func NewHelmEnv(config *HelmEnvConfig) (*HelmEnv, error) {
 	bin := "helm" // fallback
 	if value, ok := os.LookupEnv("HELM3"); ok {
 		bin = value
@@ -43,10 +51,11 @@ func NewHelmEnv(kubeconfig string) (*HelmEnv, error) {
 		return nil, err
 	}
 	return &HelmEnv{
-		Dir: dir,
-		Bin: bin,
+		Config: config,
+		Dir:    dir,
+		Bin:    bin,
 		Env: append(os.Environ(),
-			fmt.Sprintf("KUBECONFIG=%s", kubeconfig),
+			fmt.Sprintf("KUBECONFIG=%s", config.Kubeconfig),
 			fmt.Sprintf("XDG_CACHE_HOME=%s", filepath.Join(dir, "cache")),
 			fmt.Sprintf("XDG_CONFIG_HOME=%s", filepath.Join(dir, "config")),
 			fmt.Sprintf("XDG_DATA_HOME=%s", filepath.Join(dir, "data")),
@@ -58,10 +67,31 @@ func NewHelmEnv(kubeconfig string) (*HelmEnv, error) {
 func (e *HelmEnv) RepoAdd(name, url string) error {
 	e.log.Info("adding repository", "name", name, "url", url)
 	cmd := exec.Command(e.Bin, "repo", "add", name, url)
-	cmd.Env = e.Env
+	e.setupCmd(cmd)
+	return cmd.Run()
+}
+
+func (e *HelmEnv) RepoUpdate() error {
+	e.log.Info("updating repositories")
+	cmd := exec.Command(e.Bin, "repo", "update")
+	e.setupCmd(cmd)
+	return cmd.Run()
+}
+
+func (e *HelmEnv) Install(release, chart string, args ...string) error {
+	e.log.Info("installing chart", "release", release, "chart", chart, "args", args)
+	args = append([]string{"install", "--wait", release, chart}, args...)
+	cmd := exec.Command(e.Bin, args...)
+	e.setupCmd(cmd)
 	return cmd.Run()
 }
 
 func (e *HelmEnv) Close() error {
 	return os.RemoveAll(e.Dir)
+}
+
+func (e *HelmEnv) setupCmd(cmd *exec.Cmd) {
+	cmd.Env = e.Env
+	cmd.Stdout = e.Config.Stdout
+	cmd.Stderr = e.Config.Stderr
 }

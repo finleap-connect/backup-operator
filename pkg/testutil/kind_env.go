@@ -17,6 +17,7 @@ limitations under the License.
 package testutil
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -25,15 +26,41 @@ import (
 	"github.com/kubism-io/backup-operator/pkg/logger"
 )
 
+const kindConfig = `kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "ingress-ready=true"
+        authorization-mode: "AlwaysAllow"
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 9080
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 9443
+    protocol: TCP`
+
+type KindEnvConfig struct {
+	Stdout io.Writer
+	Stderr io.Writer
+}
+
 type KindEnv struct {
+	Config     *KindEnvConfig
 	Dir        string
 	Bin        string
 	Name       string
+	ConfigFile string // Kind specific config.yaml
 	Kubeconfig string
 	log        logger.Logger
 }
 
-func NewKindEnv() (*KindEnv, error) {
+func NewKindEnv(config *KindEnvConfig) (*KindEnv, error) {
 	bin := "kind" // fallback
 	if value, ok := os.LookupEnv("KIND"); ok {
 		bin = value
@@ -42,21 +69,32 @@ func NewKindEnv() (*KindEnv, error) {
 	if err != nil {
 		return nil, err
 	}
+	configFile := filepath.Join(dir, "kind.yaml")
+	err = ioutil.WriteFile(configFile, []byte(kindConfig), 0644)
+	if err != nil {
+		return nil, err
+	}
 	return &KindEnv{
-		Dir: dir,
-		Bin: bin,
-		log: logger.WithName("kindenv"),
+		Config:     config,
+		Dir:        dir,
+		Bin:        bin,
+		ConfigFile: configFile,
+		log:        logger.WithName("kindenv"),
 	}, nil
 }
 
 func (e *KindEnv) Start(name string) error {
-	cmd := exec.Command(e.Bin, "create", "cluster", "--image", "kindest/node:v1.16.4", "--name", name, "--wait", "5m")
+	cmd := exec.Command(e.Bin, "create", "cluster",
+		"--image", "kindest/node:v1.16.4", "--name", name,
+		"--config", e.ConfigFile, "--wait", "5m")
+	e.setupCmd(cmd)
 	err := cmd.Run()
 	if err != nil {
 		return err
 	}
+	e.Name = name // let's remember the cluster name for cleanup
 	cmd = exec.Command(e.Bin, "get", "kubeconfig", "--name", name)
-	out, err := cmd.Output()
+	out, err := cmd.Output() // do not use setupCmd here
 	if err != nil {
 		return err
 	}
@@ -66,12 +104,12 @@ func (e *KindEnv) Start(name string) error {
 		return err
 	}
 	e.log.Info("cluster created", "name", name)
-	e.Name = name // let's remember the cluster name for cleanup
 	return nil
 }
 
 func (e *KindEnv) Stop() error {
 	cmd := exec.Command(e.Bin, "delete", "cluster", "--name", e.Name)
+	e.setupCmd(cmd)
 	err := cmd.Run()
 	if err != nil {
 		return err
@@ -85,4 +123,9 @@ func (e *KindEnv) Close() error {
 		return e.Stop()
 	}
 	return os.RemoveAll(e.Dir)
+}
+
+func (e *KindEnv) setupCmd(cmd *exec.Cmd) {
+	cmd.Stdout = e.Config.Stdout
+	cmd.Stderr = e.Config.Stderr
 }

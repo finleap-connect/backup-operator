@@ -17,6 +17,7 @@ limitations under the License.
 package integration
 
 import (
+	"os"
 	"testing"
 
 	"github.com/kubism-io/backup-operator/pkg/logger"
@@ -52,17 +53,34 @@ var _ = BeforeSuite(func(done Done) {
 	var err error
 	log := logger.WithName("integrationsetup")
 	By("bootstrapping kind test cluster")
-	kind, err = testutil.NewKindEnv()
+	kind, err = testutil.NewKindEnv(&testutil.KindEnvConfig{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	})
 	Expect(err).ToNot(HaveOccurred())
 	err = kind.Start("int-test")
 	Expect(err).ToNot(HaveOccurred())
-	helm, err = testutil.NewHelmEnv(kind.Kubeconfig)
+	helm, err = testutil.NewHelmEnv(&testutil.HelmEnvConfig{
+		Kubeconfig: kind.Kubeconfig,
+		Stdout:     os.Stdout,
+		Stderr:     os.Stderr,
+	})
 	Expect(err).ToNot(HaveOccurred())
 	err = helm.RepoAdd("stable", "https://kubernetes-charts.storage.googleapis.com/")
 	Expect(err).ToNot(HaveOccurred())
+	err = helm.RepoAdd("bitnami", "https://charts.bitnami.com/bitnami")
+	Expect(err).ToNot(HaveOccurred())
+	err = helm.RepoUpdate()
+	Expect(err).ToNot(HaveOccurred())
+	err = helm.Install("a", "bitnami/mongodb")
+	Expect(err).ToNot(HaveOccurred())
+	err = helm.Install("b", "bitnami/mongodb")
+	Expect(err).ToNot(HaveOccurred())
+	err = helm.Install("c", "stable/minio")
+	Expect(err).ToNot(HaveOccurred())
 	log.Info("setup done")
 	close(done)
-}, 600)
+}, 1200)
 
 var _ = AfterSuite(func() {
 	By("tearing down test cluster")
