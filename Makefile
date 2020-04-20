@@ -11,6 +11,7 @@ GINKGO ?= $(TOOLS_DIR)/ginkgo
 LINTER ?= $(TOOLS_DIR)/golangci-lint
 KIND ?= $(TOOLS_DIR)/kind
 GOVERALLS ?= $(TOOLS_DIR)/goveralls
+GOVER ?= $(TOOLS_DIR)/gover
 HELM3 ?= $(TOOLS_DIR)/helm3
 CONTROLLER_GEN ?= $(TOOLS_DIR)/controller-gen
 KUSTOMIZE ?= $(TOOLS_DIR)/kustomize
@@ -36,13 +37,14 @@ $(WORKER_BIN): generate fmt vet
 	$(GO) build -o $(WORKER_BIN) ./cmd/worker/...
 
 test: generate fmt vet manifests $(GINKGO) $(KUBEBUILDER)
-	$(GINKGO) -r -v -covermode=count -coverprofile coverage.out pkg test/interaction
+	$(GINKGO) -r -v -cover pkg test/interaction
 
 integration: generate manifests docker-build $(GINKGO) $(KIND)
 	$(GINKGO) -r -v test/integration
 
-coverage: $(GOVERALLS)
-	$(GOVERALLS) -coverprofile=coverage.out -service=travis-ci -repotoken $(COVERALLS_TOKEN)
+coverage: $(GOVERALLS) $(GOVER)
+	$(GOVER)
+	$(GOVERALLS) -coverprofile=gover.coverprofile -service=travis-ci -repotoken $(COVERALLS_TOKEN)
 
 lint: $(LINTER)
 	$(GO) mod verify
@@ -92,7 +94,7 @@ docker-push-worker:
 	$(DOCKER) push $(WORKER_IMG)
 
 # Phony target to install all required tools into ${TOOLS_DIR}
-tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/kustomize $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/helm3 $(TOOLS_DIR)/goveralls
+tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/kustomize $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/helm3 $(TOOLS_DIR)/goveralls $(TOOLS_DIR)/gover
 
 $(TOOLS_DIR)/kind:
 	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/kind@v0.7.0)
@@ -117,4 +119,7 @@ $(TOOLS_DIR)/helm3:
 
 $(TOOLS_DIR)/goveralls:
 	$(shell $(TOOLS_DIR)/goget-wrapper github.com/mattn/goveralls@v0.0.5)
+
+$(TOOLS_DIR)/gover:
+	$(shell $(TOOLS_DIR)/goget-wrapper github.com/modocache/gover)
 
