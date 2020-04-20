@@ -1,5 +1,7 @@
 # Backup Operator
 
+[![Build Status](https://travis-ci.org/kubism-io/backup-operator.svg?branch=master)](https://travis-ci.org/kubism-io/backup-operator)
+
 ## Development
 
 ### Kubebuilder
