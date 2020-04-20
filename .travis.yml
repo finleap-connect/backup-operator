@@ -1,0 +1,17 @@
+language: go
+
+go:
+  - "1.14.x"
+sudo: required
+
+services:
+- docker
+
+stages:
+- test
+
+jobs:
+  include:
+  - stage: test
+    script:
+    - make test
