@@ -15,3 +15,9 @@ jobs:
   - stage: test
     script:
     - make test
+    after_success:
+    - make coverage
+
+env:
+  global:
+    secure: EwYozTuVY67GMR+OcNOUOAdYNsLOvM56GDVveMDoJ/nI+XZyV1siSEnY6ihiJf1qmnP6Rz54ZCM/N7UVlgM2KPxRyC9SP1tdlpEo8MItV8ZkoDkn88CPEbtiCh2a1KZBz/ENZetpdb9hLwssEGAQ/mQq26czQPKW/36A9ufip90dVaFIuCKkPGa++xiC4vuG7o5R9EWujfI/lcgw1VA8x29M6HTjF3tk0+takYfggMMAK2IXP7iEnqWPq4qP4C2KvzYZjwrh74QGGuwwCcbxoiHirURxqqLo7OdKSafaycub+DpZsAUTr8o4b3Tro6v48ejSQ2ackT4VPhpSQ1q8B8m8IA1HlFoCTDv5kDeBRL0rnoYrgd0F5Yahpi7CD1BPtZvscJ4cP/OVhH/VGrGDSYoSR7QPShk7ZOzWbj7fMo8llVcBvvtzzga5j8kyBui5P71Z1KjMrjYG666cZ36yIUcS7IEY1eRMORaHn3dfqIaycRj0vguzWYuzJHIPsvBoXcyX9/2ZKghpOWK6UIg4mToPgOEEfojqungxQpfsVRl3EWvP/lDCG+DUkzdIKuH/hfgDsCvB1xV4rCw9nRZHUAlyCGJXVPTVH/XZ57ndYvmEyVuj3Rfg7Ya1Dj/C9ZHehITYJgHk/PWFpxBGOdhVvAXyPYkH/Tw+qLlMQUZHbYo=
