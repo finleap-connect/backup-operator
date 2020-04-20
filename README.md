@@ -1,5 +1,6 @@
 # Backup Operator
 
+[![Go Documentation](https://img.shields.io/badge/go-documentation-blue.svg?style=flat)](https://pkg.go.dev/mod/github.com/kubism-io/backup-operator?tab=packages)
 [![Build Status](https://travis-ci.org/kubism-io/backup-operator.svg?branch=master)](https://travis-ci.org/kubism-io/backup-operator)
 
 ## Development
