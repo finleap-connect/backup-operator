@@ -18,6 +18,8 @@ package s3
 
 import (
 	"bytes"
+	"fmt"
+	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -25,6 +27,7 @@ import (
 	"github.com/kubism/backup-operator/pkg/util"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -49,58 +52,54 @@ var _ = Describe("S3Destination", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(buf.Bytes()).Should(Equal(data))
 	})
-	It("should ensure retention", func() {
-		data := []byte("testcontent")
-		bucket := "bucketc"
-		dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket, "")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(dst).ToNot(BeNil())
-		_, err = dst.Client.PutObject(&s3.PutObjectInput{
-			Body:   bytes.NewReader(data),
-			Bucket: &bucket,
-			Key:    aws.String("a"),
-		})
-		Expect(err).ToNot(HaveOccurred())
-		_, err = dst.Client.PutObject(&s3.PutObjectInput{
-			Body:   bytes.NewReader(data),
-			Bucket: &bucket,
-			Key:    aws.String("b"),
-		})
-		Expect(err).ToNot(HaveOccurred())
-		_, err = dst.Client.PutObject(&s3.PutObjectInput{
-			Body:   bytes.NewReader(data),
-			Bucket: &bucket,
-			Key:    aws.String("c"),
-		})
-		Expect(err).ToNot(HaveOccurred())
-		_, err = dst.Client.PutObject(&s3.PutObjectInput{
-			Body:   bytes.NewReader(data),
-			Bucket: &bucket,
-			Key:    aws.String("d"),
-		})
-		Expect(err).ToNot(HaveOccurred())
-		_, err = dst.Client.PutObject(&s3.PutObjectInput{
-			Body:   bytes.NewReader(data),
-			Bucket: &bucket,
-			Key:    aws.String("e"),
-		})
-		Expect(err).ToNot(HaveOccurred())
-		err = dst.EnsureRetention(3)
-		Expect(err).ToNot(HaveOccurred())
-		input := &s3.ListObjectsInput{
-			Bucket: &bucket,
-		}
-		found := []string{}
-		expected := []string{"c", "d", "e"}
-		err = dst.Client.ListObjectsPages(input,
-			func(page *s3.ListObjectsOutput, lastPage bool) bool {
-				for _, obj := range page.Contents {
-					found = append(found, *obj.Key)
-				}
-				return true
-			})
-		Expect(err).ToNot(HaveOccurred())
-		Expect(found).To(Equal(expected))
-
-	})
+	DescribeTable("ensure retention for values",
+		func(retention int, count int) {
+			data := []byte("testcontent")
+			bucket := fmt.Sprintf("bucket%d-%d", retention, count)
+			dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket, "")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(dst).ToNot(BeNil())
+			for i := 0; i < count; i++ {
+				_, err := dst.Client.PutObject(&s3.PutObjectInput{
+					Body:   bytes.NewReader(data),
+					Bucket: &bucket,
+					Key:    aws.String(fmt.Sprintf("key%d-%d-%d", retention, count, i)),
+				})
+				Expect(err).ToNot(HaveOccurred())
+			}
+			input := &s3.ListObjectsInput{
+				Bucket: &bucket,
+			}
+			objects := sortableObjectSlice{}
+			err = dst.Client.ListObjectsPages(input,
+				func(page *s3.ListObjectsOutput, lastPage bool) bool {
+					for _, obj := range page.Contents {
+						objects = append(objects, obj)
+					}
+					return true
+				})
+			sort.Sort(objects)
+			expected := []string{}
+			for _, obj := range objects[:retention] {
+				expected = append(expected, *obj.Key)
+			}
+			err = dst.EnsureRetention(retention)
+			Expect(err).ToNot(HaveOccurred())
+			found := []string{}
+			err = dst.Client.ListObjectsPages(input,
+				func(page *s3.ListObjectsOutput, lastPage bool) bool {
+					for _, obj := range page.Contents {
+						found = append(found, *obj.Key)
+					}
+					return true
+				})
+			Expect(err).ToNot(HaveOccurred())
+			sort.Strings(expected)
+			sort.Strings(found)
+			Expect(found).To(Equal(expected))
+		},
+		Entry("3 out of 5", 3, 5),
+		Entry("4 out of 5", 4, 5),
+		Entry("5 out of 12", 5, 12),
+	)
 })
