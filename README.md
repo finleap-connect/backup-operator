@@ -1,9 +1,9 @@
 # Backup Operator
 
-[![Go Documentation](https://img.shields.io/badge/go-documentation-blue.svg?style=flat)](https://pkg.go.dev/mod/github.com/kubism-io/backup-operator?tab=packages)
-[![Build Status](https://travis-ci.org/kubism-io/backup-operator.svg?branch=master)](https://travis-ci.org/kubism-io/backup-operator)
-[![Go Report Card](https://goreportcard.com/badge/github.com/kubism-io/backup-operator)](https://goreportcard.com/report/github.com/kubism-io/backup-operator)
-[![Coverage Status](https://coveralls.io/repos/github/kubism-io/backup-operator/badge.svg?branch=master)](https://coveralls.io/github/kubism-io/backup-operator?branch=master)
+[![Go Documentation](https://img.shields.io/badge/go-doc-blue.svg?style=flat)](https://pkg.go.dev/mod/github.com/kubism/backup-operator?tab=packages)
+[![Build Status](https://travis-ci.org/kubism/backup-operator.svg?branch=master)](https://travis-ci.org/kubism/backup-operator)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kubism/backup-operator)](https://goreportcard.com/report/github.com/kubism/backup-operator)
+[![Coverage Status](https://coveralls.io/repos/github/kubism/backup-operator/badge.svg?branch=master)](https://coveralls.io/github/kubism/backup-operator?branch=master)
 
 ## Development
 
