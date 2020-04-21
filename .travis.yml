@@ -9,6 +9,7 @@ services:
 
 stages:
 - test
+- build
 
 jobs:
   include:
@@ -17,6 +18,17 @@ jobs:
     - make test
     after_success:
     - make coverage
+  - stage: build
+    if: tag IS present
+    env:
+    - secure: cGWzCN3cNv9kP7ibRlL90bUWAUHXK4qNRO0k71k35NoS+dWCpGxH2BVxAlGcIUao4VCiH/POhA69+A//bINC24cDAJMyEi+zS+q/HvxqnGpGIS1prJyR+5gZhiEs0KThBmkAKQghDAuLFIZtMQSVqlG4LGoDKWK7cCZ0i+kOnJWWyZ1knOLwyOxZtknL/cR4eaYHy6czObSnoWWV6sRL+d9DkDrssDhv3oQfERITPGjlWqIuVCvvIbd/TQxwjG2KUuEwruJpVZMsReyjZ6qkVZV8sH6RuRiYfGaVmvfiuQECiiTkL7MdsnKUWnRxHcd/zkVjeGnZsVtTk9icq/1gkKQgurQSYbMuxaS/LPM+Tj97UOhQQH8/KXJn/880lDAqn+3Jlx6ZZ5nT7XykszW3N5Qu8cz8qp5Tx2/lXIaIfiDNLXm8SdfYfeD7rJQj2McPn6lPvF8G4y14NQLiNxGzCivF2iiSC+BeqkwEYiU/ML7v5jxPoVjrCcDG3r0YbJbuvtgm/BP+tLU6xpgoSsfbce8T1J0NA3HzvJNRqi+7TyOyDMK6Le5dXXDd/F0Wm8PP93paZl7QszNTIcF0ncBCRc4EriZT2TrzGBR/2s31js2ICJAxJ0bfMLZ+CYOFsWkaM6z4OQ4OzN5VbNIN+IzpICX+pMkDB7MpQXAgRXFXjqU=
+    - secure: kGo33sW+1OLDC1DXlgA/jSHeh+m4DT7DRKKqc1reoQ7cvXt8MBVadZsxki4In+jIkyrRoecGE0dW2XorXifD+uDslNrY4uvU+kFKr2G3hi7AilIrrjNgtW5mj4QVZuNk8ORu2leLSmWx/L4PcMtRReJGhjyrvt7nfgtn7kaF74Or+nAg50SbZ/iNojouqJ2+a4zYQtD4KMuqbMhOd5KGOXRwYrfeH7Ue8OptmzMdEodvxFAc06jt0sVJXzz0SRaWg6i/BmQORTH3T5P6E1ODeh6pkH/DXPi17iUUk7DEqWUfhQbhSb4By726eM57juIZCG01yCdVmDQgZ7V5ZFGMJLP7PB4PzAt17awJFxN0EPNnuZ8NhlY1XWNBBFB3Bj+ExIVry6c4cpggxrU5Xft5tspa+c2TMiydjSLrKnwUK1EVBei0GWxZKVmjKKv/Xv71P3NN6J9LzybaPaHoYZUNit2XnvItTseS3grfwwAa1NS6XE2jkTQppSM8vKj6Ikzu0V8AQkHkR2LATJUWuJu9ILgw5uXfWbUfKjFJAKKiw7W3+Hs7IuqxcRxwDXiRxpwYlErDk7/G33gujhOvn9evgNzxf2pVcgyU0H7qo6iWZduTtzFJsGwfBqHlURv8D/p1HtCZEFtc2aZjpm33I3Z0oTo+lUM5OyAvU3WpBl0Ht8k=
+    script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - make DOCKER_TAG=$TRAVIS_TAG docker-build
+    - make docker-build
+    - make DOCKER_TAG=$TRAVIS_TAG docker-push
+    - make docker-push
 
 env:
   global:

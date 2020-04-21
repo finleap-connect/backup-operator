@@ -48,7 +48,7 @@ func main() {
 	var workerImage string
 	var enableLeaderElection bool
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
-	flag.StringVar(&workerImage, "worker-image", "kubismio/worker:latest", "The image for the worker jobs.")
+	flag.StringVar(&workerImage, "worker-image", "kubismio/backup-operator:latest", "The image for the worker jobs.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")

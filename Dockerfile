@@ -20,16 +20,11 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o bin/work
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static:nonroot as manager
+FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY --from=builder /workspace/bin/manager .
-USER nonroot:nonroot
-ENTRYPOINT ["/manager"]
-
-FROM gcr.io/distroless/static:nonroot as worker
-WORKDIR /
 COPY --from=builder /workspace/bin/worker .
 USER nonroot:nonroot
-ENTRYPOINT ["/worker"]
-
+# by default use for operator, overriden for workers
+ENTRYPOINT ["/manager"]
 

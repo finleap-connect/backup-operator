@@ -19,10 +19,10 @@ KUBEBUILDER ?= $(TOOLS_DIR)/kubebuilder
 KUBEBUILDER_ASSETS ?= $(TOOLS_DIR)
 
 MANAGER_BIN ?= bin/manager
-MANAGER_IMG ?= kubismio/manager:latest
-
 WORKER_BIN ?= bin/worker
-WORKER_IMG ?= kubismio/worker:latest
+
+DOCKER_TAG ?= latest
+DOCKER_IMG ?= kubismio/backup-operator:$(DOCKER_TAG)
 
 export
 
@@ -39,8 +39,12 @@ $(WORKER_BIN): generate fmt vet
 test: generate fmt vet manifests $(GINKGO) $(KUBEBUILDER)
 	$(GINKGO) -r -v -cover pkg test/interaction
 
-integration: generate manifests docker-build $(GINKGO) $(KIND)
+test-integration: generate manifests docker-build $(GINKGO) $(KIND)
 	$(GINKGO) -r -v test/integration
+
+test-%: generate fmt vet manifests $(GINKGO) $(KUBEBUILDER)
+	$(GINKGO) -r -v -cover pkg/$*
+
 
 coverage: $(GOVERALLS) $(GOVER)
 	$(GOVER)
@@ -77,21 +81,11 @@ manifests: $(CONTROLLER_GEN)
 generate: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-docker-build: docker-build-manager docker-build-worker
+docker-build:
+	$(DOCKER) build . -t $(DOCKER_IMG)
 
-docker-build-manager:
-	$(DOCKER) build --target manager . -t $(MANAGER_IMG)
-
-docker-build-worker:
-	$(DOCKER) build --target worker . -t $(WORKER_IMG)
-
-docker-push: docker-push-manager docker-push-worker
-
-docker-push-manager:
-	$(DOCKER) push $(MANAGER_IMG)
-
-docker-push-worker:
-	$(DOCKER) push $(WORKER_IMG)
+docker-push:
+	$(DOCKER) push $(DOCKER_IMG)
 
 # Phony target to install all required tools into ${TOOLS_DIR}
 tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/kustomize $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/helm3 $(TOOLS_DIR)/goveralls $(TOOLS_DIR)/gover
