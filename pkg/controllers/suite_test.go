@@ -17,13 +17,19 @@ limitations under the License.
 package controllers
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/record"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
@@ -37,9 +43,21 @@ import (
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var cfg *rest.Config
-var k8sClient client.Client
-var testEnv *envtest.Environment
+const (
+	testNamespace = "test"
+)
+
+type reconciler interface {
+	Reconcile(req ctrl.Request) (ctrl.Result, error)
+}
+
+var (
+	testConfig *rest.Config
+	testClient client.Client
+	testEnv    *envtest.Environment
+
+	testReconcilers map[string]reconciler
+)
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -53,22 +71,33 @@ var _ = BeforeSuite(func(done Done) {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases")},
+		CRDDirectoryPaths: []string{filepath.Join("..", "..", "config", "crd", "bases")},
 	}
 
 	var err error
-	cfg, err = testEnv.Start()
+	testConfig, err = testEnv.Start()
 	Expect(err).ToNot(HaveOccurred())
-	Expect(cfg).ToNot(BeNil())
+	Expect(testConfig).ToNot(BeNil())
 
 	err = backupv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
 
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+	testClient, err = client.New(testConfig, client.Options{Scheme: scheme.Scheme})
 	Expect(err).ToNot(HaveOccurred())
-	Expect(k8sClient).ToNot(BeNil())
+	Expect(testClient).ToNot(BeNil())
+
+	testReconcilers = map[string]reconciler{
+		backupv1alpha1.MongoDBBackupPlanKind: &MongoDBBackupPlanReconciler{
+			Client:             testClient,
+			Log:                logf.Log.WithName("controllers").WithName("MongoDBBackupPlan"),
+			Recorder:           &record.FakeRecorder{},
+			Scheme:             scheme.Scheme,
+			DefaultDestination: nil, // TODO
+			WorkerImage:        "test",
+		},
+	}
 
 	close(done)
 }, 60)
@@ -78,3 +107,42 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })
+
+// Helper
+
+var testNameCounter = 0
+
+func newTestName() string {
+	testNameCounter += 1
+	return fmt.Sprintf("test%d", testNameCounter)
+}
+
+func namespacedName(obj runtime.Object) types.NamespacedName {
+	obj.GetObjectKind()
+	accessor, err := meta.Accessor(obj)
+	Expect(err).ToNot(HaveOccurred())
+	accessor.GetResourceVersion()
+	return types.NamespacedName{
+		Namespace: accessor.GetNamespace(),
+		Name:      accessor.GetName(),
+	}
+}
+
+func newRequestFor(obj runtime.Object) ctrl.Request {
+	return ctrl.Request{
+		NamespacedName: namespacedName(obj),
+	}
+}
+
+func mustReconcile(obj runtime.Object) ctrl.Result {
+	var reconciler reconciler
+	if _, ok := obj.(*backupv1alpha1.MongoDBBackupPlan); ok {
+		reconciler = testReconcilers[backupv1alpha1.MongoDBBackupPlanKind]
+	} else {
+		panic("deadcode, otherwise reconciler was not properly registered for test")
+	}
+	req := newRequestFor(obj)
+	res, err := reconciler.Reconcile(req)
+	Expect(err).ToNot(HaveOccurred())
+	return res
+}

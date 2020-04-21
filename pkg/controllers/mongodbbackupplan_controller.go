@@ -162,6 +162,7 @@ func (r *MongoDBBackupPlanReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.Recorder = mgr.GetEventRecorderFor("mongodbbackupplan-controller")
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&backupv1alpha1.MongoDBBackupPlan{}).
+		Owns(&corev1.Secret{}).
 		Owns(&batchv1beta1.CronJob{}).
 		Complete(r)
 }
