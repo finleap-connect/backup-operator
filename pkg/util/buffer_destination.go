@@ -19,7 +19,7 @@ package util
 import (
 	"io/ioutil"
 
-	"github.com/kubism-io/backup-operator/pkg/stream"
+	"github.com/kubism/backup-operator/pkg/stream"
 )
 
 func NewBufferDestination() (*BufferDestination, error) {

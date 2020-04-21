@@ -19,7 +19,7 @@ package util
 import (
 	"bytes"
 
-	"github.com/kubism-io/backup-operator/pkg/stream"
+	"github.com/kubism/backup-operator/pkg/stream"
 )
 
 func NewBufferSource(name string, data []byte) (*BufferSource, error) {

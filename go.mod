@@ -1,4 +1,4 @@
-module github.com/kubism-io/backup-operator
+module github.com/kubism/backup-operator
 
 go 1.13
 

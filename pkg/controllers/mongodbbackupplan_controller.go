@@ -21,8 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	backupv1alpha1 "github.com/kubism-io/backup-operator/api/v1alpha1"
-	"github.com/kubism-io/backup-operator/pkg/util"
+	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
+	"github.com/kubism/backup-operator/pkg/util"
 
 	"github.com/go-logr/logr"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"

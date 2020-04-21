@@ -30,7 +30,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	backupv1alpha1 "github.com/kubism-io/backup-operator/api/v1alpha1"
+	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

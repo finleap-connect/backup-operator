@@ -20,9 +20,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	awss3 "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/kubism-io/backup-operator/pkg/mongodb"
-	"github.com/kubism-io/backup-operator/pkg/s3"
-	"github.com/kubism-io/backup-operator/pkg/testutil"
+	"github.com/kubism/backup-operator/pkg/mongodb"
+	"github.com/kubism/backup-operator/pkg/s3"
+	"github.com/kubism/backup-operator/pkg/testutil"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

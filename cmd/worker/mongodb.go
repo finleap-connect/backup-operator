@@ -23,9 +23,9 @@ import (
 	"os"
 	"time"
 
-	backupv1alpha1 "github.com/kubism-io/backup-operator/api/v1alpha1"
-	"github.com/kubism-io/backup-operator/pkg/mongodb"
-	"github.com/kubism-io/backup-operator/pkg/s3"
+	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
+	"github.com/kubism/backup-operator/pkg/mongodb"
+	"github.com/kubism/backup-operator/pkg/s3"
 	"github.com/spf13/cobra"
 )
 

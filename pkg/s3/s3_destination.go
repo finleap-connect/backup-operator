@@ -20,8 +20,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/kubism-io/backup-operator/pkg/logger"
-	"github.com/kubism-io/backup-operator/pkg/stream"
+	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/kubism/backup-operator/pkg/stream"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"

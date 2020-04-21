@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kubism-io/backup-operator/pkg/logger"
-	"github.com/kubism-io/backup-operator/pkg/testutil"
+	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/kubism/backup-operator/pkg/testutil"
 	"github.com/onsi/ginkgo/reporters"
 	"github.com/ory/dockertest/v3"
 	dc "github.com/ory/dockertest/v3/docker"

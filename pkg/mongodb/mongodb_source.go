@@ -22,8 +22,8 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/kubism-io/backup-operator/pkg/logger"
-	"github.com/kubism-io/backup-operator/pkg/stream"
+	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/kubism/backup-operator/pkg/stream"
 	"github.com/mongodb/mongo-tools-common/options"
 	"github.com/mongodb/mongo-tools/mongodump"
 )

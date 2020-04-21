@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kubism-io/backup-operator/pkg/stream"
+	"github.com/kubism/backup-operator/pkg/stream"
 )
 
 func NewFileSource(fp string) (stream.Source, error) {

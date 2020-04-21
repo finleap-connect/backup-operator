@@ -21,7 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kubism-io/backup-operator/pkg/fs"
+	"github.com/kubism/backup-operator/pkg/fs"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

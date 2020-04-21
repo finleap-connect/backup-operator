@@ -22,7 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kubism-io/backup-operator/pkg/stream"
+	"github.com/kubism/backup-operator/pkg/stream"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

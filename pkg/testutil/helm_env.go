@@ -24,7 +24,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/kubism-io/backup-operator/pkg/logger"
+	"github.com/kubism/backup-operator/pkg/logger"
 )
 
 type HelmEnvConfig struct {

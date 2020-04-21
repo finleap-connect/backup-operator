@@ -19,8 +19,8 @@ package mongodb
 import (
 	"fmt"
 
-	"github.com/kubism-io/backup-operator/pkg/logger"
-	"github.com/kubism-io/backup-operator/pkg/stream"
+	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/kubism/backup-operator/pkg/stream"
 	"github.com/mongodb/mongo-tools/mongorestore"
 )
 

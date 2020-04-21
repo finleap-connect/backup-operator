@@ -20,8 +20,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kubism-io/backup-operator/pkg/logger"
-	"github.com/kubism-io/backup-operator/pkg/testutil"
+	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/kubism/backup-operator/pkg/testutil"
 	"github.com/onsi/ginkgo/reporters"
 
 	. "github.com/onsi/ginkgo"
