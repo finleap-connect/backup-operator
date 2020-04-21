@@ -132,6 +132,9 @@ func (s sortableObjectSlice) Len() int {
 }
 
 func (s sortableObjectSlice) Less(i, j int) bool {
+	if s[i].LastModified == s[j].LastModified {
+		return *s[i].Key > *s[j].Key
+	}
 	return s[i].LastModified.After(*s[j].LastModified)
 }
 

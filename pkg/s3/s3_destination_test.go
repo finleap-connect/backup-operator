@@ -50,9 +50,6 @@ var _ = Describe("S3Destination", func() {
 		Expect(buf.Bytes()).Should(Equal(data))
 	})
 	It("should ensure retention", func() {
-		// TODO: it looks like if this test is to fast it is flaky because of
-		//       too close timestamps, so it probably makes sense to enforce
-		//       lexical ordering before ordering by time
 		data := []byte("testcontent")
 		bucket := "bucketc"
 		dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket, "")
