@@ -14,15 +14,18 @@ stages:
 jobs:
   include:
   - stage: test
+    name: "Run tests"
     script:
     - make kind-create
     - make test
     after_success:
     - make coverage
   - stage: test
+    name: "Lint code"
     script:
     - make lint
   - stage: build
+    name: "Release docker images"
     if: branch = master AND tag IS present AND type != pull_request
     env:
     - secure: cGWzCN3cNv9kP7ibRlL90bUWAUHXK4qNRO0k71k35NoS+dWCpGxH2BVxAlGcIUao4VCiH/POhA69+A//bINC24cDAJMyEi+zS+q/HvxqnGpGIS1prJyR+5gZhiEs0KThBmkAKQghDAuLFIZtMQSVqlG4LGoDKWK7cCZ0i+kOnJWWyZ1knOLwyOxZtknL/cR4eaYHy6czObSnoWWV6sRL+d9DkDrssDhv3oQfERITPGjlWqIuVCvvIbd/TQxwjG2KUuEwruJpVZMsReyjZ6qkVZV8sH6RuRiYfGaVmvfiuQECiiTkL7MdsnKUWnRxHcd/zkVjeGnZsVtTk9icq/1gkKQgurQSYbMuxaS/LPM+Tj97UOhQQH8/KXJn/880lDAqn+3Jlx6ZZ5nT7XykszW3N5Qu8cz8qp5Tx2/lXIaIfiDNLXm8SdfYfeD7rJQj2McPn6lPvF8G4y14NQLiNxGzCivF2iiSC+BeqkwEYiU/ML7v5jxPoVjrCcDG3r0YbJbuvtgm/BP+tLU6xpgoSsfbce8T1J0NA3HzvJNRqi+7TyOyDMK6Le5dXXDd/F0Wm8PP93paZl7QszNTIcF0ncBCRc4EriZT2TrzGBR/2s31js2ICJAxJ0bfMLZ+CYOFsWkaM6z4OQ4OzN5VbNIN+IzpICX+pMkDB7MpQXAgRXFXjqU=
