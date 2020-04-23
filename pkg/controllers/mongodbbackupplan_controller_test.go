@@ -77,5 +77,13 @@ var _ = Describe("VaultSecretReconciler", func() {
 			res := mustReconcile(mustCreateNewMongoDBBackupPlan())
 			Expect(res.Requeue).To(Equal(false))
 		})
+		Context("which were deleted", func() {
+			plan := mustCreateNewMongoDBBackupPlan()
+			res := mustReconcile(plan)
+			Expect(res.Requeue).To(Equal(false))
+			Expect(testClient.Delete(ctx, plan)).Should(Succeed())
+			// mustReconcile(plan)
+		})
 	})
+
 })

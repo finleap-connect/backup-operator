@@ -31,9 +31,13 @@ import (
 )
 
 var (
-	pool     *dockertest.Pool
-	resource *dockertest.Resource
-	endpoint string
+	pool        *dockertest.Pool
+	srcResource *dockertest.Resource
+	dstResource *dockertest.Resource
+	srcURI      string
+	dstURI      string
+	s3Resource  *dockertest.Resource
+	endpoint    string
 )
 
 const (
@@ -49,10 +53,18 @@ func TestS3(t *testing.T) {
 
 var _ = BeforeSuite(func(done Done) {
 	var err error
-	log := logger.WithName("mongosetup")
-	By("bootstrapping both mongodbs and minio")
+	log := logger.WithName("s3setup")
+	By("bootstrapping both mongodbs")
 	pool, err = dockertest.NewPool("")
 	Expect(err).ToNot(HaveOccurred())
+	log.Info("spawn src mongo container")
+	srcResource, err = pool.Run("mongo", "4.2", nil)
+	Expect(err).ToNot(HaveOccurred())
+	srcURI = fmt.Sprintf("mongodb://localhost:%s", srcResource.GetPort("27017/tcp"))
+	log.Info("spawn dst mongo container")
+	dstResource, err = pool.Run("mongo", "4.2", nil)
+	Expect(err).ToNot(HaveOccurred())
+	dstURI = fmt.Sprintf("mongodb://localhost:%s", dstResource.GetPort("27017/tcp"))
 	log.Info("spawn minio container")
 	options := &dockertest.RunOptions{
 		Repository: "minio/minio",
@@ -66,17 +78,32 @@ var _ = BeforeSuite(func(done Done) {
 			fmt.Sprintf("MINIO_SECRET_KEY=%s", secretAccessKey),
 		},
 	}
-	resource, err = pool.RunWithOptions(options)
+	s3Resource, err = pool.RunWithOptions(options)
 	Expect(err).ToNot(HaveOccurred())
-	endpoint = fmt.Sprintf("localhost:%s", resource.GetPort("9000/tcp"))
+	endpoint = fmt.Sprintf("localhost:%s", s3Resource.GetPort("9000/tcp"))
+	log.Info("check src mongo connection", "uri", srcURI)
+	err = testutil.WaitForMongoDB(pool, srcURI)
+	Expect(err).ToNot(HaveOccurred())
+	log.Info("insert test data", "uri", srcURI)
+	err = testutil.InsertTestData(srcURI)
+	Expect(err).ToNot(HaveOccurred())
+	log.Info("check dst mongo connection", "uri", dstURI)
+	err = testutil.WaitForMongoDB(pool, dstURI)
+	Expect(err).ToNot(HaveOccurred())
+	log.Info("mongo databases ready")
 	log.Info("check minio connection", "endpoint", endpoint)
 	err = testutil.WaitForS3(pool, endpoint, accessKeyID, secretAccessKey)
 	Expect(err).ToNot(HaveOccurred())
+	log.Info("minio ready")
 	close(done)
 }, 60)
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
-	err := pool.Purge(resource)
-	Expect(err).ToNot(HaveOccurred())
+	err1 := pool.Purge(srcResource)
+	err2 := pool.Purge(dstResource)
+	err3 := pool.Purge(s3Resource)
+	Expect(err1).ToNot(HaveOccurred())
+	Expect(err2).ToNot(HaveOccurred())
+	Expect(err3).ToNot(HaveOccurred())
 })

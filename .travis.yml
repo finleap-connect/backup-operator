@@ -15,6 +15,7 @@ jobs:
   include:
   - stage: test
     script:
+    - make kind-create
     - make test
     after_success:
     - make coverage

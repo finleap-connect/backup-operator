@@ -24,9 +24,12 @@ WORKER_BIN ?= bin/worker
 DOCKER_TAG ?= latest
 DOCKER_IMG ?= kubismio/backup-operator:$(DOCKER_TAG)
 
+KIND_CLUSTER ?= test
+KIND_IMAGE ?= kindest/node:v1.16.4
+
 export
 
-.PHONY: all test lint fmt vet install uninstall deploy manifests docker-build docker-push tools
+.PHONY: all test lint fmt vet install uninstall deploy manifests docker-build docker-push tools docker-is-running kind-create kind-delete kind-is-running
 
 all: $(MANAGER_BIN) $(WORKER_BIN) tools
 
@@ -36,15 +39,11 @@ $(MANAGER_BIN): generate fmt vet
 $(WORKER_BIN): generate fmt vet
 	$(GO) build -o $(WORKER_BIN) ./cmd/worker/...
 
-test: generate fmt vet manifests $(GINKGO) $(KUBEBUILDER)
-	$(GINKGO) -r -v -cover pkg test/interaction
+test: generate fmt vet manifests docker-is-running kind-is-running $(GINKGO) $(KUBEBUILDER)
+	$(GINKGO) -r -v -cover pkg
 
-test-integration: generate manifests docker-build $(GINKGO) $(KIND)
-	$(GINKGO) -r -v test/integration
-
-test-%: generate fmt vet manifests $(GINKGO) $(KUBEBUILDER)
+test-%: generate fmt vet manifests docker-is-running kind-is-running $(GINKGO) $(KUBEBUILDER)
 	$(GINKGO) -r -v -cover pkg/$*
-
 
 coverage: $(GOVERALLS) $(GOVER)
 	$(GOVER)
@@ -86,6 +85,27 @@ docker-build:
 
 docker-push:
 	$(DOCKER) push $(DOCKER_IMG)
+
+docker-is-running:
+	@echo "Checking if docker is running..."
+	@{ \
+	set -e; \
+	$(DOCKER) version > /dev/null; \
+	}
+
+kind-create: $(KIND)
+	$(KIND) create cluster --image $(KIND_IMAGE) --name $(KIND_CLUSTER) --wait 2m
+
+kind-is-running: $(KIND)
+	@echo "Checking if kind cluster with name '$(KIND_CLUSTER)' is running..."
+	@{ \
+	set -e; \
+	$(KIND) get kubeconfig --name $(KIND_CLUSTER) > /dev/null; \
+	}
+
+kind-delete: $(KIND)
+	$(KIND) delete cluster --name $(KIND_CLUSTER)
+
 
 # Phony target to install all required tools into ${TOOLS_DIR}
 tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/kustomize $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/helm3 $(TOOLS_DIR)/goveralls $(TOOLS_DIR)/gover

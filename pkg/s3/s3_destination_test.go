@@ -24,6 +24,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/kubism/backup-operator/pkg/mongodb"
+	"github.com/kubism/backup-operator/pkg/testutil"
 	"github.com/kubism/backup-operator/pkg/util"
 
 	. "github.com/onsi/ginkgo"
@@ -102,4 +104,35 @@ var _ = Describe("S3Destination", func() {
 		Entry("4 out of 5", 4, 5),
 		Entry("5 out of 12", 5, 12),
 	)
+	It("should stream from MongoDBSource to S3Destination and back", func() {
+		name := "backup.tgz"
+		src, err := mongodb.NewMongoDBSource(srcURI, "", name)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(src).ToNot(BeNil())
+		bucket := "bucketc"
+		dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket, "")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dst).ToNot(BeNil())
+		err = src.Stream(dst)
+		Expect(err).ToNot(HaveOccurred())
+		input := s3.GetObjectInput{
+			Bucket: &bucket,
+			Key:    &name,
+		}
+		buf := aws.NewWriteAtBuffer([]byte{})
+		downloader := s3manager.NewDownloader(dst.Session)
+		_, err = downloader.Download(buf, &input)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(len(buf.Bytes())).Should(BeNumerically(">", 100))
+		src, err = NewS3Source(endpoint, accessKeyID, secretAccessKey, false, bucket, name)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(src).ToNot(BeNil())
+		mdst, err := mongodb.NewMongoDBDestination(dstURI)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(mdst).ToNot(BeNil())
+		err = src.Stream(mdst)
+		Expect(err).ToNot(HaveOccurred())
+		err = testutil.FindTestData(dstURI)
+		Expect(err).ToNot(HaveOccurred())
+	})
 })
