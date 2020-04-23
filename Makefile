@@ -94,7 +94,7 @@ docker-is-running:
 	}
 
 kind-create: $(KIND)
-	$(KIND) create cluster --image $(KIND_IMAGE) --name $(KIND_CLUSTER) --wait 2m
+	$(KIND) create cluster --image $(KIND_IMAGE) --name $(KIND_CLUSTER) --wait 5m
 
 kind-is-running: $(KIND)
 	@echo "Checking if kind cluster with name '$(KIND_CLUSTER)' is running..."
