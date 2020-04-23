@@ -27,6 +27,25 @@ import (
 	"github.com/kubism/backup-operator/pkg/logger"
 )
 
+// helm, err = testutil.NewHelmEnv(&testutil.HelmEnvConfig{
+// 	Kubeconfig: kind.Kubeconfig,
+// 	Stdout:     os.Stdout,
+// 	Stderr:     os.Stderr,
+// })
+// Expect(err).ToNot(HaveOccurred())
+// err = helm.RepoAdd("stable", "https://kubernetes-charts.storage.googleapis.com/")
+// Expect(err).ToNot(HaveOccurred())
+// err = helm.RepoAdd("bitnami", "https://charts.bitnami.com/bitnami")
+// Expect(err).ToNot(HaveOccurred())
+// err = helm.RepoUpdate()
+// Expect(err).ToNot(HaveOccurred())
+// err = helm.Install("a", "bitnami/mongodb")
+// Expect(err).ToNot(HaveOccurred())
+// err = helm.Install("b", "bitnami/mongodb")
+// Expect(err).ToNot(HaveOccurred())
+// err = helm.Install("c", "stable/minio")
+// Expect(err).ToNot(HaveOccurred())
+
 type HelmEnvConfig struct {
 	Kubeconfig string
 	Stdout     io.Writer

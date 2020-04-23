@@ -28,10 +28,10 @@ import (
 
 type UpdateMongoDBBackupPlanFunc = func(spec *backupv1alpha1.MongoDBBackupPlanSpec)
 
-func newMongoDBBackupPlan(updates ...UpdateMongoDBBackupPlanFunc) *backupv1alpha1.MongoDBBackupPlan {
+func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFunc) *backupv1alpha1.MongoDBBackupPlan {
 	plan := &backupv1alpha1.MongoDBBackupPlan{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: testNamespace,
+			Namespace: namespace,
 			Name:      newTestName(),
 		},
 		Spec: backupv1alpha1.MongoDBBackupPlanSpec{
@@ -56,33 +56,52 @@ func newMongoDBBackupPlan(updates ...UpdateMongoDBBackupPlanFunc) *backupv1alpha
 	return plan
 }
 
-func mustCreateNewMongoDBBackupPlan(updates ...UpdateMongoDBBackupPlanFunc) *backupv1alpha1.MongoDBBackupPlan {
-	plan := newMongoDBBackupPlan(updates...)
-	Expect(testClient.Create(context.Background(), plan)).Should(Succeed())
+func mustCreateNewMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFunc) *backupv1alpha1.MongoDBBackupPlan {
+	plan := newMongoDBBackupPlan(namespace, updates...)
+	Expect(k8sClient.Create(context.Background(), plan)).Should(Succeed())
 	return plan
 }
 
 var _ = Describe("VaultSecretReconciler", func() {
 	ctx := context.Background()
+	namespace := ""
+
+	BeforeEach(func() {
+		namespace = mustCreateNamespace()
+	})
+	AfterEach(func() {
+		mustDeleteNamespace(namespace)
+	})
+
 	It("can create MongoDBBackupPlans", func() {
 		Context("with missing data", func() {
-			Expect(testClient.Create(ctx, &backupv1alpha1.MongoDBBackupPlan{})).ShouldNot(Succeed())
+			Expect(k8sClient.Create(ctx, &backupv1alpha1.MongoDBBackupPlan{})).ShouldNot(Succeed())
 		})
 		Context("with valid data", func() {
-			mustCreateNewMongoDBBackupPlan()
+			plan := mustCreateNewMongoDBBackupPlan(namespace)
+			defer mustRemoveFinalizers(plan)
 		})
 	})
 	It("can process MongoDBBackupPlans", func() {
 		Context("which are just created", func() {
-			res := mustReconcile(mustCreateNewMongoDBBackupPlan())
+			plan := mustCreateNewMongoDBBackupPlan(namespace)
+			defer mustRemoveFinalizers(plan)
+			res := mustReconcile(plan)
 			Expect(res.Requeue).To(Equal(false))
 		})
 		Context("which were deleted", func() {
-			plan := mustCreateNewMongoDBBackupPlan()
+			plan := mustCreateNewMongoDBBackupPlan(namespace)
+			defer func() {
+				// If this test fails, we need to make sure the finalizers are removed
+				if err := k8sClient.Get(ctx, namespacedName(plan), plan); err == nil {
+					mustRemoveFinalizers(plan)
+				}
+			}()
 			res := mustReconcile(plan)
 			Expect(res.Requeue).To(Equal(false))
-			Expect(testClient.Delete(ctx, plan)).Should(Succeed())
-			// mustReconcile(plan)
+			Expect(k8sClient.Delete(ctx, plan)).Should(Succeed())
+			res = mustReconcile(plan)
+			Expect(res.Requeue).To(Equal(false))
 		})
 	})
 

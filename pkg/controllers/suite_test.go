@@ -17,17 +17,23 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,26 +43,24 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
+	"github.com/kubism/backup-operator/pkg/testutil"
 	// +kubebuilder:scaffold:imports
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-const (
-	testNamespace = "test"
-)
-
 type reconciler interface {
 	Reconcile(req ctrl.Request) (ctrl.Result, error)
 }
 
 var (
-	testConfig *rest.Config
-	testClient client.Client
-	testEnv    *envtest.Environment
+	config    *rest.Config
+	k8sClient client.Client
+	env       *envtest.Environment
+	kind      *testutil.KindEnv
 
-	testReconcilers map[string]reconciler
+	reconcilers map[string]reconciler
 )
 
 func TestAPIs(t *testing.T) {
@@ -67,30 +71,42 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(done Done) {
+	var err error
 	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
 
 	By("bootstrapping test environment")
-	testEnv = &envtest.Environment{
-		CRDDirectoryPaths: []string{filepath.Join("..", "..", "config", "crd", "bases")},
-	}
 
-	var err error
-	testConfig, err = testEnv.Start()
+	kind, err = testutil.NewKindEnv(&testutil.KindEnvConfig{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	})
 	Expect(err).ToNot(HaveOccurred())
-	Expect(testConfig).ToNot(BeNil())
+
+	config, err = clientcmd.BuildConfigFromFlags("", kind.Kubeconfig)
+	Expect(err).ToNot(HaveOccurred())
+	Expect(config).ToNot(BeNil())
+	useExistingCluster := true
+	env = &envtest.Environment{
+		Config:             config,
+		UseExistingCluster: &useExistingCluster,
+		CRDDirectoryPaths:  []string{filepath.Join("..", "..", "config", "crd", "bases")},
+	}
+	config, err = env.Start()
+	Expect(err).ToNot(HaveOccurred())
+	Expect(config).ToNot(BeNil())
 
 	err = backupv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
 
-	testClient, err = client.New(testConfig, client.Options{Scheme: scheme.Scheme})
+	k8sClient, err = client.New(config, client.Options{Scheme: scheme.Scheme})
 	Expect(err).ToNot(HaveOccurred())
-	Expect(testClient).ToNot(BeNil())
+	Expect(k8sClient).ToNot(BeNil())
 
-	testReconcilers = map[string]reconciler{
+	reconcilers = map[string]reconciler{
 		backupv1alpha1.MongoDBBackupPlanKind: &MongoDBBackupPlanReconciler{
-			Client:             testClient,
+			Client:             k8sClient,
 			Log:                logf.Log.WithName("controllers").WithName("MongoDBBackupPlan"),
 			Recorder:           &record.FakeRecorder{},
 			Scheme:             scheme.Scheme,
@@ -104,7 +120,7 @@ var _ = BeforeSuite(func(done Done) {
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
-	err := testEnv.Stop()
+	err := env.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })
 
@@ -137,7 +153,7 @@ func newRequestFor(obj runtime.Object) ctrl.Request {
 func mustReconcile(obj runtime.Object) ctrl.Result {
 	var reconciler reconciler
 	if _, ok := obj.(*backupv1alpha1.MongoDBBackupPlan); ok {
-		reconciler = testReconcilers[backupv1alpha1.MongoDBBackupPlanKind]
+		reconciler = reconcilers[backupv1alpha1.MongoDBBackupPlanKind]
 	} else {
 		panic("deadcode, otherwise reconciler was not properly registered for test")
 	}
@@ -145,4 +161,41 @@ func mustReconcile(obj runtime.Object) ctrl.Result {
 	res, err := reconciler.Reconcile(req)
 	Expect(err).ToNot(HaveOccurred())
 	return res
+}
+
+func createNamespace(name string) error {
+	ctx := context.Background()
+	return k8sClient.Create(ctx, &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	})
+}
+
+func deleteNamespace(name string) error {
+	ctx := context.Background()
+	return k8sClient.Delete(ctx, &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	})
+}
+
+func mustCreateNamespace() string {
+	name := newTestName()
+	Expect(createNamespace(name)).To(Succeed())
+	return name
+}
+
+func mustDeleteNamespace(name string) {
+	Expect(deleteNamespace(name)).To(Succeed())
+}
+
+func mustRemoveFinalizers(obj runtime.Object) {
+	ctx := context.Background()
+	Expect(k8sClient.Get(ctx, namespacedName(obj), obj)).To(Succeed())
+	accessor, err := meta.Accessor(obj)
+	Expect(err).ToNot(HaveOccurred())
+	accessor.SetFinalizers([]string{})
+	Expect(k8sClient.Update(ctx, obj)).To(Succeed())
 }
