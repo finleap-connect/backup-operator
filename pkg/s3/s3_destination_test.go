@@ -73,13 +73,13 @@ var _ = Describe("S3Destination", func() {
 				Bucket: &bucket,
 			}
 			objects := sortableObjectSlice{}
-			err = dst.Client.ListObjectsPages(input,
+			Expect(dst.Client.ListObjectsPages(input,
 				func(page *s3.ListObjectsOutput, lastPage bool) bool {
 					for _, obj := range page.Contents {
 						objects = append(objects, obj)
 					}
 					return true
-				})
+				})).To(Succeed())
 			sort.Sort(objects)
 			expected := []string{}
 			for _, obj := range objects[:retention] {

@@ -79,7 +79,7 @@ func (e *KindEnv) Close() error {
 	return os.RemoveAll(e.Dir)
 }
 
-func (e *KindEnv) setupCmd(cmd *exec.Cmd) {
+func (e *KindEnv) setupCmd(cmd *exec.Cmd) { // nolint:deadcode,unused
 	cmd.Stdout = e.Config.Stdout
 	cmd.Stderr = e.Config.Stderr
 }
