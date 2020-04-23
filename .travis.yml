@@ -19,6 +19,9 @@ jobs:
     - make test
     after_success:
     - make coverage
+  - stage: test
+    script:
+    - make lint
   - stage: build
     if: branch = master AND tag IS present AND type != pull_request
     env:
