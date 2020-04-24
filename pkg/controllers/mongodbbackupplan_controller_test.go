@@ -18,9 +18,12 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -63,7 +66,7 @@ func mustCreateNewMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBa
 	return plan
 }
 
-var _ = Describe("VaultSecretReconciler", func() {
+var _ = Describe("MongoDBBackupPlanReconciler", func() {
 	ctx := context.Background()
 	namespace := ""
 
@@ -119,5 +122,22 @@ var _ = Describe("VaultSecretReconciler", func() {
 		Entry("three times", 3),
 		Entry("five times", 5),
 	)
-
+	It("creates relevant Secret", func() {
+		plan := mustCreateNewMongoDBBackupPlan(namespace)
+		defer mustRemoveFinalizers(plan)
+		res := mustReconcile(plan)
+		Expect(res.Requeue).To(Equal(false))
+		Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
+		var secret corev1.Secret
+		Expect(k8sClient.Get(ctx, types.NamespacedName{
+			Namespace: plan.Status.Secret.Namespace,
+			Name:      plan.Status.Secret.Name,
+		}, &secret)).Should(Succeed())
+		Expect(secret.Data).NotTo(BeNil())
+		raw, ok := secret.Data[secretFieldName]
+		Expect(ok).To(Equal(true))
+		var content backupv1alpha1.MongoDBBackupPlan
+		Expect(json.Unmarshal(raw, &content)).Should(Succeed())
+		Expect(content.Spec).To(Equal(plan.Spec))
+	})
 })
