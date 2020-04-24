@@ -23,6 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -100,9 +101,23 @@ var _ = Describe("VaultSecretReconciler", func() {
 			res := mustReconcile(plan)
 			Expect(res.Requeue).To(Equal(false))
 			Expect(k8sClient.Delete(ctx, plan)).Should(Succeed())
+			Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
 			res = mustReconcile(plan)
 			Expect(res.Requeue).To(Equal(false))
 		})
 	})
+	DescribeTable("can process MongoDBBackupPlans multiple times",
+		func(count int) {
+			plan := mustCreateNewMongoDBBackupPlan(namespace)
+			defer mustRemoveFinalizers(plan)
+			for i := 0; i < count; i++ {
+				res := mustReconcile(plan)
+				Expect(res.Requeue).To(Equal(false))
+			}
+		},
+		Entry("twice", 2),
+		Entry("three times", 3),
+		Entry("five times", 5),
+	)
 
 })

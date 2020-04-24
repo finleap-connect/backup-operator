@@ -33,6 +33,7 @@ import (
 	ref "k8s.io/client-go/tools/reference"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 const (
@@ -100,10 +101,7 @@ func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 	// First we create or update the secret before checking the related CronJob
 	var secret corev1.Secret
 	// If secret does not exist, let's create a new name
-	if plan.Status.Secret == nil {
-		secret.ObjectMeta.Name = req.Name // TODO: maybe introduce a hash of content?
-		secret.ObjectMeta.Namespace = req.Namespace
-	} else {
+	if plan.Status.Secret != nil {
 		err := r.Get(ctx, types.NamespacedName{
 			Namespace: plan.Status.Secret.Namespace,
 			Name:      plan.Status.Secret.Name,
@@ -113,9 +111,15 @@ func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 			return ctrl.Result{}, err
 		} else if err != nil {
 			// Not found so let's reset the reference and let's re-create it
-			secret.ObjectMeta.Name = plan.Status.Secret.Name
-			secret.ObjectMeta.Namespace = plan.Status.Secret.Namespace
 			plan.Status.Secret = nil
+		}
+	}
+	if plan.Status.Secret == nil { // Checking here as above control flow can reset secret
+		secret.ObjectMeta.Name = req.Name // TODO: maybe introduce a hash of content?
+		secret.ObjectMeta.Namespace = req.Namespace
+		err := controllerutil.SetControllerReference(&plan, &secret, r.Scheme)
+		if err != nil {
+			return ctrl.Result{}, err
 		}
 	}
 	// Let's compute the content of the secret
@@ -154,6 +158,12 @@ func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 
 	// TODO: create or update cronjob
 	// TODO: if default destination is used, check if additional resources (e.g. secret) should be created
+
+	if err := r.Update(ctx, &plan); err != nil {
+		log.Error(err, "status update failed")
+		r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Failed to update MongoDBBackupPlan: %v", err))
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }

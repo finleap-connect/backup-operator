@@ -98,6 +98,7 @@ kind-create: $(KIND)
 
 kind-is-running: $(KIND)
 	@echo "Checking if kind cluster with name '$(KIND_CLUSTER)' is running..."
+	@echo "(e.g. create cluster via 'make kind-create')"
 	@{ \
 	set -e; \
 	$(KIND) get kubeconfig --name $(KIND_CLUSTER) > /dev/null; \
