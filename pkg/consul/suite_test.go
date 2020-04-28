@@ -24,22 +24,18 @@ import (
 	"github.com/kubism/backup-operator/pkg/testutil"
 	"github.com/onsi/ginkgo/reporters"
 	"github.com/ory/dockertest/v3"
-	dc "github.com/ory/dockertest/v3/docker"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var (
-	pool           *dockertest.Pool
-	consulResource *dockertest.Resource
-	consulAddr     string
-	s3Resource     *dockertest.Resource
-	s3Addr         string
+	pool        *dockertest.Pool
+	srcResource *dockertest.Resource
+	dstResource *dockertest.Resource
+	srcURI      string
+	dstURI      string
 )
-
-const accessKeyID = "TESTACCESSKEY"
-const secretAccessKey = "TESTSECRETKEY"
 
 func TestService(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -49,45 +45,39 @@ func TestService(t *testing.T) {
 
 var _ = BeforeSuite(func(done Done) {
 	var err error
-	log := logger.WithName("testsetup")
-	By("bootstrapping s3 and consul")
+	log := logger.WithName("consulsetup")
+
+	By("bootstrapping both consuls")
 	pool, err = dockertest.NewPool("")
 	Expect(err).ToNot(HaveOccurred())
-	log.Info("spawn consul container")
-	consulResource, err = pool.Run("consul", "1.7", nil)
-	Expect(err).ToNot(HaveOccurred())
-	consulAddr = fmt.Sprintf("localhost:%s", consulResource.GetPort("8500/tcp"))
-	log.Info("spawn s3 minio container")
-	options := &dockertest.RunOptions{
-		Repository: "minio/minio",
-		Tag:        "latest",
-		Cmd:        []string{"server", "/data"},
-		PortBindings: map[dc.Port][]dc.PortBinding{
-			"9000": {{HostPort: "9000"}},
-		},
-		Env: []string{
-			fmt.Sprintf("MINIO_ACCESS_KEY=%s", accessKeyID),
-			fmt.Sprintf("MINIO_SECRET_KEY=%s", secretAccessKey),
-		},
-	}
-	s3Resource, err = pool.RunWithOptions(options)
-	Expect(err).ToNot(HaveOccurred())
-	s3Addr = fmt.Sprintf("localhost:%s", s3Resource.GetPort("9000/tcp"))
 
-	err = testutil.WaitForConsul(pool, consulAddr)
+	log.Info("spawn src consul container")
+	srcResource, err = pool.Run("consul", "1.7", nil)
 	Expect(err).ToNot(HaveOccurred())
-	log.Info("consul ready")
+	srcURI = fmt.Sprintf("localhost:%s", srcResource.GetPort("8500/tcp"))
 
-	err = testutil.WaitForS3(pool, s3Addr, accessKeyID, secretAccessKey)
+	log.Info("spawn dst consul container")
+	dstResource, err = pool.Run("consul", "1.7", nil)
 	Expect(err).ToNot(HaveOccurred())
-	log.Info("s3 ready")
+	dstURI = fmt.Sprintf("localhost:%s", dstResource.GetPort("8500/tcp"))
+
+	err = testutil.WaitForConsul(pool, srcURI)
+	Expect(err).ToNot(HaveOccurred())
+	log.Info("src consul ready")
+
+	err = testutil.WaitForConsul(pool, dstURI)
+	Expect(err).ToNot(HaveOccurred())
+	log.Info("dst consul ready")
+
 	close(done)
 }, 60)
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
-	err1 := pool.Purge(consulResource)
-	err2 := pool.Purge(s3Resource)
-	Expect(err1).ToNot(HaveOccurred())
-	Expect(err2).ToNot(HaveOccurred())
+
+	var err error
+	err = pool.Purge(srcResource)
+	Expect(err).ToNot(HaveOccurred())
+	err = pool.Purge(dstResource)
+	Expect(err).ToNot(HaveOccurred())
 })

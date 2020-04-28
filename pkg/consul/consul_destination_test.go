@@ -15,3 +15,21 @@ limitations under the License.
 */
 
 package consul
+
+import (
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+var _ = Describe("ConsulDestination", func() {
+	It("should restore dump", func() {
+		src, err := NewConsulSource(srcURI, "", "", "test.snap")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(src).ToNot(BeNil())
+		dst, err := NewConsulDestination(dstURI, "", "")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dst).ToNot(BeNil())
+		err = src.Stream(dst)
+		Expect(err).ToNot(HaveOccurred())
+	})
+})

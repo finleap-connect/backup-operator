@@ -29,7 +29,7 @@ import (
 
 var _ = Describe("ConsulSource", func() {
 	It("should dump to file", func() {
-		src, err := NewConsulSource(consulAddr, "", "", "test.snap")
+		src, err := NewConsulSource(srcURI, "", "", "test.snap")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
 		dir, err := ioutil.TempDir("", "consulsrc")
