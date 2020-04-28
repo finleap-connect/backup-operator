@@ -28,9 +28,5 @@ type S3 struct {
 	// +optional
 	Bucket string `json:"bucket,omitempty"`
 	// +optional
-	AccessKeyID string `json:"accessKeyID,omitempty"`
-	// +optional
-	SecretAccessKey string `json:"secretAccessKey,omitempty"`
-	// +optional
 	UseSSL bool `json:"useSSL,omitempty"`
 }
