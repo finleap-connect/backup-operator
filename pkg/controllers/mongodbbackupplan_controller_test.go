@@ -47,11 +47,9 @@ func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFu
 			URI:                   "mongodb://localhost:27017",
 			Destination: &backupv1alpha1.Destination{
 				S3: &backupv1alpha1.S3{
-					Endpoint:        "localhost:8000",
-					Bucket:          "test",
-					UseSSL:          false,
-					AccessKeyID:     "A",
-					SecretAccessKey: "B",
+					Endpoint: "localhost:8000",
+					Bucket:   "test",
+					UseSSL:   false,
 				},
 			},
 		},
