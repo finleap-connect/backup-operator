@@ -6,6 +6,12 @@
 [![Coverage Status](https://coveralls.io/repos/github/kubism/backup-operator/badge.svg?branch=master)](https://coveralls.io/github/kubism/backup-operator?branch=master)
 [![Docker Image Version (latest semver)](https://img.shields.io/docker/v/kubismio/backup-operator.svg?sort=semver)](https://hub.docker.com/r/kubismio/backup-operator/tags)
 
+## Usage
+
+### Backups for consul
+
+See example configuration in [`backup_v1alpha1_consulbackupplan.yaml`](./config/samples/backup_v1alpha1_consulbackupplan.yaml).
+
 ## Development
 
 ### Kubebuilder
