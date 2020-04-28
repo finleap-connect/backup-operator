@@ -21,9 +21,11 @@ import (
 	"encoding/json"
 
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -107,6 +109,17 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 			Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
 			res = mustReconcile(plan)
 			Expect(res.Requeue).To(Equal(false))
+			// Check if the owned resources were freed
+			var secret corev1.Secret
+			Expect(client.IgnoreNotFound(k8sClient.Get(ctx, types.NamespacedName{
+				Namespace: plan.Status.Secret.Namespace,
+				Name:      plan.Status.Secret.Name,
+			}, &secret))).Should(Succeed())
+			var cronJob batchv1beta1.CronJob
+			Expect(client.IgnoreNotFound(k8sClient.Get(ctx, types.NamespacedName{
+				Namespace: plan.Status.CronJob.Namespace,
+				Name:      plan.Status.CronJob.Name,
+			}, &cronJob))).Should(Succeed())
 		})
 	})
 	DescribeTable("can process MongoDBBackupPlans multiple times",
@@ -139,5 +152,17 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 		var content backupv1alpha1.MongoDBBackupPlan
 		Expect(json.Unmarshal(raw, &content)).Should(Succeed())
 		Expect(content.Spec).To(Equal(plan.Spec))
+	})
+	It("creates relevant CronJob", func() {
+		plan := mustCreateNewMongoDBBackupPlan(namespace)
+		defer mustRemoveFinalizers(plan)
+		res := mustReconcile(plan)
+		Expect(res.Requeue).To(Equal(false))
+		Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
+		var cronJob batchv1beta1.CronJob
+		Expect(k8sClient.Get(ctx, types.NamespacedName{
+			Namespace: plan.Status.CronJob.Namespace,
+			Name:      plan.Status.CronJob.Name,
+		}, &cronJob)).Should(Succeed())
 	})
 })
