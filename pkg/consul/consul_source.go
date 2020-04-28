@@ -17,26 +17,75 @@ limitations under the License.
 package consul
 
 import (
+	"fmt"
+	"io"
+	"time"
+
 	"github.com/kubism/backup-operator/pkg/logger"
 	"github.com/kubism/backup-operator/pkg/stream"
+
+	consulApi "github.com/hashicorp/consul/api"
 )
 
 type consulSource struct {
-	URI      string
-	Username string
-	Password string
+	SnapName string
+	Client   *consulApi.Client
 	log      logger.Logger
 }
 
-func NewConsulSource(uri, username, password string) (stream.Source, error) {
+func NewConsulSource(uri, username, password, snapName string) (stream.Source, error) {
+	consulConf := consulApi.DefaultConfig()
+	consulConf.Address = uri
+	if username != "" && password != "" {
+		consulConf.HttpAuth = &consulApi.HttpBasicAuth{
+			Username: username,
+			Password: password,
+		}
+	}
+	client, err := consulApi.NewClient(consulConf)
+	if err != nil {
+		return nil, err
+	}
+
 	return &consulSource{
-		URI:      uri,
-		Username: username,
-		Password: password,
+		SnapName: snapName,
+		Client:   client,
 		log:      logger.WithName("consulsrc"),
 	}, nil
 }
 
 func (s *consulSource) Stream(dst stream.Destination) error {
-	panic("not implemented")
+	log := s.log
+
+	reader, _, err := s.Client.Snapshot().Save(&consulApi.QueryOptions{})
+	if err != nil {
+		log.Error(err, "Could not get snapshot from consul")
+		return err
+	}
+	defer reader.Close()
+	pr, pw := io.Pipe()
+
+	// start the backup in a separate routine
+	errc := make(chan error, 1)
+	defer close(errc)
+	go func() {
+		defer pw.Close()
+		log.Info("starting dump")
+		numBytes, err := io.Copy(pw, reader)
+		if err != nil {
+			errc <- err
+		}
+		log.Info("finished dump", "numBytes", numBytes)
+	}()
+	dsterr := dst.Store(stream.Object{
+		ID:   s.SnapName,
+		Data: pr,
+	})
+
+	select {
+	case srcerr := <-errc: // return src error if possible as well
+		return fmt.Errorf("dst error: %v; src error: %v", dsterr, srcerr)
+	case <-time.After(1 * time.Second):
+		return dsterr
+	}
 }

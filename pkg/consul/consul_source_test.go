@@ -15,3 +15,34 @@ limitations under the License.
 */
 
 package consul
+
+import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
+	"github.com/kubism/backup-operator/pkg/fs"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+var _ = Describe("ConsulSource", func() {
+	It("should dump to file", func() {
+		src, err := NewConsulSource(consulAddr, "", "", "test.snap")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(src).ToNot(BeNil())
+		dir, err := ioutil.TempDir("", "consulsrc")
+		Expect(err).ToNot(HaveOccurred())
+		defer os.RemoveAll(dir)
+		fp := filepath.Join(dir, "test.snap")
+		dst, err := fs.NewDirDestination(dir)
+		Expect(err).ToNot(HaveOccurred())
+		err = src.Stream(dst)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(fp).Should(BeAnExistingFile())
+		fi, err := os.Stat(fp)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(fi.Size()).Should(BeNumerically(">", 0))
+	})
+})
