@@ -50,10 +50,13 @@ func NewConsulDestination(uri, username, password string) (stream.Destination, e
 
 func (s *consulDestination) Store(obj stream.Object) error {
 	log := s.log
+
+	log.Info("restore starting")
 	err := s.Client.Snapshot().Restore(&consulApi.WriteOptions{}, obj.Data)
 	if err != nil {
-		log.Error(err, "Could not restore snapshot to consul")
+		log.Error(err, "Failed to write snapshot to consul")
 		return err
 	}
+	log.Info("restore finished")
 	return nil
 }
