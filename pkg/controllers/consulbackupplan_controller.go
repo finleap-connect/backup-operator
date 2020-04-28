@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -150,8 +151,63 @@ func (r *ConsulBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 	}
 	plan.Status.Secret = secretRef
 
-	// TODO: create or update cronjob
-	// TODO: if default destination is used, check if additional resources (e.g. secret) should be created
+	var cronJob batchv1beta1.CronJob
+	// If CronJob does not exist, let's create a new one
+	if plan.Status.CronJob != nil {
+		err := r.Get(ctx, types.NamespacedName{
+			Namespace: plan.Status.CronJob.Namespace,
+			Name:      plan.Status.CronJob.Name,
+		}, &cronJob)
+		if client.IgnoreNotFound(err) != nil { // Unexpected error
+			r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Checking owned CronJob failed with: %v", err))
+			return ctrl.Result{}, err
+		} else if err != nil {
+			// Not found so let's reset the reference and let's re-create it
+			plan.Status.CronJob = nil
+		}
+	}
+	if plan.Status.CronJob == nil { // Checking here as above control flow can reset CronJob
+		cronJob.ObjectMeta.Name = req.Name
+		cronJob.ObjectMeta.Namespace = req.Namespace
+		err := controllerutil.SetControllerReference(&plan, &cronJob, r.Scheme)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
+	// Properly construct the spec
+	err = UpdateCronJobSpec(&cronJob, secretRef,
+		plan.Spec.Schedule,
+		plan.Spec.ActiveDeadlineSeconds,
+		r.WorkerImage,
+		plan.Spec.Env,
+		"consul") // TODO: const?
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Finally create or update the cronjob
+	if plan.Status.CronJob != nil {
+		r.Recorder.Event(&plan, corev1.EventTypeNormal, "Info", "Updating CronJob")
+		err = r.Update(ctx, &cronJob)
+	} else {
+		r.Recorder.Event(&plan, corev1.EventTypeNormal, "Info", "Creating CronJob")
+		err = r.Create(ctx, &cronJob)
+	}
+	if err != nil {
+		log.Error(err, "failed to create or update CronJob")
+		r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Update or creation of CronJob failed with: %v", err))
+		return ctrl.Result{}, err
+	}
+	// Let's make sure to store the reference
+	cronJobRef, err := ref.GetReference(r.Scheme, &cronJob)
+	if err != nil {
+		log.Error(err, "failed to get CronJob reference")
+		r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Failed to get CronJob reference: %v", err))
+		return ctrl.Result{}, err
+
+	}
+	plan.Status.CronJob = cronJobRef
 
 	if err := r.Update(ctx, &plan); err != nil {
 		log.Error(err, "status update failed")
