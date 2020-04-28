@@ -36,11 +36,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-const (
-	finalizerName   = "backup.kubism.io"
-	secretFieldName = "plan.json"
-)
-
 // MongoDBBackupPlanReconciler reconciles a MongoDBBackupPlan object
 type MongoDBBackupPlanReconciler struct {
 	client.Client

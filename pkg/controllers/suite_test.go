@@ -113,6 +113,14 @@ var _ = BeforeSuite(func(done Done) {
 			DefaultDestination: nil, // TODO
 			WorkerImage:        "test",
 		},
+		backupv1alpha1.ConsulBackupPlanKind: &ConsulBackupPlanReconciler{
+			Client:             k8sClient,
+			Log:                logf.Log.WithName("controllers").WithName("ConsulBackupPlan"),
+			Recorder:           &record.FakeRecorder{},
+			Scheme:             scheme.Scheme,
+			DefaultDestination: nil, // TODO
+			WorkerImage:        "test",
+		},
 	}
 
 	close(done)
@@ -154,6 +162,8 @@ func mustReconcile(obj runtime.Object) ctrl.Result {
 	var reconciler reconciler
 	if _, ok := obj.(*backupv1alpha1.MongoDBBackupPlan); ok {
 		reconciler = reconcilers[backupv1alpha1.MongoDBBackupPlanKind]
+	} else if _, ok := obj.(*backupv1alpha1.ConsulBackupPlan); ok {
+		reconciler = reconcilers[backupv1alpha1.ConsulBackupPlanKind]
 	} else {
 		panic("deadcode, otherwise reconciler was not properly registered for test")
 	}
