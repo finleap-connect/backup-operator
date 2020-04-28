@@ -50,8 +50,18 @@ var consulCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		username := ""
+		password := ""
+		if v := os.Getenv("CONSUL_HTTP_USERNAME"); v != "" {
+			username = v
+		}
+		if v := os.Getenv("CONSUL_HTTP_PASSWORD"); v != "" {
+			username = v
+		}
+
 		name := fmt.Sprintf("backup-%s.tgz", time.Now().Format("20060102150405"))
-		src, err := consul.NewConsulSource(plan.Spec.URI, "", "", name)
+		src, err := consul.NewConsulSource(plan.Spec.URI, username, password, name)
 		if err != nil {
 			return err
 		}
