@@ -45,13 +45,9 @@ spec:
                 s3:
                   description: Configuration for S3 as backup target
                   properties:
-                    accessKeyID:
-                      type: string
                     bucket:
                       type: string
                     endpoint:
-                      type: string
-                    secretAccessKey:
                       type: string
                     useSSL:
                       type: boolean
