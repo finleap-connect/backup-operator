@@ -27,25 +27,6 @@ import (
 	"github.com/kubism/backup-operator/pkg/logger"
 )
 
-// helm, err = testutil.NewHelmEnv(&testutil.HelmEnvConfig{
-// 	Kubeconfig: kind.Kubeconfig,
-// 	Stdout:     os.Stdout,
-// 	Stderr:     os.Stderr,
-// })
-// Expect(err).ToNot(HaveOccurred())
-// err = helm.RepoAdd("stable", "https://kubernetes-charts.storage.googleapis.com/")
-// Expect(err).ToNot(HaveOccurred())
-// err = helm.RepoAdd("bitnami", "https://charts.bitnami.com/bitnami")
-// Expect(err).ToNot(HaveOccurred())
-// err = helm.RepoUpdate()
-// Expect(err).ToNot(HaveOccurred())
-// err = helm.Install("a", "bitnami/mongodb")
-// Expect(err).ToNot(HaveOccurred())
-// err = helm.Install("b", "bitnami/mongodb")
-// Expect(err).ToNot(HaveOccurred())
-// err = helm.Install("c", "stable/minio")
-// Expect(err).ToNot(HaveOccurred())
-
 type HelmEnvConfig struct {
 	Kubeconfig string
 	Stdout     io.Writer
@@ -97,9 +78,10 @@ func (e *HelmEnv) RepoUpdate() error {
 	return cmd.Run()
 }
 
-func (e *HelmEnv) Install(release, chart string, args ...string) error {
-	e.log.Info("installing chart", "release", release, "chart", chart, "args", args)
-	args = append([]string{"install", "--wait", release, chart}, args...)
+func (e *HelmEnv) Install(namespace, release, chart string, args ...string) error {
+	log := e.log.WithValues("namespace", namespace, "release", release, "chart", chart, "args", args)
+	log.Info("installing chart")
+	args = append([]string{"install", "--namespace", namespace, "--wait", release, chart}, args...)
 	cmd := exec.Command(e.Bin, args...)
 	e.setupCmd(cmd)
 	return cmd.Run()

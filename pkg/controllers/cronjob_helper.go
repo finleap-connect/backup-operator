@@ -17,6 +17,8 @@ limitations under the License.
 package controllers
 
 import (
+	"path/filepath"
+
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -24,7 +26,11 @@ import (
 const (
 	WorkerContainerName    = "worker"
 	WorkerConfigVolumeName = "config"
-	WorkerConfigMountPath  = "/etc/worker/config.json"
+	WorkerConfigMountPath  = "/etc/worker"
+)
+
+var (
+	WorkerConfigFilePath = filepath.Join(WorkerConfigMountPath, "plan.json")
 )
 
 func UpdateCronJobSpec(cronJob *batchv1beta1.CronJob, secretRef *corev1.ObjectReference, schedule string, activeDeadlineSeconds int64, image string, env []corev1.EnvVar, subcmd string) error {
@@ -44,10 +50,11 @@ func UpdateCronJobSpec(cronJob *batchv1beta1.CronJob, secretRef *corev1.ObjectRe
 	}
 	podSpec.Containers = []corev1.Container{
 		{
-			Name:  WorkerContainerName,
-			Image: image,
-			Env:   env,
-			Args:  []string{},
+			Name:    WorkerContainerName,
+			Image:   image,
+			Env:     env,
+			Command: []string{"/worker"},
+			Args:    []string{subcmd, WorkerConfigFilePath},
 			VolumeMounts: []corev1.VolumeMount{
 				{
 					Name:      WorkerConfigVolumeName,

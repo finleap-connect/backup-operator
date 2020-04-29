@@ -19,8 +19,10 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
+	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +32,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+)
+
+const (
+	accessKeyID     = "TESTACCESSKEY"
+	secretAccessKey = "TESTSECRETKEY"
 )
 
 type UpdateMongoDBBackupPlanFunc = func(spec *backupv1alpha1.MongoDBBackupPlanSpec)
@@ -50,8 +57,8 @@ func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFu
 					Endpoint:        "localhost:8000",
 					Bucket:          "test",
 					UseSSL:          false,
-					AccessKeyID:     "A",
-					SecretAccessKey: "B",
+					AccessKeyID:     accessKeyID,
+					SecretAccessKey: secretAccessKey,
 				},
 			},
 		},
@@ -164,5 +171,63 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 			Namespace: plan.Status.CronJob.Namespace,
 			Name:      plan.Status.CronJob.Name,
 		}, &cronJob)).Should(Succeed())
+	})
+	It("works end-to-end", func() {
+		if !e2e {
+			Skip("TEST_E2E not set")
+		}
+		Expect(helm.Install(namespace, "src", "bitnami/mongodb")).Should(Succeed())
+		Expect(helm.Install(namespace, "dst", "stable/minio", "--set", fmt.Sprintf("accessKey=%s,secretKey=%s,readinessProbe.initialDelaySeconds=10", accessKeyID, secretAccessKey))).Should(Succeed())
+		Expect(kind.LoadDockerImage(workerImage)).Should(Succeed())
+		var mongodbSecret corev1.Secret
+		Expect(k8sClient.Get(ctx, types.NamespacedName{
+			Namespace: namespace,
+			Name:      "src-mongodb",
+		}, &mongodbSecret)).Should(Succeed())
+		plan := mustCreateNewMongoDBBackupPlan(namespace, func(spec *backupv1alpha1.MongoDBBackupPlanSpec) {
+			spec.Env = []corev1.EnvVar{
+				{
+					Name: "MONGODB_ROOT_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: mongodbSecret.ObjectMeta.Name,
+							},
+							Key: "mongodb-root-password",
+						},
+					},
+				},
+			}
+			spec.URI = "mongodb://root:$MONGODB_ROOT_PASSWORD@src-mongodb:27017/admin"
+			spec.Destination.S3.Endpoint = "http://dst-minio:9000"
+		})
+		defer mustRemoveFinalizers(plan)
+		res := mustReconcile(plan)
+		Expect(res.Requeue).To(Equal(false))
+		Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
+		var cronJob batchv1beta1.CronJob
+		Expect(k8sClient.Get(ctx, types.NamespacedName{
+			Namespace: plan.Status.CronJob.Namespace,
+			Name:      plan.Status.CronJob.Name,
+		}, &cronJob)).Should(Succeed())
+		spawned := false
+		for !spawned {
+			Expect(k8sClient.Get(ctx, namespacedName(&cronJob), &cronJob)).Should(Succeed())
+			if len(cronJob.Status.Active) > 0 {
+				spawned = true
+			}
+		}
+		var job batchv1.Job
+		job.ObjectMeta.Name = cronJob.Status.Active[0].Name
+		job.ObjectMeta.Namespace = cronJob.Status.Active[0].Namespace
+		done := false
+		for !done {
+			Expect(k8sClient.Get(ctx, namespacedName(&job), &job)).Should(Succeed())
+			Expect(job.Status.Failed).Should(BeNumerically("==", 0))
+			if job.Status.Succeeded == 1 {
+				done = true
+			}
+		}
+		// TODO: check content of S3? Test retention?
 	})
 })
