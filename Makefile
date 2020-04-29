@@ -27,6 +27,9 @@ DOCKER_IMG ?= kubismio/backup-operator:$(DOCKER_TAG)
 KIND_CLUSTER ?= test
 KIND_IMAGE ?= kindest/node:v1.16.4
 
+# Options to control behavior
+TEST_E2E ?=
+
 export
 
 .PHONY: all test lint fmt vet install uninstall deploy manifests docker-build docker-push tools docker-is-running kind-create kind-delete kind-is-running
@@ -39,11 +42,16 @@ $(MANAGER_BIN): generate fmt vet
 $(WORKER_BIN): generate fmt vet
 	$(GO) build -o $(WORKER_BIN) ./cmd/worker/...
 
-test: generate fmt vet manifests docker-is-running kind-is-running $(GINKGO) $(KUBEBUILDER)
+test: generate fmt vet manifests docker-is-running kind-is-running check-e2e $(GINKGO) $(KUBEBUILDER)
 	$(GINKGO) -r -v -cover pkg
 
-test-%: generate fmt vet manifests docker-is-running kind-is-running $(GINKGO) $(KUBEBUILDER)
+test-%: generate fmt vet manifests docker-is-running kind-is-running check-e2e $(GINKGO) $(KUBEBUILDER)
 	$(GINKGO) -r -v -cover pkg/$*
+
+check-e2e:
+ifdef TEST_E2E
+	$(MAKE) docker-build
+endif
 
 coverage: $(GOVERALLS) $(GOVER)
 	$(GOVER)

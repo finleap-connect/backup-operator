@@ -59,8 +59,13 @@ var (
 	k8sClient client.Client
 	env       *envtest.Environment
 	kind      *testutil.KindEnv
+	helm      *testutil.HelmEnv
 
 	reconcilers map[string]reconciler
+
+	workerImage string = os.Getenv("DOCKER_IMG")
+
+	e2e bool = os.Getenv("TEST_E2E") != ""
 )
 
 func TestAPIs(t *testing.T) {
@@ -81,6 +86,22 @@ var _ = BeforeSuite(func(done Done) {
 		Stderr: os.Stderr,
 	})
 	Expect(err).ToNot(HaveOccurred())
+
+	if e2e { // Only required in e2e tests
+		helm, err = testutil.NewHelmEnv(&testutil.HelmEnvConfig{
+			Kubeconfig: kind.Kubeconfig,
+			Stdout:     os.Stdout,
+			Stderr:     os.Stderr,
+		})
+		Expect(err).ToNot(HaveOccurred())
+		err = helm.RepoAdd("stable", "https://kubernetes-charts.storage.googleapis.com/")
+		Expect(err).ToNot(HaveOccurred())
+		err = helm.RepoAdd("bitnami", "https://charts.bitnami.com/bitnami")
+		Expect(err).ToNot(HaveOccurred())
+		err = helm.RepoUpdate()
+		Expect(err).ToNot(HaveOccurred())
+
+	}
 
 	config, err = clientcmd.BuildConfigFromFlags("", kind.Kubeconfig)
 	Expect(err).ToNot(HaveOccurred())
@@ -111,7 +132,7 @@ var _ = BeforeSuite(func(done Done) {
 			Recorder:           &record.FakeRecorder{},
 			Scheme:             scheme.Scheme,
 			DefaultDestination: nil, // TODO
-			WorkerImage:        "test",
+			WorkerImage:        workerImage,
 		},
 		backupv1alpha1.ConsulBackupPlanKind: &ConsulBackupPlanReconciler{
 			Client:             k8sClient,
@@ -130,6 +151,12 @@ var _ = AfterSuite(func() {
 	By("tearing down the test environment")
 	err := env.Stop()
 	Expect(err).ToNot(HaveOccurred())
+	if kind != nil {
+		kind.Close()
+	}
+	if helm != nil {
+		helm.Close()
+	}
 })
 
 // Helper
