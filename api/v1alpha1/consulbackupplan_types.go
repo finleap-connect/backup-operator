@@ -46,9 +46,17 @@ type ConsulBackupPlanSpec struct {
 	// Environments for the CronJob
 	Env []corev1.EnvVar `json:"env,omitempty"`
 
-	// Fully qualifying Consul URI connection string. Environment variables
+	// Address of Consul. Environment variables
 	// will be evaluated before usage.
-	URI string `json:"uri"`
+	Address string `json:"address"`
+
+	// +optional
+	// Username to authenticate with consul
+	Username string `json:"username,omitempty"`
+
+	// +optional
+	// Password to authenticate with consul
+	Password string `json:"password,omitempty"`
 
 	// +optional
 	// Destination for the backup. If none is provided the default destination

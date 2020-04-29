@@ -38,6 +38,10 @@ spec:
               format: int64
               minimum: 1
               type: integer
+            address:
+              description: Address of Consul. Environment variables will be evaluated
+                before usage.
+              type: string
             destination:
               description: Destination for the backup. If none is provided the default
                 destination will be tried.
@@ -45,9 +49,13 @@ spec:
                 s3:
                   description: Configuration for S3 as backup target
                   properties:
+                    accessKeyID:
+                      type: string
                     bucket:
                       type: string
                     endpoint:
+                      type: string
+                    secretAccessKey:
                       type: string
                     useSSL:
                       type: boolean
@@ -156,6 +164,9 @@ spec:
                 - name
                 type: object
               type: array
+            password:
+              description: Password to authenticate with consul
+              type: string
             retention:
               description: Number of backups to keep
               format: int64
@@ -164,15 +175,14 @@ spec:
             schedule:
               description: Schedule in cron format
               type: string
-            uri:
-              description: Fully qualifying Consul URI connection string. Environment
-                variables will be evaluated before usage.
+            username:
+              description: Username to authenticate with consul
               type: string
           required:
           - activeDeadlineSeconds
+          - address
           - retention
           - schedule
-          - uri
           type: object
         status:
           description: ConsulBackupPlanStatus defines the observed state of ConsulBackupPlan

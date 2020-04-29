@@ -51,32 +51,14 @@ var consulCmd = &cobra.Command{
 			return err
 		}
 
-		username := ""
-		if v := os.Getenv("CONSUL_HTTP_USERNAME"); v != "" {
-			username = v
-		}
-		password := ""
-		if v := os.Getenv("CONSUL_HTTP_PASSWORD"); v != "" {
-			password = v
-		}
-
-		accessKeyID := ""
-		if v := os.Getenv("S3_SECRET_ACCESS_KEY"); v != "" {
-			accessKeyID = v
-		}
-		secretAccessKey := ""
-		if v := os.Getenv("S3_SECRET_ACCESS_KEY"); v != "" {
-			secretAccessKey = v
-		}
-
 		name := fmt.Sprintf("backup-%s.tgz", time.Now().Format("20060102150405"))
-		src, err := consul.NewConsulSource(plan.Spec.URI, username, password, name)
+		src, err := consul.NewConsulSource(plan.Spec.Address, plan.Spec.Username, plan.Spec.Password, name)
 		if err != nil {
 			return err
 		}
 		prefix := fmt.Sprintf("%s/%s", plan.ObjectMeta.Namespace, plan.ObjectMeta.Name)
 		s3c := plan.Spec.Destination.S3
-		dst, err := s3.NewS3Destination(s3c.Endpoint, accessKeyID, secretAccessKey, s3c.UseSSL, s3c.Bucket, prefix)
+		dst, err := s3.NewS3Destination(s3c.Endpoint, s3c.AccessKeyID, s3c.SecretAccessKey, s3c.UseSSL, s3c.Bucket, prefix)
 		if err != nil {
 			return err
 		}

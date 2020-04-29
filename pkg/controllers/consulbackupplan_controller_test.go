@@ -42,12 +42,14 @@ func newConsulBackupPlan(namespace string, updates ...UpdateConsulBackupPlanFunc
 			Schedule:              "* * * * *",
 			ActiveDeadlineSeconds: 3600,
 			Retention:             2,
-			URI:                   "localhost:27017",
+			Address:               "localhost:27017",
 			Destination: &backupv1alpha1.Destination{
 				S3: &backupv1alpha1.S3{
-					Endpoint: "localhost:8000",
-					Bucket:   "test",
-					UseSSL:   false,
+					Endpoint:        "localhost:8000",
+					Bucket:          "test",
+					UseSSL:          false,
+					AccessKeyID:     "a",
+					SecretAccessKey: "b",
 				},
 			},
 		},
