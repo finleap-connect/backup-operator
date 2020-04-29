@@ -26,6 +26,7 @@ import (
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
 	"github.com/kubism/backup-operator/pkg/consul"
 	"github.com/kubism/backup-operator/pkg/s3"
+	"github.com/kubism/backup-operator/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -52,13 +53,14 @@ var consulCmd = &cobra.Command{
 		}
 
 		name := fmt.Sprintf("backup-%s.tgz", time.Now().Format("20060102150405"))
-		src, err := consul.NewConsulSource(plan.Spec.Address, plan.Spec.Username, plan.Spec.Password, name)
+		src, err := consul.NewConsulSource(plan.Spec.Address, util.FallbackToEnv(plan.Spec.Username, "CONSUL_HTTP_USERNAME"), util.FallbackToEnv(plan.Spec.Password, "CONSUL_HTTP_PASSWORD"), name)
 		if err != nil {
 			return err
 		}
 		prefix := fmt.Sprintf("%s/%s", plan.ObjectMeta.Namespace, plan.ObjectMeta.Name)
 		s3c := plan.Spec.Destination.S3
-		dst, err := s3.NewS3Destination(s3c.Endpoint, s3c.AccessKeyID, s3c.SecretAccessKey, s3c.UseSSL, s3c.Bucket, prefix)
+
+		dst, err := s3.NewS3Destination(s3c.Endpoint, util.FallbackToEnv(s3c.AccessKeyID, "S3_SECRET_ACCESS_KEY"), util.FallbackToEnv(s3c.SecretAccessKey, "S3_SECRET_ACCESS_KEY"), s3c.UseSSL, s3c.Bucket, prefix)
 		if err != nil {
 			return err
 		}

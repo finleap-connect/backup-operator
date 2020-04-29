@@ -26,6 +26,7 @@ import (
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
 	"github.com/kubism/backup-operator/pkg/mongodb"
 	"github.com/kubism/backup-operator/pkg/s3"
+	"github.com/kubism/backup-operator/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -57,7 +58,7 @@ var mongodbCmd = &cobra.Command{
 		}
 		prefix := fmt.Sprintf("%s/%s", plan.ObjectMeta.Namespace, plan.ObjectMeta.Name)
 		s3c := plan.Spec.Destination.S3
-		dst, err := s3.NewS3Destination(s3c.Endpoint, s3c.AccessKeyID, s3c.SecretAccessKey, s3c.UseSSL, s3c.Bucket, prefix)
+		dst, err := s3.NewS3Destination(s3c.Endpoint, util.FallbackToEnv(s3c.AccessKeyID, "S3_SECRET_ACCESS_KEY"), util.FallbackToEnv(s3c.SecretAccessKey, "S3_SECRET_ACCESS_KEY"), s3c.UseSSL, s3c.Bucket, prefix)
 		if err != nil {
 			return err
 		}
