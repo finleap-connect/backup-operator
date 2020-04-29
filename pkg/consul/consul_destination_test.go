@@ -14,23 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package consul
 
-type Destination struct {
-	// +optional
-	// Configuration for S3 as backup target
-	S3 *S3 `json:"s3,omitempty"`
-}
+import (
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
 
-type S3 struct {
-	// +optional
-	Endpoint string `json:"endpoint,omitempty"`
-	// +optional
-	Bucket string `json:"bucket,omitempty"`
-	// +optional
-	UseSSL bool `json:"useSSL,omitempty"`
-	// +optional
-	AccessKeyID string `json:"accessKeyID,omitempty"`
-	// +optional
-	SecretAccessKey string `json:"secretAccessKey,omitempty"`
-}
+var _ = Describe("ConsulDestination", func() {
+	It("should restore dump", func() {
+		src, err := NewConsulSource(srcURI, "", "", "test.snap")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(src).ToNot(BeNil())
+		dst, err := NewConsulDestination(dstURI, "", "")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dst).ToNot(BeNil())
+		err = src.Stream(dst)
+		Expect(err).ToNot(HaveOccurred())
+	})
+})

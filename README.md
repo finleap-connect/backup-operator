@@ -6,6 +6,12 @@
 [![Coverage Status](https://coveralls.io/repos/github/kubism/backup-operator/badge.svg?branch=master)](https://coveralls.io/github/kubism/backup-operator?branch=master)
 [![Docker Image Version (latest semver)](https://img.shields.io/docker/v/kubismio/backup-operator.svg?sort=semver)](https://hub.docker.com/r/kubismio/backup-operator/tags)
 
+## Usage
+
+### Backups for consul
+
+The backup of consul to S3 is supported at the moment. See example configuration in [`backup_v1alpha1_consulbackupplan.yaml`](./config/samples/backup_v1alpha1_consulbackupplan.yaml).
+
 ## Development
 
 ### Kubebuilder
@@ -23,3 +29,11 @@ of kubebuilder and their plugin capabilities.
 
 * When using the kubebuilder CLI to create a new API [`main.go`](./cmd/manager/main.go)
 has a wrong controllers import path and has to be fixed manually afterwards.
+
+### Adding a new API
+
+As mentioned before you have to use the wrapper ([`tools/kubebuilder`](./tools/kubebuilder)) to create a new API with the following command (see the official [kubebuilder docs](https://book.kubebuilder.io/cronjob-tutorial/new-api.html)):
+
+```bash
+./tools/kubebuilder create api --group backup --version v1alpha1 --kind <SomeBackupPlan>
+```

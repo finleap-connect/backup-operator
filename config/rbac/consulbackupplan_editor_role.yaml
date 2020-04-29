@@ -1,0 +1,24 @@
+# permissions for end users to edit consulbackupplans.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: consulbackupplan-editor-role
+rules:
+- apiGroups:
+  - backup.kubism.io
+  resources:
+  - consulbackupplans
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.kubism.io
+  resources:
+  - consulbackupplans/status
+  verbs:
+  - get

@@ -4,4 +4,7 @@ resources:
 - group: backup
   kind: MongoDBBackupPlan
   version: v1alpha1
+- group: backup
+  kind: ConsulBackupPlan
+  version: v1alpha1
 version: "2"

@@ -9,6 +9,26 @@ rules:
 - apiGroups:
   - backup.kubism.io
   resources:
+  - consulbackupplans
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backup.kubism.io
+  resources:
+  - consulbackupplans/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backup.kubism.io
+  resources:
   - mongodbbackupplans
   verbs:
   - create

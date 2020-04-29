@@ -21,13 +21,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
-	"github.com/kubism/backup-operator/pkg/util"
-
 	"github.com/go-logr/logr"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
@@ -35,10 +31,13 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
+	"github.com/kubism/backup-operator/pkg/util"
 )
 
-// MongoDBBackupPlanReconciler reconciles a MongoDBBackupPlan object
-type MongoDBBackupPlanReconciler struct {
+// ConsulBackupPlanReconciler reconciles a ConsulBackupPlan object
+type ConsulBackupPlanReconciler struct {
 	client.Client
 	Log                logr.Logger
 	Scheme             *runtime.Scheme
@@ -47,16 +46,16 @@ type MongoDBBackupPlanReconciler struct {
 	WorkerImage        string
 }
 
-// +kubebuilder:rbac:groups=backup.kubism.io,resources=mongodbbackupplans,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.kubism.io,resources=mongodbbackupplans/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.kubism.io,resources=consulbackupplans,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=backup.kubism.io,resources=consulbackupplans/status,verbs=get;update;patch
 
-func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *ConsulBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
-	log := r.Log.WithValues("mongodbbackupplan", req.NamespacedName)
+	log := r.Log.WithValues("consulbackupplan", req.NamespacedName)
 
-	var plan backupv1alpha1.MongoDBBackupPlan
+	var plan backupv1alpha1.ConsulBackupPlan
 	if err := r.Get(ctx, req.NamespacedName, &plan); err != nil {
-		log.Error(err, "unable to fetch MongoDBBackupPlan")
+		log.Error(err, "unable to fetch ConsulBackupPlan")
 		// We'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
 		// on deleted requests.
@@ -78,34 +77,8 @@ func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 		r.Recorder.Event(&plan, corev1.EventTypeNormal, "Info", "Deletion in progress")
 		if util.ContainsString(plan.ObjectMeta.Finalizers, finalizerName) {
 			// Finalizer is present, so let's cleanup our owned resources
-			if plan.Status.Secret != nil {
-				if err := r.Delete(ctx, &corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: plan.Status.Secret.Namespace,
-						Name:      plan.Status.Secret.Name,
-					},
-				}); client.IgnoreNotFound(err) != nil {
-					log.Error(err, "failed to remove owned Secret")
-					r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", "Failed to remove owned Secret")
-					return ctrl.Result{}, err
-				} else {
-					plan.Status.Secret = nil
-				}
-			}
-			if plan.Status.CronJob != nil {
-				if err := r.Delete(ctx, &batchv1beta1.CronJob{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: plan.Status.CronJob.Namespace,
-						Name:      plan.Status.CronJob.Name,
-					},
-				}); client.IgnoreNotFound(err) != nil {
-					log.Error(err, "failed to remove owned CronJob")
-					r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", "Failed to remove owned CronJob")
-					return ctrl.Result{}, err
-				} else {
-					plan.Status.CronJob = nil
-				}
-			}
+			// TODO: delete cronjob
+			// TODO: if default destination is used, check if additional resources (e.g. secret) should be freed
 			// Finally remove the finalizer
 			plan.ObjectMeta.Finalizers = util.RemoveString(plan.ObjectMeta.Finalizers, finalizerName)
 			if err := r.Update(ctx, &plan); err != nil {
@@ -119,18 +92,17 @@ func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 	}
 
 	// TODO: validate plan
-	// TODO: if default destination is used, check if additional resources (e.g. secret) should be created
 
-	// First we create or update the Secret before checking the related CronJob
+	// First we create or update the secret before checking the related CronJob
 	var secret corev1.Secret
-	// If Secret does not exist, let's create a new one
+	// If secret does not exist, let's create a new name
 	if plan.Status.Secret != nil {
 		err := r.Get(ctx, types.NamespacedName{
 			Namespace: plan.Status.Secret.Namespace,
 			Name:      plan.Status.Secret.Name,
 		}, &secret)
 		if client.IgnoreNotFound(err) != nil { // Unexpected error
-			r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Checking owned Secret failed with: %v", err))
+			r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Checking owned secret failed with: %v", err))
 			return ctrl.Result{}, err
 		} else if err != nil {
 			// Not found so let's reset the reference and let's re-create it
@@ -145,7 +117,7 @@ func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 			return ctrl.Result{}, err
 		}
 	}
-	// Let's compute the content of the Secret
+	// Let's compute the content of the secret
 	if secret.Data == nil {
 		secret.Data = map[string][]byte{}
 	}
@@ -156,30 +128,29 @@ func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 		return ctrl.Result{}, err
 	}
 	secret.Data[secretFieldName] = raw
-	// Finally create or update the Secret
+	// Finally create or update the secret
 	if plan.Status.Secret != nil {
-		r.Recorder.Event(&plan, corev1.EventTypeNormal, "Info", "Updating Secret")
+		r.Recorder.Event(&plan, corev1.EventTypeNormal, "Info", "Updating secret")
 		err = r.Update(ctx, &secret)
 	} else {
-		r.Recorder.Event(&plan, corev1.EventTypeNormal, "Info", "Creating Secret")
+		r.Recorder.Event(&plan, corev1.EventTypeNormal, "Info", "Creating secret")
 		err = r.Create(ctx, &secret)
 	}
 	if err != nil {
-		log.Error(err, "failed to create or update Secret")
-		r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Update or creation of Secret failed with: %v", err))
+		log.Error(err, "failed to create or update secret")
+		r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Update or creation of secret failed with: %v", err))
 		return ctrl.Result{}, err
 	}
 	// Let's make sure to store the reference
 	secretRef, err := ref.GetReference(r.Scheme, &secret)
 	if err != nil {
-		log.Error(err, "failed to get Secret reference")
-		r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Failed to get Secret reference: %v", err))
+		log.Error(err, "failed to get secret reference")
+		r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Failed to get secret reference: %v", err))
 		return ctrl.Result{}, err
 
 	}
 	plan.Status.Secret = secretRef
 
-	// Finally create or update the CronJob
 	var cronJob batchv1beta1.CronJob
 	// If CronJob does not exist, let's create a new one
 	if plan.Status.CronJob != nil {
@@ -210,7 +181,7 @@ func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 		plan.Spec.ActiveDeadlineSeconds,
 		r.WorkerImage,
 		plan.Spec.Env,
-		"mongodb") // TODO: const?
+		"consul") // TODO: const?
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -240,18 +211,15 @@ func (r *MongoDBBackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 
 	if err := r.Update(ctx, &plan); err != nil {
 		log.Error(err, "status update failed")
-		r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Failed to update MongoDBBackupPlan: %v", err))
+		r.Recorder.Event(&plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Failed to update ConsulBackupPlan: %v", err))
 		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func (r *MongoDBBackupPlanReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.Recorder = mgr.GetEventRecorderFor("mongodbbackupplan-controller")
+func (r *ConsulBackupPlanReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&backupv1alpha1.MongoDBBackupPlan{}).
-		Owns(&corev1.Secret{}).
-		Owns(&batchv1beta1.CronJob{}).
+		For(&backupv1alpha1.ConsulBackupPlan{}).
 		Complete(r)
 }

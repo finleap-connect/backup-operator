@@ -14,23 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package util
 
-type Destination struct {
-	// +optional
-	// Configuration for S3 as backup target
-	S3 *S3 `json:"s3,omitempty"`
-}
+import "os"
 
-type S3 struct {
-	// +optional
-	Endpoint string `json:"endpoint,omitempty"`
-	// +optional
-	Bucket string `json:"bucket,omitempty"`
-	// +optional
-	UseSSL bool `json:"useSSL,omitempty"`
-	// +optional
-	AccessKeyID string `json:"accessKeyID,omitempty"`
-	// +optional
-	SecretAccessKey string `json:"secretAccessKey,omitempty"`
+func FallbackToEnv(value string, envName string) string {
+	if value == "" {
+		value = os.Getenv(envName)
+	}
+	return value
 }

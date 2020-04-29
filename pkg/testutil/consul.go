@@ -14,23 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package testutil
 
-type Destination struct {
-	// +optional
-	// Configuration for S3 as backup target
-	S3 *S3 `json:"s3,omitempty"`
-}
+import (
+	consulApi "github.com/hashicorp/consul/api"
+	"github.com/ory/dockertest/v3"
+)
 
-type S3 struct {
-	// +optional
-	Endpoint string `json:"endpoint,omitempty"`
-	// +optional
-	Bucket string `json:"bucket,omitempty"`
-	// +optional
-	UseSSL bool `json:"useSSL,omitempty"`
-	// +optional
-	AccessKeyID string `json:"accessKeyID,omitempty"`
-	// +optional
-	SecretAccessKey string `json:"secretAccessKey,omitempty"`
+func WaitForConsul(pool *dockertest.Pool, endpoint string) error {
+	return pool.Retry(func() error {
+		consulConf := consulApi.DefaultConfig()
+		consulConf.Address = endpoint
+		client, err := consulApi.NewClient(consulConf)
+		if err != nil {
+			return err
+		}
+		_, err = client.Status().Leader()
+		return err
+	})
 }

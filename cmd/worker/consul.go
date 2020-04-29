@@ -24,15 +24,15 @@ import (
 	"time"
 
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
-	"github.com/kubism/backup-operator/pkg/mongodb"
+	"github.com/kubism/backup-operator/pkg/consul"
 	"github.com/kubism/backup-operator/pkg/s3"
 	"github.com/kubism/backup-operator/pkg/util"
 	"github.com/spf13/cobra"
 )
 
-var mongodbCmd = &cobra.Command{
-	Use:   "mongodb [flags] config",
-	Short: "Backups mongodb using specified config",
+var consulCmd = &cobra.Command{
+	Use:   "consul [flags] config",
+	Short: "Backups consul using specified config",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return fmt.Errorf("config path expected as one and only argument")
@@ -46,18 +46,20 @@ var mongodbCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		var plan backupv1alpha1.MongoDBBackupPlan
+		var plan backupv1alpha1.ConsulBackupPlan
 		err = json.Unmarshal([]byte(os.ExpandEnv(string(raw))), &plan)
 		if err != nil {
 			return err
 		}
+
 		name := fmt.Sprintf("backup-%s.tgz", time.Now().Format("20060102150405"))
-		src, err := mongodb.NewMongoDBSource(plan.Spec.URI, "", name)
+		src, err := consul.NewConsulSource(plan.Spec.Address, util.FallbackToEnv(plan.Spec.Username, "CONSUL_HTTP_USERNAME"), util.FallbackToEnv(plan.Spec.Password, "CONSUL_HTTP_PASSWORD"), name)
 		if err != nil {
 			return err
 		}
 		prefix := fmt.Sprintf("%s/%s", plan.ObjectMeta.Namespace, plan.ObjectMeta.Name)
 		s3c := plan.Spec.Destination.S3
+
 		dst, err := s3.NewS3Destination(s3c.Endpoint, util.FallbackToEnv(s3c.AccessKeyID, "S3_SECRET_ACCESS_KEY"), util.FallbackToEnv(s3c.SecretAccessKey, "S3_SECRET_ACCESS_KEY"), s3c.UseSSL, s3c.Bucket, prefix)
 		if err != nil {
 			return err
@@ -75,5 +77,5 @@ var mongodbCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(mongodbCmd)
+	rootCmd.AddCommand(consulCmd)
 }
