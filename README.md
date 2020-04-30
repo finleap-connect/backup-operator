@@ -8,11 +8,34 @@
 
 ## Usage
 
-### Backups for consul
+### Setup
+
+TODO
+
+### Backups for MongoDB
+
+TODO
+
+### Backups for Consul
 
 The backup of consul to S3 is supported at the moment. See example configuration in [`backup_v1alpha1_consulbackupplan.yaml`](./config/samples/backup_v1alpha1_consulbackupplan.yaml).
 
+## Design
+
+TODO
+
 ## Development
+
+### Tools
+
+All required tools for development are automatically downloaded and stored in the `tools` sub-directory (see relevant section of [`Makefile`](./Makefile) for details).
+A custom [`tools/goget-wrapper`](./tools/goget-wrapper) is used to create a temporary isolated environment to install and compile go tools.
+To make sure those can be properly used in tests, several helpers were implemented in [`pkg/testutil`](./pkg/testutil) (e.g. `HelmEnv`, `KindEnv`).
+
+### Testing
+
+The tests depend on `docker` and `kind` and use [`ginkgo`](https://github.com/onsi/ginkgo) and [`gomega`](https://github.com/onsi/gomega). To spin up containers for tests [`ory/dockertest`](https://github.com/ory/dockertest) is used. For the controller tests `kind` is used, which has the advantage, compared to the more lightweight kubebuilder assets approach, to properly handle finalizers and allow integration tests.
+
 
 ### Kubebuilder
 
