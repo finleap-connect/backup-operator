@@ -1,0 +1,7 @@
+namespace: "{{ .Release.Namespace }}"
+namePrefix: "{{ .Release.Name }}-backup-operator-"
+
+bases:
+- ../rbac
+
+# TODO: patch service account

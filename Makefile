@@ -27,6 +27,8 @@ DOCKER_IMG ?= kubismio/backup-operator:$(DOCKER_TAG)
 KIND_CLUSTER ?= test
 KIND_IMAGE ?= kindest/node:v1.16.4
 
+HELM_CHART_DIR ?= charts/backup-operator
+
 # Options to control behavior
 TEST_E2E ?=
 
@@ -83,6 +85,8 @@ deploy: manifests $(KUSTOMIZE)
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) crd:trivialVersions=false rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(KUSTOMIZE) build config/crd > $(HELM_CHART_DIR)/files/crds.yaml
+	$(KUSTOMIZE) build config/rbac-templates > $(HELM_CHART_DIR)/templates/rbac.yaml
 
 # Generate code
 generate: $(CONTROLLER_GEN)
