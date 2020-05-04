@@ -52,6 +52,7 @@ func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFu
 			ActiveDeadlineSeconds: 3600,
 			Retention:             2,
 			URI:                   "mongodb://localhost:27017",
+			Pushgateway:           &backupv1alpha1.Pushgateway{},
 			Destination: &backupv1alpha1.Destination{
 				S3: &backupv1alpha1.S3{
 					Endpoint:        "localhost:8000",
@@ -178,6 +179,7 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 		}
 		Expect(helm.Install(namespace, "src", "bitnami/mongodb")).Should(Succeed())
 		Expect(helm.Install(namespace, "dst", "stable/minio", "--set", fmt.Sprintf("accessKey=%s,secretKey=%s,readinessProbe.initialDelaySeconds=10", accessKeyID, secretAccessKey))).Should(Succeed())
+		Expect(helm.Install(namespace, "mon", "stable/prometheus-pushgateway")).Should(Succeed())
 		Expect(kind.LoadDockerImage(workerImage)).Should(Succeed())
 		var mongodbSecret corev1.Secret
 		Expect(k8sClient.Get(ctx, types.NamespacedName{
@@ -200,6 +202,7 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 			}
 			spec.URI = "mongodb://root:$MONGODB_ROOT_PASSWORD@src-mongodb:27017/admin"
 			spec.Destination.S3.Endpoint = "http://dst-minio:9000"
+			spec.Pushgateway.URL = "mon-prometheus-pushgateway:9091"
 		})
 		defer mustRemoveFinalizers(plan)
 		res := mustReconcile(plan)
@@ -228,6 +231,6 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 				done = true
 			}
 		}
-		// TODO: check content of S3? test retention?
+		// TODO: check content of S3? test retention? check metrics?
 	})
 })
