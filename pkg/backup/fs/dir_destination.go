@@ -34,13 +34,12 @@ type dirDestination struct {
 	dir string
 }
 
-func (f *dirDestination) Store(obj backup.Object) error {
+func (f *dirDestination) Store(obj backup.Object) (int64, error) {
 	fp := filepath.Join(f.dir, obj.ID)
 	file, err := os.Create(fp)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer file.Close()
-	_, err = io.Copy(file, obj.Data)
-	return err
+	return io.Copy(file, obj.Data)
 }

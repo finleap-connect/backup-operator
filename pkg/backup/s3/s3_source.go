@@ -76,7 +76,7 @@ type S3Source struct {
 	log        logger.Logger
 }
 
-func (s *S3Source) Stream(dst backup.Destination) error {
+func (s *S3Source) Stream(dst backup.Destination) (int64, error) {
 	log := s.log
 	// Use sequential writes to be able tu use stub implementation
 	s.Downloader.Concurrency = 1
@@ -96,15 +96,15 @@ func (s *S3Source) Stream(dst backup.Destination) error {
 		}
 		log.Info("finished download", "numBytes", numBytes)
 	}()
-	dsterr := dst.Store(backup.Object{
+	written, dsterr := dst.Store(backup.Object{
 		ID:   s.Key,
 		Data: pr,
 	})
 	select {
 	case srcerr := <-errc: // return src error if possible as well
-		return fmt.Errorf("dst error: %v; src error: %v", dsterr, srcerr)
+		return written, fmt.Errorf("dst error: %v; src error: %v", dsterr, srcerr)
 	case <-time.After(1 * time.Second):
-		return dsterr
+		return written, dsterr
 	}
 }
 

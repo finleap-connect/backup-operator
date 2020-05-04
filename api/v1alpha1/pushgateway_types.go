@@ -14,33 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package fs
+package v1alpha1
 
-import (
-	"os"
-	"path/filepath"
-
-	"github.com/kubism/backup-operator/pkg/backup"
-)
-
-func NewFileSource(fp string) (backup.Source, error) {
-	return &fileSource{
-		fp: fp,
-	}, nil
-}
-
-type fileSource struct {
-	fp string
-}
-
-func (f *fileSource) Stream(dst backup.Destination) (int64, error) {
-	file, err := os.Open(f.fp)
-	if err != nil {
-		return 0, err
-	}
-	defer file.Close()
-	return dst.Store(backup.Object{
-		ID:   filepath.Base(f.fp),
-		Data: file,
-	})
+type Pushgateway struct {
+	// +optional
+	URL string `json:"url,omitempty"`
+	// +optional
+	Username string `json:"username,omitempty"`
+	// +optional
+	Password string `json:"password,omitempty"`
 }

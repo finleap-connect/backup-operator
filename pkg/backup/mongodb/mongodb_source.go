@@ -49,7 +49,7 @@ type mongoDBSource struct {
 	log         logger.Logger
 }
 
-func (m *mongoDBSource) Stream(dst backup.Destination) error {
+func (m *mongoDBSource) Stream(dst backup.Destination) (int64, error) {
 	log := m.log
 	opts := options.New("mongodump", "custom", "custom", mongodump.Usage, options.EnabledOptions{Auth: true, Connection: true, Namespace: true, URI: true})
 	inputOpts := &mongodump.InputOptions{}
@@ -65,7 +65,7 @@ func (m *mongoDBSource) Stream(dst backup.Destination) error {
 	opts.URI.AddKnownURIParameters(options.KnownURIOptionsReadPreference)
 	_, err := opts.ParseArgs(args)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	// verify uri options and log them
 	opts.URI.LogUnsupportedOptions()
@@ -76,7 +76,7 @@ func (m *mongoDBSource) Stream(dst backup.Destination) error {
 		InputOptions:  inputOpts,
 	}
 	if err = m.dump.Init(); err != nil {
-		return err
+		return 0, err
 	}
 	pr, pw := io.Pipe()
 	m.dump.OutputWriter = pw
@@ -96,15 +96,15 @@ func (m *mongoDBSource) Stream(dst backup.Destination) error {
 	if m.ArchiveName == "" {
 		m.ArchiveName = filter.ReplaceAllString(m.URI+m.Database, "") + ".tgz"
 	}
-	dsterr := dst.Store(backup.Object{
+	written, dsterr := dst.Store(backup.Object{
 		ID:   m.ArchiveName,
 		Data: pr,
 	})
 	select {
 	case srcerr := <-errc: // return src error if possible as well
-		return fmt.Errorf("dst error: %v; src error: %v", dsterr, srcerr)
+		return written, fmt.Errorf("dst error: %v; src error: %v", dsterr, srcerr)
 	case <-time.After(1 * time.Second):
-		return dsterr
+		return written, dsterr
 	}
 }
 

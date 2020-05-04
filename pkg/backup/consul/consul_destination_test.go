@@ -29,7 +29,7 @@ var _ = Describe("ConsulDestination", func() {
 		dst, err := NewConsulDestination(dstURI, "", "")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dst).ToNot(BeNil())
-		err = src.Stream(dst)
+		_, err = src.Stream(dst)
 		Expect(err).ToNot(HaveOccurred())
 	})
 })

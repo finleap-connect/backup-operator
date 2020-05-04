@@ -32,8 +32,8 @@ type BufferDestination struct {
 	Data map[string][]byte
 }
 
-func (b *BufferDestination) Store(obj backup.Object) error {
+func (b *BufferDestination) Store(obj backup.Object) (int64, error) {
 	var err error
 	b.Data[obj.ID], err = ioutil.ReadAll(obj.Data)
-	return err
+	return (int64)(len(b.Data[obj.ID])), err
 }

@@ -50,6 +50,10 @@ type MongoDBBackupPlanSpec struct {
 	URI string `json:"uri"`
 
 	// +optional
+	// Setup for metrics
+	Pushgateway *Pushgateway `json:"pushgateway,omitempty"`
+
+	// +optional
 	// Destination for the backup. If none is provided the default destination
 	// will be tried.
 	Destination *Destination `json:"destination,omitempty"`

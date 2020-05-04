@@ -31,7 +31,7 @@ var _ = Describe("MongoDBSource", func() {
 		dst, err := NewMongoDBDestination(dstURI)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dst).ToNot(BeNil())
-		err = src.Stream(dst)
+		_, err = src.Stream(dst)
 		Expect(err).ToNot(HaveOccurred())
 		err = testutil.FindTestData(dstURI)
 		Expect(err).ToNot(HaveOccurred())

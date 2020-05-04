@@ -34,7 +34,7 @@ type BufferSource struct {
 	Data []byte
 }
 
-func (b *BufferSource) Stream(dst backup.Destination) error {
+func (b *BufferSource) Stream(dst backup.Destination) (int64, error) {
 	return dst.Store(backup.Object{
 		ID:   b.Name,
 		Data: bytes.NewReader(b.Data),

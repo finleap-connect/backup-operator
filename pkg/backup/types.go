@@ -26,9 +26,9 @@ type Object struct {
 }
 
 type Destination interface {
-	Store(obj Object) error // Can be invoked multiple times
+	Store(obj Object) (int64, error) // Can be invoked multiple times
 }
 
 type Source interface {
-	Stream(dst Destination) error
+	Stream(dst Destination) (int64, error)
 }

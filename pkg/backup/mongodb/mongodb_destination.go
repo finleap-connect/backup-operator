@@ -37,7 +37,7 @@ type mongoDBDestination struct {
 	log     logger.Logger
 }
 
-func (m *mongoDBDestination) Store(obj backup.Object) error {
+func (m *mongoDBDestination) Store(obj backup.Object) (int64, error) {
 	log := m.log
 	args := []string{
 		fmt.Sprintf("--uri=\"%s\"", m.URI),
@@ -46,25 +46,25 @@ func (m *mongoDBDestination) Store(obj backup.Object) error {
 	}
 	opts, err := mongorestore.ParseOptions(args, "custom", "custom")
 	if err != nil {
-		return err
+		return 0, err
 	}
 	m.restore, err = mongorestore.New(opts)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer m.restore.Close()
 	m.restore.InputReader = obj.Data
 	// start the restoral
 	result := m.restore.Restore()
 	if result.Err != nil {
-		return result.Err
+		return 0, result.Err
 	}
 	if m.restore.ToolOptions.WriteConcern.Acknowledged() {
 		log.Info(fmt.Sprintf("%v document(s) restored successfully. %v document(s) failed to restore.", result.Successes, result.Failures))
 	} else {
 		log.Info("done")
 	}
-	return nil
+	return 0, nil // NOTE: written bytes not supported
 }
 
 func (m *mongoDBDestination) Close() error {

@@ -167,6 +167,16 @@ spec:
             password:
               description: Password to authenticate with consul
               type: string
+            pushgateway:
+              description: Setup for metrics
+              properties:
+                password:
+                  type: string
+                url:
+                  type: string
+                username:
+                  type: string
+              type: object
             retention:
               description: Number of backups to keep
               format: int64

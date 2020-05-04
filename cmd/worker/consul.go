@@ -26,6 +26,8 @@ import (
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
 	"github.com/kubism/backup-operator/pkg/backup/consul"
 	"github.com/kubism/backup-operator/pkg/backup/s3"
+	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/kubism/backup-operator/pkg/metrics"
 	"github.com/kubism/backup-operator/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -34,6 +36,8 @@ var consulCmd = &cobra.Command{
 	Use:   "consul [flags] config",
 	Short: "Backups consul using specified config",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		log := logger.WithName("worker")
+		// Load configuration
 		if len(args) != 1 {
 			return fmt.Errorf("config path expected as one and only argument")
 		}
@@ -51,7 +55,24 @@ var consulCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-
+		// Setup metrics publisher
+		mps := plan.Spec.Pushgateway
+		mpc := metrics.DefaultConfig().
+			WithURL(util.FallbackToEnv(mps.URL, "PUSHGATEWAY_URL")).
+			WithUsername(util.FallbackToEnv(mps.Username, "PUSHGATEWAY_USERNAME")).
+			WithPassword(util.FallbackToEnv(mps.Password, "PUSHGATEWAY_PASSWORD"))
+		var mp metrics.MetricsPublisher
+		if err := mpc.Validate(); err != nil {
+			log.Error(err, "invalid metrics configuration falling back to NewNopMetricsPublisher")
+			mp = metrics.NewNopMetricsPublisher()
+		} else {
+			mp = metrics.NewMetricsPublisher(mpc)
+		}
+		defer func() {
+			mp.StopTimer()
+			mp.PublishMetrics()
+		}()
+		// Backup
 		name := fmt.Sprintf("backup-%s.tgz", time.Now().Format("20060102150405"))
 		src, err := consul.NewConsulSource(plan.Spec.Address, util.FallbackToEnv(plan.Spec.Username, "CONSUL_HTTP_USERNAME"), util.FallbackToEnv(plan.Spec.Password, "CONSUL_HTTP_PASSWORD"), name)
 		if err != nil {
@@ -64,14 +85,16 @@ var consulCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		err = src.Stream(dst)
+		written, err := src.Stream(dst)
 		if err != nil {
 			return err
 		}
+		mp.SetBackupSizeInBytes(written)
 		err = dst.EnsureRetention(int(plan.Spec.Retention))
 		if err != nil {
 			return err
 		}
+		mp.SetSuccessfulRun()
 		return nil
 	},
 }

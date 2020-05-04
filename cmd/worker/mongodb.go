@@ -26,6 +26,8 @@ import (
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
 	"github.com/kubism/backup-operator/pkg/backup/mongodb"
 	"github.com/kubism/backup-operator/pkg/backup/s3"
+	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/kubism/backup-operator/pkg/metrics"
 	"github.com/kubism/backup-operator/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -34,6 +36,8 @@ var mongodbCmd = &cobra.Command{
 	Use:   "mongodb [flags] config",
 	Short: "Backups mongodb using specified config",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		log := logger.WithName("worker")
+		// Load configuration
 		if len(args) != 1 {
 			return fmt.Errorf("config path expected as one and only argument")
 		}
@@ -51,6 +55,25 @@ var mongodbCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		// Setup metrics publisher
+		mps := plan.Spec.Pushgateway
+		mpc := metrics.DefaultConfig().
+			WithURL(util.FallbackToEnv(mps.URL, "PUSHGATEWAY_URL")).
+			WithUsername(util.FallbackToEnv(mps.Username, "PUSHGATEWAY_USERNAME")).
+			WithPassword(util.FallbackToEnv(mps.Password, "PUSHGATEWAY_PASSWORD"))
+		var mp metrics.MetricsPublisher
+		if err := mpc.Validate(); err != nil {
+			log.Error(err, "invalid metrics configuration falling back to NewNopMetricsPublisher")
+			mp = metrics.NewNopMetricsPublisher()
+		} else {
+			mp = metrics.NewMetricsPublisher(mpc)
+		}
+		defer func() {
+			mp.StopTimer()
+			mp.PublishMetrics()
+		}()
+		// Backup
+		mp.StartTimer()
 		name := fmt.Sprintf("backup-%s.tgz", time.Now().Format("20060102150405"))
 		src, err := mongodb.NewMongoDBSource(plan.Spec.URI, "", name)
 		if err != nil {
@@ -62,14 +85,16 @@ var mongodbCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		err = src.Stream(dst)
+		written, err := src.Stream(dst)
 		if err != nil {
 			return err
 		}
+		mp.SetBackupSizeInBytes(written)
 		err = dst.EnsureRetention(int(plan.Spec.Retention))
 		if err != nil {
 			return err
 		}
+		mp.SetSuccessfulRun()
 		return nil
 	},
 }

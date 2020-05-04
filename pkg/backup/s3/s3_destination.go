@@ -75,7 +75,7 @@ type S3Destination struct {
 	log      logger.Logger
 }
 
-func (s *S3Destination) Store(obj backup.Object) error {
+func (s *S3Destination) Store(obj backup.Object) (int64, error) {
 	key := filepath.Join(s.Prefix, obj.ID)
 	params := &s3manager.UploadInput{
 		Bucket: &s.Bucket,
@@ -83,12 +83,19 @@ func (s *S3Destination) Store(obj backup.Object) error {
 		Body:   obj.Data,
 	}
 	s.log.Info("upload starting", "bucket", s.Bucket, "key", key)
-	result, err := s.Uploader.Upload(params)
+	res, err := s.Uploader.Upload(params)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	s.log.Info("upload successful", "result", result)
-	return nil
+	s.log.Info("upload successful", "result", res)
+	head, err := s.Client.HeadObject(&s3.HeadObjectInput{
+		Bucket: &s.Bucket,
+		Key:    &key,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return *head.ContentLength, nil
 }
 
 func (s *S3Destination) EnsureRetention(max int) error {

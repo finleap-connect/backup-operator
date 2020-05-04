@@ -48,15 +48,15 @@ func NewConsulDestination(uri, username, password string) (backup.Destination, e
 	}, nil
 }
 
-func (s *consulDestination) Store(obj backup.Object) error {
+func (s *consulDestination) Store(obj backup.Object) (int64, error) {
 	log := s.log
 
 	log.Info("restore starting")
 	err := s.Client.Snapshot().Restore(&consulApi.WriteOptions{}, obj.Data)
 	if err != nil {
 		log.Error(err, "Failed to write snapshot to consul")
-		return err
+		return 0, err
 	}
 	log.Info("restore finished")
-	return nil
+	return 0, nil // NOTE: written bytes not supported
 }

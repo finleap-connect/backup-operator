@@ -42,8 +42,9 @@ var _ = Describe("S3Destination", func() {
 		dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket, "")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dst).ToNot(BeNil())
-		err = src.Stream(dst)
+		written, err := src.Stream(dst)
 		Expect(err).ToNot(HaveOccurred())
+		Expect(written).To(BeNumerically(">", 0))
 		input := s3.GetObjectInput{
 			Bucket: &bucket,
 			Key:    &key,
@@ -113,7 +114,8 @@ var _ = Describe("S3Destination", func() {
 		dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket, "")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dst).ToNot(BeNil())
-		err = src.Stream(dst)
+		written, err := src.Stream(dst)
+		Expect(written).To(BeNumerically(">", 0))
 		Expect(err).ToNot(HaveOccurred())
 		input := s3.GetObjectInput{
 			Bucket: &bucket,
@@ -130,7 +132,7 @@ var _ = Describe("S3Destination", func() {
 		mdst, err := mongodb.NewMongoDBDestination(dstURI)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(mdst).ToNot(BeNil())
-		err = src.Stream(mdst)
+		_, err = src.Stream(mdst)
 		Expect(err).ToNot(HaveOccurred())
 		err = testutil.FindTestData(dstURI)
 		Expect(err).ToNot(HaveOccurred())
