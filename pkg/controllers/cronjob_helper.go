@@ -50,11 +50,12 @@ func UpdateCronJobSpec(cronJob *batchv1beta1.CronJob, secretRef *corev1.ObjectRe
 	}
 	podSpec.Containers = []corev1.Container{
 		{
-			Name:    WorkerContainerName,
-			Image:   image,
-			Env:     env,
-			Command: []string{"/worker"},
-			Args:    []string{subcmd, WorkerConfigFilePath},
+			Name:            WorkerContainerName,
+			Image:           image,
+			ImagePullPolicy: corev1.PullIfNotPresent, // NOTE: Currently required for tests!
+			Env:             env,
+			Command:         []string{"/worker"},
+			Args:            []string{subcmd, WorkerConfigFilePath},
 			VolumeMounts: []corev1.VolumeMount{
 				{
 					Name:      WorkerConfigVolumeName,

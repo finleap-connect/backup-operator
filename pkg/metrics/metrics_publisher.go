@@ -71,7 +71,7 @@ func (c *MetricsPublisherConfig) WithApp(app string) *MetricsPublisherConfig {
 }
 
 func (c *MetricsPublisherConfig) Validate() error {
-	if c.URL != "" { // TODO: parse URL once to check for errors
+	if c.URL == "" { // TODO: parse URL once to check for errors
 		return fmt.Errorf("Invalid URL for pushgateway: %s", c.URL)
 	}
 	return nil
@@ -170,9 +170,9 @@ func (m *metricsPublisher) SetBackupSizeInBytes(sizeInBytes int64) {
 func (m *metricsPublisher) PublishMetrics() {
 	err := m.pusher.Add()
 	if err != nil { // TODO: should we error for real?
-		m.log.Error(err, "Failed to push metrics to Prometheus")
+		m.log.Error(err, "failed to push metrics to Prometheus")
 	} else {
-		m.log.Info("Published metrics about this run to Prometheus")
+		m.log.Info("published metrics about this run to Prometheus")
 	}
 }
 

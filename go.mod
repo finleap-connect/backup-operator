@@ -13,11 +13,12 @@ require (
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
 	github.com/ory/dockertest/v3 v3.5.5
-	github.com/prometheus/client_golang v1.0.0
+	github.com/prometheus/client_golang v1.2.0
 	github.com/spf13/cobra v0.0.5
 	github.com/xdg/stringprep v1.0.0 // indirect
 	go.mongodb.org/mongo-driver v1.3.2
 	go.uber.org/zap v1.10.0
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
 	k8s.io/api v0.17.2
 	k8s.io/apimachinery v0.17.2

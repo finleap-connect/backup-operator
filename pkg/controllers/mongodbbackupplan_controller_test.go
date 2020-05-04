@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
+	"golang.org/x/sync/errgroup"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -177,10 +178,20 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 		if !shouldRunLongTests {
 			Skip("TEST_LONG not set")
 		}
-		Expect(helm.Install(namespace, "src", "bitnami/mongodb")).Should(Succeed())
-		Expect(helm.Install(namespace, "dst", "stable/minio", "--set", fmt.Sprintf("accessKey=%s,secretKey=%s,readinessProbe.initialDelaySeconds=10", accessKeyID, secretAccessKey))).Should(Succeed())
-		Expect(helm.Install(namespace, "mon", "stable/prometheus-pushgateway")).Should(Succeed())
-		Expect(kind.LoadDockerImage(workerImage)).Should(Succeed())
+		g, _ := errgroup.WithContext(ctx)
+		g.Go(func() error {
+			return helm.Install(namespace, "src", "bitnami/mongodb")
+		})
+		g.Go(func() error {
+			return helm.Install(namespace, "dst", "stable/minio", "--set", fmt.Sprintf("accessKey=%s,secretKey=%s,readinessProbe.initialDelaySeconds=10", accessKeyID, secretAccessKey))
+		})
+		g.Go(func() error {
+			return helm.Install(namespace, "mon", "stable/prometheus-pushgateway")
+		})
+		g.Go(func() error {
+			return kind.LoadDockerImage(workerImage)
+		})
+		Expect(g.Wait()).Should(Succeed())
 		var mongodbSecret corev1.Secret
 		Expect(k8sClient.Get(ctx, types.NamespacedName{
 			Namespace: namespace,
@@ -231,6 +242,47 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 				done = true
 			}
 		}
-		// TODO: check content of S3? test retention? check metrics?
+		// TODO: test retention?
+		var testjob batchv1.Job
+		testjob.ObjectMeta.Name = "test"
+		testjob.ObjectMeta.Namespace = namespace
+		activeDeadlineSeconds := (int64)(60)
+		testjob.Spec.ActiveDeadlineSeconds = &activeDeadlineSeconds
+		testjob.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyNever
+		testjob.Spec.Template.Spec.Containers = []corev1.Container{
+			{
+				Name:  "test",
+				Image: "minio/mc",
+				Command: []string{"/bin/ash", "-c", fmt.Sprintf(`
+set -euo pipefail
+mc config host add dst http://dst-minio:9000 %s %s
+count=$(mc ls dst/test/%s/%s | wc -l)
+sleep 10
+if [ "$count" -gt "0" ]; then
+  echo "$count objects found"
+else
+  echo "no objects found"
+  exit 1
+fi
+apk add --update curl jq
+app=$(curl -X GET http://mon-prometheus-pushgateway:9091/api/v1/metrics | jq -r ".data[0].backup_last_success_timestamp_seconds.metrics[0].labels.app")
+if [ "$app" = "%s" ]; then
+  echo "expected metrics exist"
+else
+  echo "not successful: $successful"
+  exit 2
+fi
+				`, accessKeyID, secretAccessKey, namespace, plan.ObjectMeta.Name, "mongodb")},
+			},
+		}
+		Expect(k8sClient.Create(ctx, &testjob)).Should(Succeed())
+		done = false
+		for !done {
+			Expect(k8sClient.Get(ctx, namespacedName(&testjob), &testjob)).Should(Succeed())
+			Expect(testjob.Status.Failed).Should(BeNumerically("==", 0))
+			if testjob.Status.Succeeded == 1 {
+				done = true
+			}
+		}
 	})
 })

@@ -76,7 +76,7 @@ func NewKindEnv(config *KindEnvConfig) (*KindEnv, error) {
 }
 
 func (e *KindEnv) LoadDockerImage(image string) error {
-	cmd := exec.Command(e.Bin, "load", "--name", e.Name, "docker-image", image)
+	cmd := exec.Command(e.Bin, "load", "docker-image", "--name", e.Name, image)
 	e.setupCmd(cmd)
 	return cmd.Run()
 }

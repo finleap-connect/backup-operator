@@ -67,6 +67,7 @@ var mongodbCmd = &cobra.Command{
 			log.Error(err, "invalid metrics configuration falling back to NewNopMetricsPublisher")
 			mp = metrics.NewNopMetricsPublisher()
 		} else {
+			log.Info("using pushgateway for metrics", "url", mpc.URL)
 			mp = metrics.NewMetricsPublisher(mpc)
 		}
 		defer func() {

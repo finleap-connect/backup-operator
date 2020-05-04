@@ -61,7 +61,6 @@ func (m *mongoDBSource) Stream(dst backup.Destination) (int64, error) {
 		"--archive",
 		"--gzip",
 	}
-	log.Info("configuring mongodump", "args", args)
 	opts.URI.AddKnownURIParameters(options.KnownURIOptionsReadPreference)
 	_, err := opts.ParseArgs(args)
 	if err != nil {
