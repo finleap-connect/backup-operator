@@ -58,6 +58,7 @@ var mongodbCmd = &cobra.Command{
 		// Setup metrics publisher
 		mps := plan.Spec.Pushgateway
 		mpc := metrics.DefaultConfig().
+			WithApp("mongodb").
 			WithURL(util.FallbackToEnv(mps.URL, "PUSHGATEWAY_URL")).
 			WithUsername(util.FallbackToEnv(mps.Username, "PUSHGATEWAY_USERNAME")).
 			WithPassword(util.FallbackToEnv(mps.Password, "PUSHGATEWAY_PASSWORD"))
