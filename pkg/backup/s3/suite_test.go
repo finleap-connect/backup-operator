@@ -47,7 +47,7 @@ const (
 
 func TestS3(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("../../reports/s3-junit.xml")
+	junitReporter := reporters.NewJUnitReporter("../../../reports/s3-junit.xml")
 	RunSpecsWithDefaultAndCustomReporters(t, "S3", []Reporter{junitReporter})
 }
 

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package consul
+package mongodb
 
 import (
 	"fmt"
@@ -37,47 +37,43 @@ var (
 	dstURI      string
 )
 
-func TestService(t *testing.T) {
+func TestMongoDB(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("../../reports/service-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "Consul", []Reporter{junitReporter})
+	junitReporter := reporters.NewJUnitReporter("../../../reports/mongodb-junit.xml")
+	RunSpecsWithDefaultAndCustomReporters(t, "MongoDB", []Reporter{junitReporter})
 }
 
 var _ = BeforeSuite(func(done Done) {
 	var err error
-	log := logger.WithName("consulsetup")
-
-	By("bootstrapping both consuls")
+	log := logger.WithName("mongosetup")
+	By("bootstrapping both mongodbs")
 	pool, err = dockertest.NewPool("")
 	Expect(err).ToNot(HaveOccurred())
-
-	log.Info("spawn src consul container")
-	srcResource, err = pool.Run("consul", "1.7", nil)
+	log.Info("spawn src mongo container")
+	srcResource, err = pool.Run("mongo", "4.2", nil)
 	Expect(err).ToNot(HaveOccurred())
-	srcURI = fmt.Sprintf("localhost:%s", srcResource.GetPort("8500/tcp"))
-
-	log.Info("spawn dst consul container")
-	dstResource, err = pool.Run("consul", "1.7", nil)
+	srcURI = fmt.Sprintf("mongodb://localhost:%s", srcResource.GetPort("27017/tcp"))
+	log.Info("spawn dst mongo container")
+	dstResource, err = pool.Run("mongo", "4.2", nil)
 	Expect(err).ToNot(HaveOccurred())
-	dstURI = fmt.Sprintf("localhost:%s", dstResource.GetPort("8500/tcp"))
-
-	err = testutil.WaitForConsul(pool, srcURI)
+	dstURI = fmt.Sprintf("mongodb://localhost:%s", dstResource.GetPort("27017/tcp"))
+	log.Info("check src mongo connection", "uri", srcURI)
+	err = testutil.WaitForMongoDB(pool, srcURI)
 	Expect(err).ToNot(HaveOccurred())
-	log.Info("src consul ready")
-
-	err = testutil.WaitForConsul(pool, dstURI)
+	log.Info("insert test data", "uri", srcURI)
+	err = testutil.InsertTestData(srcURI)
 	Expect(err).ToNot(HaveOccurred())
-	log.Info("dst consul ready")
-
+	log.Info("check dst mongo connection", "uri", dstURI)
+	err = testutil.WaitForMongoDB(pool, dstURI)
+	Expect(err).ToNot(HaveOccurred())
+	log.Info("mongo databases ready")
 	close(done)
 }, 60)
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
-
-	var err error
-	err = pool.Purge(srcResource)
-	Expect(err).ToNot(HaveOccurred())
-	err = pool.Purge(dstResource)
-	Expect(err).ToNot(HaveOccurred())
+	err1 := pool.Purge(srcResource)
+	err2 := pool.Purge(dstResource)
+	Expect(err1).ToNot(HaveOccurred())
+	Expect(err2).ToNot(HaveOccurred())
 })

@@ -21,8 +21,8 @@ import (
 	"io"
 	"time"
 
+	"github.com/kubism/backup-operator/pkg/backup"
 	"github.com/kubism/backup-operator/pkg/logger"
-	"github.com/kubism/backup-operator/pkg/stream"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -76,7 +76,7 @@ type S3Source struct {
 	log        logger.Logger
 }
 
-func (s *S3Source) Stream(dst stream.Destination) error {
+func (s *S3Source) Stream(dst backup.Destination) error {
 	log := s.log
 	// Use sequential writes to be able tu use stub implementation
 	s.Downloader.Concurrency = 1
@@ -96,7 +96,7 @@ func (s *S3Source) Stream(dst stream.Destination) error {
 		}
 		log.Info("finished download", "numBytes", numBytes)
 	}()
-	dsterr := dst.Store(stream.Object{
+	dsterr := dst.Store(backup.Object{
 		ID:   s.Key,
 		Data: pr,
 	})

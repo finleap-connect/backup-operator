@@ -26,6 +26,6 @@ import (
 
 func TestFS(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("../../reports/fs-junit.xml")
+	junitReporter := reporters.NewJUnitReporter("../../../reports/fs-junit.xml")
 	RunSpecsWithDefaultAndCustomReporters(t, "FS", []Reporter{junitReporter})
 }

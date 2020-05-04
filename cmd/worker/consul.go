@@ -24,8 +24,8 @@ import (
 	"time"
 
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
-	"github.com/kubism/backup-operator/pkg/consul"
-	"github.com/kubism/backup-operator/pkg/s3"
+	"github.com/kubism/backup-operator/pkg/backup/consul"
+	"github.com/kubism/backup-operator/pkg/backup/s3"
 	"github.com/kubism/backup-operator/pkg/util"
 	"github.com/spf13/cobra"
 )

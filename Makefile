@@ -30,12 +30,12 @@ KIND_IMAGE ?= kindest/node:v1.16.4
 
 HELM_CHART_DIR ?= charts/backup-operator
 
-# Empty by default, needs value to run e2e/integration tests (e.g. 'make TEST_E2E=y test')
-TEST_E2E ?=
+# Empty by default, needs value to run e2e/integration tests (e.g. 'make TEST_LONG=y test')
+TEST_LONG ?=
 
 export
 
-.PHONY: all test lint fmt vet install uninstall deploy manifests docker-build docker-push tools docker-is-running kind-create kind-delete kind-is-running check-e2e
+.PHONY: all test lint fmt vet install uninstall deploy manifests docker-build docker-push tools docker-is-running kind-create kind-delete kind-is-running check-test-long
 
 all: $(MANAGER_BIN) $(WORKER_BIN) tools
 
@@ -45,15 +45,15 @@ $(MANAGER_BIN): generate fmt vet
 $(WORKER_BIN): generate fmt vet
 	$(GO) build -o $(WORKER_BIN) ./cmd/worker/...
 
-test: generate fmt vet manifests docker-is-running kind-is-running check-e2e $(GINKGO) $(KUBEBUILDER)
+test: generate fmt vet manifests docker-is-running kind-is-running check-test-long $(GINKGO) $(KUBEBUILDER)
 	$(GINKGO) -r -v -cover pkg
 
-test-%: generate fmt vet manifests docker-is-running kind-is-running check-e2e $(GINKGO) $(KUBEBUILDER)
+test-%: generate fmt vet manifests docker-is-running kind-is-running check-test-long $(GINKGO) $(KUBEBUILDER)
 	$(GINKGO) -r -v -cover pkg/$*
 
 # If e2e/integration tests are running we need to build the image beforehand
-check-e2e:
-ifdef TEST_E2E
+check-test-long:
+ifdef TEST_LONG
 	$(MAKE) docker-build
 endif
 

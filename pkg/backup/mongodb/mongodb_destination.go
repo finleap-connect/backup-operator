@@ -19,12 +19,12 @@ package mongodb
 import (
 	"fmt"
 
+	"github.com/kubism/backup-operator/pkg/backup"
 	"github.com/kubism/backup-operator/pkg/logger"
-	"github.com/kubism/backup-operator/pkg/stream"
 	"github.com/mongodb/mongo-tools/mongorestore"
 )
 
-func NewMongoDBDestination(uri string) (stream.Destination, error) {
+func NewMongoDBDestination(uri string) (backup.Destination, error) {
 	return &mongoDBDestination{
 		URI: uri,
 		log: logger.WithName("mongodst"),
@@ -37,7 +37,7 @@ type mongoDBDestination struct {
 	log     logger.Logger
 }
 
-func (m *mongoDBDestination) Store(obj stream.Object) error {
+func (m *mongoDBDestination) Store(obj backup.Object) error {
 	log := m.log
 	args := []string{
 		fmt.Sprintf("--uri=\"%s\"", m.URI),

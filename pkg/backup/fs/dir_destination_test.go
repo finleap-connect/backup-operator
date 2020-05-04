@@ -14,35 +14,37 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package mongodb
+package fs
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/kubism/backup-operator/pkg/fs"
+	"github.com/kubism/backup-operator/pkg/backup"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("MongoDBSource", func() {
-	It("should dump to file", func() {
-		src, err := NewMongoDBSource(srcURI, "", "dump.tgz")
-		Expect(err).ToNot(HaveOccurred())
-		Expect(src).ToNot(BeNil())
-		dir, err := ioutil.TempDir("", "mongosrc")
+var _ = Describe("FileDestination", func() {
+	It("should write buffer to file", func() {
+		data := []byte("temporarycontent")
+		dir, err := ioutil.TempDir("", "fdst")
 		Expect(err).ToNot(HaveOccurred())
 		defer os.RemoveAll(dir)
-		fp := filepath.Join(dir, "dump.tgz")
-		dst, err := fs.NewDirDestination(dir)
+		fp := filepath.Join(dir, "tmpfile")
+		dst, err := NewDirDestination(dir)
 		Expect(err).ToNot(HaveOccurred())
-		err = src.Stream(dst)
+		Expect(dst).ToNot(BeNil())
+		buf := bytes.NewBuffer(data)
+		Expect(buf).ToNot(BeNil())
+		err = dst.Store(backup.Object{ID: "tmpfile", Data: buf})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(fp).Should(BeAnExistingFile())
-		fi, err := os.Stat(fp)
+		res, err := ioutil.ReadFile(fp)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(fi.Size()).Should(BeNumerically(">", 0))
+		Expect(res).Should(Equal(data))
 	})
 })

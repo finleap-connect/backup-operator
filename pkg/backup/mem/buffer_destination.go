@@ -14,29 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package util
+package mem
 
 import (
-	"bytes"
+	"io/ioutil"
 
-	"github.com/kubism/backup-operator/pkg/stream"
+	"github.com/kubism/backup-operator/pkg/backup"
 )
 
-func NewBufferSource(name string, data []byte) (*BufferSource, error) {
-	return &BufferSource{
-		Name: name,
-		Data: data,
+func NewBufferDestination() (*BufferDestination, error) {
+	return &BufferDestination{
+		Data: map[string][]byte{},
 	}, nil
 }
 
-type BufferSource struct {
-	Name string
-	Data []byte
+type BufferDestination struct {
+	Data map[string][]byte
 }
 
-func (b *BufferSource) Stream(dst stream.Destination) error {
-	return dst.Store(stream.Object{
-		ID:   b.Name,
-		Data: bytes.NewReader(b.Data),
-	})
+func (b *BufferDestination) Store(obj backup.Object) error {
+	var err error
+	b.Data[obj.ID], err = ioutil.ReadAll(obj.Data)
+	return err
 }

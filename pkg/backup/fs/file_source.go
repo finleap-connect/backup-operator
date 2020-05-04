@@ -14,26 +14,33 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package util
+package fs
 
 import (
-	"io/ioutil"
+	"os"
+	"path/filepath"
 
-	"github.com/kubism/backup-operator/pkg/stream"
+	"github.com/kubism/backup-operator/pkg/backup"
 )
 
-func NewBufferDestination() (*BufferDestination, error) {
-	return &BufferDestination{
-		Data: map[string][]byte{},
+func NewFileSource(fp string) (backup.Source, error) {
+	return &fileSource{
+		fp: fp,
 	}, nil
 }
 
-type BufferDestination struct {
-	Data map[string][]byte
+type fileSource struct {
+	fp string
 }
 
-func (b *BufferDestination) Store(obj stream.Object) error {
-	var err error
-	b.Data[obj.ID], err = ioutil.ReadAll(obj.Data)
-	return err
+func (f *fileSource) Stream(dst backup.Destination) error {
+	file, err := os.Open(f.fp)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	return dst.Store(backup.Object{
+		ID:   filepath.Base(f.fp),
+		Data: file,
+	})
 }

@@ -20,8 +20,8 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/kubism/backup-operator/pkg/backup"
 	"github.com/kubism/backup-operator/pkg/logger"
-	"github.com/kubism/backup-operator/pkg/stream"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -75,7 +75,7 @@ type S3Destination struct {
 	log      logger.Logger
 }
 
-func (s *S3Destination) Store(obj stream.Object) error {
+func (s *S3Destination) Store(obj backup.Object) error {
 	key := filepath.Join(s.Prefix, obj.ID)
 	params := &s3manager.UploadInput{
 		Bucket: &s.Bucket,

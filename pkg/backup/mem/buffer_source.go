@@ -14,33 +14,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package fs
+package mem
 
 import (
-	"io"
-	"os"
-	"path/filepath"
+	"bytes"
 
-	"github.com/kubism/backup-operator/pkg/stream"
+	"github.com/kubism/backup-operator/pkg/backup"
 )
 
-func NewDirDestination(dir string) (stream.Destination, error) {
-	return &dirDestination{
-		dir: dir,
+func NewBufferSource(name string, data []byte) (*BufferSource, error) {
+	return &BufferSource{
+		Name: name,
+		Data: data,
 	}, nil
 }
 
-type dirDestination struct {
-	dir string
+type BufferSource struct {
+	Name string
+	Data []byte
 }
 
-func (f *dirDestination) Store(obj stream.Object) error {
-	fp := filepath.Join(f.dir, obj.ID)
-	file, err := os.Create(fp)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	_, err = io.Copy(file, obj.Data)
-	return err
+func (b *BufferSource) Stream(dst backup.Destination) error {
+	return dst.Store(backup.Object{
+		ID:   b.Name,
+		Data: bytes.NewReader(b.Data),
+	})
 }

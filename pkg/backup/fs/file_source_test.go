@@ -21,7 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kubism/backup-operator/pkg/util"
+	"github.com/kubism/backup-operator/pkg/backup/mem"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -39,7 +39,7 @@ var _ = Describe("FileSource", func() {
 		src, err := NewFileSource(fp)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
-		dst, _ := util.NewBufferDestination()
+		dst, _ := mem.NewBufferDestination()
 		err = src.Stream(dst)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dst.Data["tmpfile"]).Should(Equal(data))

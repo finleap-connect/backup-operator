@@ -65,7 +65,7 @@ var (
 
 	workerImage string = os.Getenv("DOCKER_IMG")
 
-	e2e bool = os.Getenv("TEST_E2E") != ""
+	shouldRunLongTests bool = os.Getenv("TEST_LONG") != ""
 )
 
 func TestAPIs(t *testing.T) {
@@ -87,7 +87,7 @@ var _ = BeforeSuite(func(done Done) {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	if e2e { // Only required in e2e tests
+	if shouldRunLongTests { // Only required in e2e/integration tests
 		helm, err = testutil.NewHelmEnv(&testutil.HelmEnvConfig{
 			Kubeconfig: kind.Kubeconfig,
 			Stdout:     os.Stdout,

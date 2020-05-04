@@ -14,21 +14,33 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package stream
+package fs
 
 import (
 	"io"
+	"os"
+	"path/filepath"
+
+	"github.com/kubism/backup-operator/pkg/backup"
 )
 
-type Object struct {
-	ID   string // Used to determine filenames
-	Data io.Reader
+func NewDirDestination(dir string) (backup.Destination, error) {
+	return &dirDestination{
+		dir: dir,
+	}, nil
 }
 
-type Destination interface {
-	Store(obj Object) error // Can be invoked multiple times
+type dirDestination struct {
+	dir string
 }
 
-type Source interface {
-	Stream(dst Destination) error
+func (f *dirDestination) Store(obj backup.Object) error {
+	fp := filepath.Join(f.dir, obj.ID)
+	file, err := os.Create(fp)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = io.Copy(file, obj.Data)
+	return err
 }

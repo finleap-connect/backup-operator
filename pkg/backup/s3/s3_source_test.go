@@ -20,7 +20,7 @@ import (
 	"bytes"
 
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/kubism/backup-operator/pkg/util"
+	"github.com/kubism/backup-operator/pkg/backup/mem"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -40,7 +40,7 @@ var _ = Describe("S3Source", func() {
 			Key:    &key,
 		})
 		Expect(err).ToNot(HaveOccurred())
-		dst, _ := util.NewBufferDestination()
+		dst, _ := mem.NewBufferDestination()
 		err = src.Stream(dst)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dst.Data[key]).Should(Equal(data))

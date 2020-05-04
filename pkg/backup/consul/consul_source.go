@@ -21,8 +21,8 @@ import (
 	"io"
 	"time"
 
+	"github.com/kubism/backup-operator/pkg/backup"
 	"github.com/kubism/backup-operator/pkg/logger"
-	"github.com/kubism/backup-operator/pkg/stream"
 
 	consulApi "github.com/hashicorp/consul/api"
 )
@@ -33,7 +33,7 @@ type consulSource struct {
 	log      logger.Logger
 }
 
-func NewConsulSource(uri, username, password, snapName string) (stream.Source, error) {
+func NewConsulSource(uri, username, password, snapName string) (backup.Source, error) {
 	consulConf := consulApi.DefaultConfig()
 	consulConf.Address = uri
 	if username != "" && password != "" {
@@ -54,7 +54,7 @@ func NewConsulSource(uri, username, password, snapName string) (stream.Source, e
 	}, nil
 }
 
-func (s *consulSource) Stream(dst stream.Destination) error {
+func (s *consulSource) Stream(dst backup.Destination) error {
 	log := s.log
 
 	reader, _, err := s.Client.Snapshot().Save(&consulApi.QueryOptions{})
@@ -77,7 +77,7 @@ func (s *consulSource) Stream(dst stream.Destination) error {
 		}
 		log.Info("finished dump", "numBytes", numBytes)
 	}()
-	dsterr := dst.Store(stream.Object{
+	dsterr := dst.Store(backup.Object{
 		ID:   s.SnapName,
 		Data: pr,
 	})

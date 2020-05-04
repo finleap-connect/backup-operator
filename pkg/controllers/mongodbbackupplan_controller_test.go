@@ -173,8 +173,8 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 		}, &cronJob)).Should(Succeed())
 	})
 	It("works end-to-end", func() {
-		if !e2e {
-			Skip("TEST_E2E not set")
+		if !shouldRunLongTests {
+			Skip("TEST_LONG not set")
 		}
 		Expect(helm.Install(namespace, "src", "bitnami/mongodb")).Should(Succeed())
 		Expect(helm.Install(namespace, "dst", "stable/minio", "--set", fmt.Sprintf("accessKey=%s,secretKey=%s,readinessProbe.initialDelaySeconds=10", accessKeyID, secretAccessKey))).Should(Succeed())
@@ -228,6 +228,6 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 				done = true
 			}
 		}
-		// TODO: check content of S3? Test retention?
+		// TODO: check content of S3? test retention?
 	})
 })

@@ -17,8 +17,8 @@ limitations under the License.
 package consul
 
 import (
+	"github.com/kubism/backup-operator/pkg/backup"
 	"github.com/kubism/backup-operator/pkg/logger"
-	"github.com/kubism/backup-operator/pkg/stream"
 
 	consulApi "github.com/hashicorp/consul/api"
 )
@@ -28,7 +28,7 @@ type consulDestination struct {
 	log    logger.Logger
 }
 
-func NewConsulDestination(uri, username, password string) (stream.Destination, error) {
+func NewConsulDestination(uri, username, password string) (backup.Destination, error) {
 	consulConf := consulApi.DefaultConfig()
 	consulConf.Address = uri
 	if username != "" && password != "" {
@@ -48,7 +48,7 @@ func NewConsulDestination(uri, username, password string) (stream.Destination, e
 	}, nil
 }
 
-func (s *consulDestination) Store(obj stream.Object) error {
+func (s *consulDestination) Store(obj backup.Object) error {
 	log := s.log
 
 	log.Info("restore starting")

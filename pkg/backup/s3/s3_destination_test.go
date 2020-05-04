@@ -24,9 +24,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/kubism/backup-operator/pkg/mongodb"
+	"github.com/kubism/backup-operator/pkg/backup/mem"
+	"github.com/kubism/backup-operator/pkg/backup/mongodb"
 	"github.com/kubism/backup-operator/pkg/testutil"
-	"github.com/kubism/backup-operator/pkg/util"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -38,7 +38,7 @@ var _ = Describe("S3Destination", func() {
 		data := []byte("temporarycontent")
 		bucket := "bucketb"
 		key := "keyb"
-		src, _ := util.NewBufferSource(key, data)
+		src, _ := mem.NewBufferSource(key, data)
 		dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket, "")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dst).ToNot(BeNil())
