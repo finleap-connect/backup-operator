@@ -108,6 +108,11 @@ kind-is-running: $(KIND)
 	$(KIND) get kubeconfig --name $(KIND_CLUSTER) > /dev/null; \
 	}
 
+kind-get-kubeconfig: $(KIND)
+	$(KIND) get kubeconfig --name $(KIND_CLUSTER) > /tmp/kind-$(KIND_CLUSTER)-config
+	@echo "Created untracked config file in '/tmp/kind-$(KIND_CLUSTER)-config. Use as follows:"
+	@echo "export KUBECONFIG=\"/tmp/kind-$(KIND_CLUSTER)-config\""
+
 kind-delete: $(KIND)
 	$(KIND) delete cluster --name $(KIND_CLUSTER)
 
