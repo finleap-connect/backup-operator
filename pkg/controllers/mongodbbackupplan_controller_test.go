@@ -269,7 +269,7 @@ app=$(curl -X GET http://mon-prometheus-pushgateway:9091/api/v1/metrics | jq -r 
 if [ "$app" = "%s" ]; then
   echo "expected metrics exist"
 else
-  echo "not successful: $successful"
+  echo "unexpected app label: $app"
   exit 2
 fi
 				`, accessKeyID, secretAccessKey, namespace, plan.ObjectMeta.Name, "mongodb")},
