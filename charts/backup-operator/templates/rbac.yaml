@@ -91,8 +91,8 @@ roleRef:
   name: '{{ .Release.Name }}-backup-operator-leader-election-role'
 subjects:
 - kind: ServiceAccount
-  name: default
-  namespace: '{{ .Release.Namespace }}'
+  name: backup-operator
+  namespace: system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -104,5 +104,5 @@ roleRef:
   name: '{{ .Release.Name }}-backup-operator-manager-role'
 subjects:
 - kind: ServiceAccount
-  name: default
-  namespace: '{{ .Release.Namespace }}'
+  name: backup-operator
+  namespace: system
