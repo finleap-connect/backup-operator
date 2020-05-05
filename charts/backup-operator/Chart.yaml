@@ -1,0 +1,6 @@
+name: backup-operator
+description: K8s operator to provide backups for several sources
+version: 0.0.1
+home: https://github.com/kubism/backup-operator
+sources:
+  - https://github.com/kubism/backup-operator
