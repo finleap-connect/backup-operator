@@ -1,0 +1,19 @@
+charts:
+  # list of charts by name
+  # each name should be a directory containing a helm chart
+  - name: backup-operator
+    # the prefix to use for built images
+    imagePrefix: kubismio/
+    # tag to use when resetting the chart values
+    # with the --reset flag. It defaults to "set-by-chartpress".
+    resetTag: latest
+    # version to use when resetting the Chart.yaml's version field with the
+    # --reset flag. It defaults to "0.0.1-set.by.chartpress". This is a valid
+    # SemVer 2 version, which is required for a helm lint command to succeed.
+    resetVersion: 0.0.1
+    # The git repo whose gh-pages contains the charts. This can be a local
+    # path such as "." as well but if matching <organization>/<repo> will be
+    # assumed to be a separate GitHub repository.
+    repo:
+      git: kubism/charts
+      published: https://kubism.github.io/charts
