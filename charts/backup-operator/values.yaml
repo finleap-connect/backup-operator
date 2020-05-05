@@ -2,8 +2,8 @@
 
 name: backup-operator
 
+installCrd: true
+replicaCount: 1
 image:
   repository: kubismio/backup-operator
   tag: latest
-
-replicaCount: 1
