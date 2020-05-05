@@ -2,7 +2,7 @@
 
 name: backup-operator
 
-installCrd: true
+installCrds: true
 replicaCount: 1
 image:
   repository: kubismio/backup-operator
