@@ -33,6 +33,7 @@ jobs:
         - make DOCKER_TAG=$TRAVIS_TAG docker-push
         - make docker-push
     - stage: publish
+      if: branch = master AND tag IS present AND type != pull_request
       install:
         - curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
         - helm init --client-only
