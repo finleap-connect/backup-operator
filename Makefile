@@ -155,10 +155,10 @@ $(TOOLS_DIR)/gover:
 
 # Helm
 helm-install:
-	$(HELM3) install --repo $(HELM_ADDR) -n $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
+	$(HELM3) install --repo $(HELM_ADDR) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
 
 helm-upgrade:
-	$(HELM3) upgrade --repo $(HELM_ADDR) -n $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
+	$(HELM3) upgrade --repo $(HELM_ADDR) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
 
 helm-uninstall:
-	$(HELM3) uninstall -n $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME)
+	$(HELM3) uninstall --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME)
