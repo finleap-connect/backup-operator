@@ -14,6 +14,8 @@ set -x
 # git ahead of time to use the identity we decrypted earlier.
 export GIT_SSH_COMMAND="ssh -i $PWD/ci/deploy_key"
 
+alias helm=tools/helm3
+
 if [ "$TRAVIS_TAG:-" == "" ]; then
     # Using --long, we are ensured to get a build suffix, which ensures we don't
     # build the same tag twice.

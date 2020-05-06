@@ -69,5 +69,4 @@ jobs:
       python:
         - 3.6
       script:
-        - ./ci/travis-docker-fix.sh
         - ./ci/publish.sh
