@@ -65,8 +65,9 @@ jobs:
       install:
         - set -e
         - pip3 install --no-cache-dir -r ci/dev-requirements.txt
+        - curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
       python:
         - 3.6
       script:
         - ./ci/travis-docker-fix.sh
-        - make helm-publish
+        - ./ci/publish.sh
