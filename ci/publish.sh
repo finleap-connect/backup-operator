@@ -15,6 +15,7 @@ set -x
 export GIT_SSH_COMMAND="ssh -i $PWD/ci/deploy_key"
 
 alias helm=tools/helm3
+helm init --client-only
 
 if [ "$TRAVIS_TAG:-" == "" ]; then
     # Using --long, we are ensured to get a build suffix, which ensures we don't
