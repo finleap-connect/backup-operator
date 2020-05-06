@@ -52,6 +52,13 @@ jobs:
 
     - stage: publish
       name: release helm chart
+      dist: bionic
+      language: python
+      install:
+        - set -e
+        - pip3 install --no-cache-dir -r ci/dev-requirements.txt
+      python:
+        - 3.6
       env:
         - secure: cGWzCN3cNv9kP7ibRlL90bUWAUHXK4qNRO0k71k35NoS+dWCpGxH2BVxAlGcIUao4VCiH/POhA69+A//bINC24cDAJMyEi+zS+q/HvxqnGpGIS1prJyR+5gZhiEs0KThBmkAKQghDAuLFIZtMQSVqlG4LGoDKWK7cCZ0i+kOnJWWyZ1knOLwyOxZtknL/cR4eaYHy6czObSnoWWV6sRL+d9DkDrssDhv3oQfERITPGjlWqIuVCvvIbd/TQxwjG2KUuEwruJpVZMsReyjZ6qkVZV8sH6RuRiYfGaVmvfiuQECiiTkL7MdsnKUWnRxHcd/zkVjeGnZsVtTk9icq/1gkKQgurQSYbMuxaS/LPM+Tj97UOhQQH8/KXJn/880lDAqn+3Jlx6ZZ5nT7XykszW3N5Qu8cz8qp5Tx2/lXIaIfiDNLXm8SdfYfeD7rJQj2McPn6lPvF8G4y14NQLiNxGzCivF2iiSC+BeqkwEYiU/ML7v5jxPoVjrCcDG3r0YbJbuvtgm/BP+tLU6xpgoSsfbce8T1J0NA3HzvJNRqi+7TyOyDMK6Le5dXXDd/F0Wm8PP93paZl7QszNTIcF0ncBCRc4EriZT2TrzGBR/2s31js2ICJAxJ0bfMLZ+CYOFsWkaM6z4OQ4OzN5VbNIN+IzpICX+pMkDB7MpQXAgRXFXjqU=
         - secure: PXCgo+r5Tzb6swDz8OLXVkrUInQouc9MBSSVRsMQVmCLSomzNYUy2U/D4Ue3Udc6LhVXMMXSgwua5SLpqYlYpP2u6zIe9LkxHnVwzbR/TVm1VqFa11wr0/K5CLdz5b1EDAM3R/MMEo7/6oAcnOj1SsI804a9rJfg+8cDCY7lv/jHt3ufBEE4wlwlDql+9J79iCGj94WlpMpgaAaXQsHuLcwS5SDUJury6WhxFkVp3yxc+iAXe7iS4tCfybda0g1HfwqwGNwsbTo6WFKK5QSPgrufu2xsjxGJwU324cV5a1DW0MUkcfwwjPy2yYwK2PIGwWXHrgjCcs5A979FgeahxqRRyCY4A27eK/QigmIYAv9qtDLYBGS8blqJU3n0U2JK2P1B8zJyXr3REy3j8nP6ydyhbpNze3JYnh/iJW2BXMgz1f4YF8BEwXDx5WpyfcNj5qf5N7vJryJzXXh5JlUpIC99Cm4NMnWeiNX4mi+OeJQ7nFQHI1KBCFrQ/Y7y64/xh3HhjpJ0YkaiNWw7oUxG+lmw/4KZ2scNxW0hg7ShuMbdJvbmoyZhpUc1LkeJjwRRmqHH/PC30V/2dviwwxrIOVy4OsHIHJ7ftG7khv9snLgYpKNETmMhkMePyOt/KeN9jG6366prM6+BM1E4ERi+ZuDXoqL2eD66jbRh6vzDiDw=
