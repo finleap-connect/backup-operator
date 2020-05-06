@@ -68,7 +68,7 @@ coverage: $(GOVERALLS) $(GOVER)
 	$(GOVER)
 	$(GOVERALLS) -coverprofile=gover.coverprofile -service=travis-ci -repotoken $(COVERALLS_TOKEN)
 
-lint: $(LINTER)
+lint: $(LINTER) helm-lint
 	$(GO) mod verify
 	$(LINTER) run -v --no-config --deadline=5m
 
@@ -162,3 +162,9 @@ helm-upgrade:
 
 helm-uninstall:
 	$(HELM3) uninstall --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME)
+
+helm-lint:
+	$(HELM3) lint charts/backup-operator
+
+helm-publish:
+	./ci/publish.sh

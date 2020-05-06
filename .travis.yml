@@ -33,14 +33,11 @@ jobs:
         - make DOCKER_TAG=$TRAVIS_TAG docker-push
         - make docker-push
     - stage: publish
+      name: release helm chart
       if: branch = master AND tag IS present AND type != pull_request
-      install:
-        - curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
-        - helm init --client-only
       script:
-        - helm lint charts/backup-operator
-        - ./ci/travis-docker-fix
-        - ./ci/publish
+        - ./ci/travis-docker-fix.sh
+        - make helm-publish
 env:
   global:
     secure: L5EXD8R2wR2kURGcO1Mqfp2Vct9SlJVuPrBFkYWC9aFGA6Y3+X85nIe3mlzfal+IqEFjjaJysCAPmBF+DVZl96/5fJCwSEtsp5pBv4OmRa3OvXbL8iMK9lGE/SQuitR3YnJzbWmvZ+EO37NXsTogaH2iYlB6NcUi9VCVz8YW/w3Nbqisb2RkM1e6kWHkRXxtbUWiTOMY5iozkGm/rMUBwlpcSa41C5JwEZqrgbC2dsdv7u81haCVfEz4lijT24bplnkXesxiV2khu3Nl0bR58CY2p28kuhz+HXBsnIRcyvX1JU3yERIYWdF6sxW5uPzFIqDKrFw3VxGP33BqUL0ZAQogUWYzrwBiZqwYh3awdahmkuGeeP7zrcM22vVQSwohc7P+A+9DLZsyxiP7haTJ05EY8yU+H7fQlTamq77LBdrFglIBWgMuHpkGkkoZhciKfiKKwBifhC42QOnAz/7+JCHYCzimo0peOYMQcKQOZfnVvXoA9KLPAylGCHOyO7C3SUMPVVBueY7iwb8vr1+a1Pgj5/JHeJ/avzpTjSZBWEqWNOpXxiF29ZxPnSus+vTWHMkUBKjQOELNUrp0lsMKSqucIcjcDiko40YhgYAAORn2Yrn43byHvXINiacsQB7sg+jj2sOaY63bnsAzKpsytJnXzPw9iGCZHA9dMA/sOIk=
