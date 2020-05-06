@@ -4,7 +4,7 @@ set -eu
 # Decrypt a private SSH key having its public key registered on GitHub. It will
 # be used to establish an identity with rights to push to the git repository
 # hosting our Helm charts: https://github.com/kubism/charts
-openssl aes-256-cbc -K $encrypted_189e52c2c347_key -iv $encrypted_189e52c2c347_iv -in deploy_key.enc -out deploy_key -d
+openssl aes-256-cbc -K $encrypted_189e52c2c347_key -iv $encrypted_189e52c2c347_iv -in ci/deploy_key.enc -out ci/deploy_key -d
 chmod 0400 ci/deploy_key
 
 docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
