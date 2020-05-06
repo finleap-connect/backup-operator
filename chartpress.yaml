@@ -1,7 +1,7 @@
 charts:
   # list of charts by name
   # each name should be a directory containing a helm chart
-  - name: backup-operator
+  - name: charts/backup-operator
     # the prefix to use for built images
     imagePrefix: kubismio/
     # The git repo whose gh-pages contains the charts. This can be a local
