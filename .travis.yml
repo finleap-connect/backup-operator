@@ -7,6 +7,8 @@ services:
 stages:
   - test
   - build
+install:
+  - make build-tools
 jobs:
   include:
     - stage: test
