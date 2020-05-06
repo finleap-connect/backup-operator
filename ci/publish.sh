@@ -7,8 +7,6 @@ set -eu
 openssl aes-256-cbc -K $encrypted_189e52c2c347_key -iv $encrypted_189e52c2c347_iv -in ci/deploy_key.enc -out ci/deploy_key -d
 chmod 0400 ci/deploy_key
 
-docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-
 # Activate logging of bash commands now that the sensitive stuff is done
 set -x
 
@@ -19,11 +17,11 @@ export GIT_SSH_COMMAND="ssh -i $PWD/ci/deploy_key"
 if [ "$TRAVIS_TAG:-" == "" ]; then
     # Using --long, we are ensured to get a build suffix, which ensures we don't
     # build the same tag twice.
-    chartpress --push --publish-chart --long
+    chartpress --skip-build --publish-chart --long
 else
     # Setting a tag explicitly enforces a rebuild if this tag had already been
     # built and we wanted to override it.
-    chartpress --push --publish-chart --tag "$TRAVIS_TAG"
+    chartpress --skip-build  --publish-chart --tag "$TRAVIS_TAG"
 fi
 
 # Let us log the changes chartpress did, it should include replacements for
