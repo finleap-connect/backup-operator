@@ -16,9 +16,9 @@ before_install:
 stages:
   - name: lint and test
   - name: build
-    if: branch = master AND tag IS present
+    if: tag IS present
   - name: publish
-    if: branch = master AND tag IS present
+    if: tag IS present
 
 install:
   - make build-tools
