@@ -10,7 +10,7 @@
 
 ### Setup
 
-Find the helm chart for the backup-operator at the [Kubism.io Helm Charts](https://kubism.github.io/charts/).
+Find the helm chart for the backup-operator at the [Kubism.io Helm Charts](https://kubism.github.io/charts/#chart-backup-operator).
 
 TODO
 
