@@ -18,7 +18,7 @@ export GIT_SSH_COMMAND="ssh -i ${PWD}/ci/deploy_key"
 
 # Setup helm command
 echo "Setting up helm..."
-alias helm=tools/helm3
+cp tools/helm3 /usr/bin/helm
 
 echo "Publishing chart via chartpress..."
 if [ "${TRAVIS_TAG:-}" == "" ]; then
