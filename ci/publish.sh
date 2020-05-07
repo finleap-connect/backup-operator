@@ -1,4 +1,11 @@
 #!/bin/bash
+export PATH="$PATH:$PWD/tools"
+
+# Setup helm command
+echo "Setting up helm..."
+ln -sf $PWD/tools/helm3 $PWD/tools/helm
+
+echo "Decrypting deploy_key..."
 set -eu
 
 # Decrypt a private SSH key having its public key registered on GitHub. It will
@@ -12,21 +19,20 @@ set -x
 
 # As chartpress uses git to push to our Helm chart repository, we configure
 # git ahead of time to use the identity we decrypted earlier.
-export GIT_SSH_COMMAND="ssh -i $PWD/ci/deploy_key"
+export GIT_SSH_COMMAND="ssh -i ${PWD}/ci/deploy_key"
 
-alias helm=tools/helm3
-helm init --client-only
-
-if [ "$TRAVIS_TAG:-" == "" ]; then
+echo "Publishing chart via chartpress..."
+if [ "${TRAVIS_TAG:-}" == "" ]; then
     # Using --long, we are ensured to get a build suffix, which ensures we don't
     # build the same tag twice.
     chartpress --skip-build --publish-chart --long
 else
     # Setting a tag explicitly enforces a rebuild if this tag had already been
     # built and we wanted to override it.
-    chartpress --skip-build  --publish-chart --tag "$TRAVIS_TAG"
+    chartpress --skip-build --publish-chart --tag "${TRAVIS_TAG}"
 fi
 
 # Let us log the changes chartpress did, it should include replacements for
 # fields in values.yaml, such as what tag for various images we are using.
+echo "Changes from chartpress:"
 git --no-pager diff

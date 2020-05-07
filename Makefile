@@ -126,8 +126,6 @@ kind-delete: $(KIND)
 # Phony target to install all required tools into ${TOOLS_DIR}
 tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/kustomize $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/helm3 $(TOOLS_DIR)/goveralls $(TOOLS_DIR)/gover
 
-build-tools: $(TOOLS_DIR)/helm3 
-
 $(TOOLS_DIR)/kind:
 	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/kind@v0.7.0)
 
@@ -170,3 +168,6 @@ helm-lint:
 
 helm-publish:
 	./ci/publish.sh
+
+helm-tool-install: $(TOOLS_DIR)/helm3 
+	$(HELM3) version

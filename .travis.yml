@@ -21,15 +21,15 @@ env:
 before_install:
   -
 
+install:
+  - make helm-tool-install
+
 stages:
   - name: lint and test
   - name: build
     if: tag IS present
   - name: publish
     if: tag IS present
-
-install:
-  - make build-tools
 
 jobs:
   include:
