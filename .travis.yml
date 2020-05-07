@@ -23,6 +23,7 @@ before_install:
 
 stages:
   - name: lint and test
+    if: tag IS present
   - name: build
     if: tag IS present
   - name: publish
