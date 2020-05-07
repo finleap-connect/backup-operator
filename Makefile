@@ -123,6 +123,26 @@ kind-get-kubeconfig: $(KIND)
 kind-delete: $(KIND)
 	$(KIND) delete cluster --name $(KIND_CLUSTER)
 
+helm-setup-repo: $(HELM3)
+	$(HELM3) repo add $(HELM_REPO) $(HELM_ADDR)
+	$(HELM3) repo update
+
+helm-install: $(HELM3)
+	$(HELM3) repo update
+	$(HELM3) install --version $(VERSION) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
+
+helm-upgrade: $(HELM3)
+	$(HELM3) repo update
+	$(HELM3) upgrade --version $(VERSION) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
+
+helm-uninstall: $(HELM3)
+	$(HELM3) uninstall --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME)
+
+helm-lint: $(HELM3)
+	$(HELM3) lint charts/backup-operator
+
+helm-publish: $(HELM3)
+	./ci/publish.sh
 
 # Phony target to install all required tools into ${TOOLS_DIR}
 tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/kustomize $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/helm3 $(TOOLS_DIR)/goveralls $(TOOLS_DIR)/gover
@@ -154,27 +174,4 @@ $(TOOLS_DIR)/goveralls:
 $(TOOLS_DIR)/gover:
 	$(shell $(TOOLS_DIR)/goget-wrapper github.com/modocache/gover)
 
-# Helm
-helm-setup-repo:
-	$(HELM3) repo add $(HELM_REPO) $(HELM_ADDR)
-	$(HELM3) repo update
 
-helm-install:
-	$(HELM3) repo update
-	$(HELM3) install --version $(VERSION) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
-
-helm-upgrade:
-	$(HELM3) repo update
-	$(HELM3) upgrade --version $(VERSION) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
-
-helm-uninstall:
-	$(HELM3) uninstall --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME)
-
-helm-lint:
-	$(HELM3) lint charts/backup-operator
-
-helm-publish:
-	./ci/publish.sh
-
-helm-tool-install: $(TOOLS_DIR)/helm3 
-	$(HELM3) version
