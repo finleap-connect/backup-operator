@@ -28,9 +28,6 @@ stages:
   - name: publish
     if: tag IS present
 
-install:
-  - make build-tools
-
 jobs:
   include:
     - stage: lint and test
