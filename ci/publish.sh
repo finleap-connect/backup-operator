@@ -14,13 +14,13 @@ set -x
 
 # As chartpress uses git to push to our Helm chart repository, we configure
 # git ahead of time to use the identity we decrypted earlier.
-export GIT_SSH_COMMAND="ssh -i ${PWD}/ci/id_rsa"
+export GIT_SSH_COMMAND="ssh -i ${PWD}/ci/deploy_key"
 
 # Setup helm command
 echo "Setting up helm..."
 alias helm=tools/helm3
 
-echo "Publishing chart via chartpres..."
+echo "Publishing chart via chartpress..."
 if [ "${TRAVIS_TAG:-}" == "" ]; then
     # Using --long, we are ensured to get a build suffix, which ensures we don't
     # build the same tag twice.
