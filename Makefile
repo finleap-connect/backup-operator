@@ -169,5 +169,5 @@ helm-lint:
 helm-publish:
 	./ci/publish.sh
 
-helm-tool-install:
-    $(TOOLS_DIR)/helm3 
+helm-tool-install: $(TOOLS_DIR)/helm3 
+	$(HELM3) version
