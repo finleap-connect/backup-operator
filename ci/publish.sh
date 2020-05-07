@@ -1,4 +1,9 @@
 #!/bin/bash
+export PATH="$PWD/tools:$PATH"
+
+# Setup helm command
+echo "Setting up helm..."
+ln -s tools/helm3 tools/helm
 
 echo "Decrypting deploy_key..."
 set -eu
@@ -15,10 +20,6 @@ set -x
 # As chartpress uses git to push to our Helm chart repository, we configure
 # git ahead of time to use the identity we decrypted earlier.
 export GIT_SSH_COMMAND="ssh -i ${PWD}/ci/deploy_key"
-
-# Setup helm command
-echo "Setting up helm..."
-cp tools/helm3 /usr/bin/helm
 
 echo "Publishing chart via chartpress..."
 if [ "${TRAVIS_TAG:-}" == "" ]; then
