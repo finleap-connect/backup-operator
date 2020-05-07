@@ -19,7 +19,7 @@ spec:
         control-plane: controller-manager
         app: {{ .Values.name }}
     spec:
-      serviceAccountName: backup-operator
+      serviceAccountName: {{ .Release.Name }}-backup-operator
       containers:
       - args:
         - --enable-leader-election
@@ -38,14 +38,4 @@ spec:
           requests:
             cpu: 100m
             memory: 100Mi
-        volumeMounts:
-        - mountPath: /tmp/k8s-webhook-server/serving-certs
-          name: cert
-          readOnly: true
       terminationGracePeriodSeconds: 10
-      volumes:
-        - name: cert
-          secret:
-            secretName: {{ .Values.name }}-cert
-            defaultMode: 420
-
