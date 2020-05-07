@@ -160,9 +160,11 @@ helm-setup-repo:
 	$(HELM3) repo update
 
 helm-install:
+	$(HELM3) repo update
 	$(HELM3) install --version $(VERSION) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
 
 helm-upgrade:
+	$(HELM3) repo update
 	$(HELM3) upgrade --version $(VERSION) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
 
 helm-uninstall:

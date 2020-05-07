@@ -43,3 +43,9 @@ spec:
           name: cert
           readOnly: true
       terminationGracePeriodSeconds: 10
+      volumes:
+        - name: cert
+          secret:
+            secretName: {{ .Values.name }}-cert
+            defaultMode: 420
+
