@@ -66,4 +66,5 @@ jobs:
       python:
         - 3.6
       script:
+        - make helm-tool-install
         - ./ci/publish.sh
