@@ -41,7 +41,6 @@ jobs:
     - stage: lint and test
       name: lint code
       script:
-        - make helm-tool-install
         - make lint
 
     - stage: build
@@ -66,5 +65,4 @@ jobs:
       python:
         - 3.6
       script:
-        - make helm-tool-install
         - ./ci/publish.sh
