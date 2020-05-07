@@ -119,9 +119,8 @@ kind-get-kubeconfig: $(KIND)
 kind-delete: $(KIND)
 	$(KIND) delete cluster --name $(KIND_CLUSTER)
 
-
 helm-install: $(HELM3)
-	$(HELM3) upgrade --install --namespace $(HELM_NAMESPACE) $(HELM_RELEASE_NAME) $(HELM_CHART_DIR)
+	$(HELM3) upgrade --install $(HELM_RELEASE_NAME) --namespace $(HELM_NAMESPACE) $(HELM_CHART_DIR)
 
 helm-uninstall: $(HELM3)
 	$(HELM3) uninstall --namespace $(HELM_NAMESPACE) $(HELM_RELEASE_NAME)
@@ -161,5 +160,3 @@ $(TOOLS_DIR)/goveralls:
 
 $(TOOLS_DIR)/gover:
 	$(shell $(TOOLS_DIR)/goget-wrapper github.com/modocache/gover)
-
-

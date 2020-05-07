@@ -4,4 +4,7 @@ namePrefix: "{{ .Release.Name }}-backup-operator-"
 bases:
 - ../rbac
 
-# TODO: patch service account
+patchesStrategicMerge:
+# Patching ServiceAccount
+- leader_election_role_binding_patch.yaml
+- role_binding_patch.yaml
