@@ -6,5 +6,5 @@ installCrds: true
 replicaCount: 1
 image:
   repository: kubismio/backup-operator
-  tag: latest
-  
+  tag: 'set-by-chartpress'
+

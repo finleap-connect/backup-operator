@@ -10,3 +10,7 @@ charts:
     repo:
       git: kubism/charts
       published: https://kubism.github.io/charts
+
+    images:
+      manager:
+        valuesPath: image
