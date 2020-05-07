@@ -155,11 +155,15 @@ $(TOOLS_DIR)/gover:
 	$(shell $(TOOLS_DIR)/goget-wrapper github.com/modocache/gover)
 
 # Helm
+helm-setup-repo:
+	$(HELM3) repo add $(HELM_REPO) $(HELM_ADDR)
+	$(HELM3) repo update
+
 helm-install:
-	$(HELM3) install --version $(VERSION) --repo $(HELM_ADDR) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
+	$(HELM3) install --version $(VERSION) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
 
 helm-upgrade:
-	$(HELM3) upgrade --version $(VERSION) --repo $(HELM_ADDR) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
+	$(HELM3) upgrade --version $(VERSION) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
 
 helm-uninstall:
 	$(HELM3) uninstall --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME)
