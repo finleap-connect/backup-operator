@@ -21,9 +21,6 @@ env:
 before_install:
   -
 
-install:
-  - make helm-tool-install
-
 stages:
   - name: lint and test
   - name: build
@@ -44,6 +41,7 @@ jobs:
     - stage: lint and test
       name: lint code
       script:
+        - make helm-tool-install
         - make lint
 
     - stage: build
