@@ -4,7 +4,7 @@ export PATH="$PATH:$PWD/tools"
 # Setup helm command
 echo "Setting up helm..."
 make helm-tool-install
-ln -sf tools/helm3 tools/helm
+ln -sf $PWD/tools/helm3 $PWD/tools/helm
 
 echo "Decrypting deploy_key..."
 set -eu
