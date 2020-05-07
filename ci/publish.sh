@@ -1,9 +1,9 @@
 #!/bin/bash
-export PATH="$PWD/tools:$PATH"
+export PATH="$PWD/tools;$PATH"
 
 # Setup helm command
 echo "Setting up helm..."
-ln -s tools/helm3 tools/helm
+ln -sf tools/helm3 tools/helm
 
 echo "Decrypting deploy_key..."
 set -eu
