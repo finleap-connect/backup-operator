@@ -12,5 +12,5 @@ charts:
       published: https://kubism.github.io/charts
 
     images:
-      manager:
+      backup-operator:
         valuesPath: image
