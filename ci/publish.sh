@@ -14,7 +14,7 @@ set -x
 
 # As chartpress uses git to push to our Helm chart repository, we configure
 # git ahead of time to use the identity we decrypted earlier.
-export GIT_SSH_COMMAND="ssh -i $PWD/ci/deploy_key"
+export GIT_SSH_COMMAND="ssh -i ${PWD}/ci/id_rsa"
 
 # Setup helm command
 echo "Setting up helm..."
@@ -22,14 +22,14 @@ echo "Setting up helm..."
 alias helm=tools/helm3
 
 echo "Publishing chart via chartpres..."
-if [ "$TRAVIS_TAG:-" == "" ]; then
+if [ "${TRAVIS_TAG:-}" == "" ]; then
     # Using --long, we are ensured to get a build suffix, which ensures we don't
     # build the same tag twice.
     chartpress --skip-build --publish-chart --long
 else
     # Setting a tag explicitly enforces a rebuild if this tag had already been
     # built and we wanted to override it.
-    chartpress --skip-build --publish-chart --tag "$TRAVIS_TAG"
+    chartpress --skip-build --publish-chart --tag "${TRAVIS_TAG}"
 fi
 
 # Let us log the changes chartpress did, it should include replacements for
