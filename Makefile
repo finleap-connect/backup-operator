@@ -28,14 +28,10 @@ DOCKER_IMG ?= kubismio/backup-operator:$(DOCKER_TAG)
 KIND_CLUSTER ?= test
 KIND_IMAGE ?= kindest/node:v1.16.4
 
-HELM_ADDR ?= https://kubism.github.io/charts
-HELM_REPO ?= kubism.io
-HELM_CHART_DIR ?= charts/backup-operator
 HELM_CHART_NAME ?= backup-operator
-
-RELEASE_NAME ?= dev
-KUBE_NAMESPACE ?= kubism
-VERSION ?= v0.1.0-pre15.n000.hbf86fcb
+HELM_CHART_DIR ?= charts/$(HELM_CHART_NAME)
+HELM_RELEASE_NAME ?= dev-backup-operator
+HELM_NAMESPACE ?= default
 
 # Empty by default, needs value to run e2e/integration tests (e.g. 'make TEST_LONG=y test')
 TEST_LONG ?=
@@ -123,23 +119,15 @@ kind-get-kubeconfig: $(KIND)
 kind-delete: $(KIND)
 	$(KIND) delete cluster --name $(KIND_CLUSTER)
 
-helm-setup-repo: $(HELM3)
-	$(HELM3) repo add $(HELM_REPO) $(HELM_ADDR)
-	$(HELM3) repo update
 
 helm-install: $(HELM3)
-	$(HELM3) repo update
-	$(HELM3) install --version $(VERSION) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
-
-helm-upgrade: $(HELM3)
-	$(HELM3) repo update
-	$(HELM3) upgrade --version $(VERSION) --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME) $(HELM_REPO)/$(HELM_CHART_NAME)
+	$(HELM3) upgrade --install --namespace $(HELM_NAMESPACE) $(HELM_RELEASE_NAME) $(HELM_CHART_DIR)
 
 helm-uninstall: $(HELM3)
-	$(HELM3) uninstall --namespace $(KUBE_NAMESPACE) $(RELEASE_NAME)-$(HELM_CHART_NAME)
+	$(HELM3) uninstall --namespace $(HELM_NAMESPACE) $(HELM_RELEASE_NAME)
 
 helm-lint: $(HELM3)
-	$(HELM3) lint charts/backup-operator
+	$(HELM3) lint $(HELM_CHART_DIR)
 
 helm-publish: $(HELM3)
 	./ci/publish.sh
