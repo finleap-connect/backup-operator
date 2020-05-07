@@ -21,6 +21,9 @@ env:
 before_install:
   -
 
+install:
+  - make helm-tool-install
+
 stages:
   - name: lint and test
   - name: build
