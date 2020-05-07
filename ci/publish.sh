@@ -18,8 +18,8 @@ export GIT_SSH_COMMAND="ssh -i ${PWD}/ci/id_rsa"
 
 # Setup helm command
 echo "Setting up helm..."
-./tools/helm3 init --client-only
 alias helm=tools/helm3
+helm init --client-only
 
 echo "Publishing chart via chartpres..."
 if [ "${TRAVIS_TAG:-}" == "" ]; then
