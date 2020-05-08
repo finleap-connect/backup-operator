@@ -48,10 +48,10 @@ $(MANAGER_BIN): generate fmt vet
 $(WORKER_BIN): generate fmt vet
 	$(GO) build -o $(WORKER_BIN) ./cmd/worker/...
 
-test: generate fmt vet manifests docker-is-running kind-is-running check-test-long $(GINKGO) $(KUBEBUILDER)
+test: generate fmt vet manifests docker-is-running kind-is-running check-test-long $(GINKGO) $(KUBEBUILDER) $(HELM3)
 	$(GINKGO) -r -v -cover pkg
 
-test-%: generate fmt vet manifests docker-is-running kind-is-running check-test-long $(GINKGO) $(KUBEBUILDER)
+test-%: generate fmt vet manifests docker-is-running kind-is-running check-test-long $(GINKGO) $(KUBEBUILDER) $(HELM3)
 	$(GINKGO) -r -v -cover pkg/$*
 
 # If e2e/integration tests are running we need to build the image beforehand
