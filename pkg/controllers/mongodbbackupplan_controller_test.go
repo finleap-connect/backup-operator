@@ -294,5 +294,6 @@ fi
 				done = true
 			}
 		}
+		Expect(k8sClient.Delete(ctx, plan)).Should(Succeed())
 	})
 })
