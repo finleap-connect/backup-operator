@@ -189,9 +189,13 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 			return helm.Install(namespace, "mon", "stable/prometheus-pushgateway")
 		})
 		g.Go(func() error {
+			return helm.Install(namespace, "op", "../../charts/backup-operator")
+		})
+		g.Go(func() error {
 			return kind.LoadDockerImage(workerImage)
 		})
 		Expect(g.Wait()).Should(Succeed())
+		defer helm.Uninstall(namespace, "op") // Make sure it is gone before other tests
 		var mongodbSecret corev1.Secret
 		Expect(k8sClient.Get(ctx, types.NamespacedName{
 			Namespace: namespace,
@@ -216,9 +220,15 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 			spec.Pushgateway.URL = "mon-prometheus-pushgateway:9091"
 		})
 		defer mustRemoveFinalizers(plan)
-		res := mustReconcile(plan)
-		Expect(res.Requeue).To(Equal(false))
-		Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
+		// res := mustReconcile(plan)
+		// Expect(res.Requeue).To(Equal(false))
+		reconciled := false
+		for !reconciled {
+			Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
+			if plan.Status.CronJob != nil {
+				reconciled = true
+			}
+		}
 		var cronJob batchv1beta1.CronJob
 		Expect(k8sClient.Get(ctx, types.NamespacedName{
 			Namespace: plan.Status.CronJob.Namespace,

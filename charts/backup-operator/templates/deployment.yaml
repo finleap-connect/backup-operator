@@ -1,23 +1,25 @@
+{{ $name := (printf "%s-backup-operator" .Release.Name) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     control-plane: controller-manager
-    app: {{ .Values.name }}
-  name: {{ .Values.name }}-controller-manager
+    app: {{ $name }}
+  name: {{ $name }}
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       control-plane: controller-manager
+      app: {{ $name }}
   template:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
       labels:
         control-plane: controller-manager
-        app: {{ .Values.name }}
+        app: {{ $name }}
     spec:
       serviceAccountName: {{ .Release.Name }}-backup-operator
       containers:

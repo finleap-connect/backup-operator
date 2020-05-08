@@ -5,4 +5,4 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: "{{ .Release.Name }}-backup-operator"
-  namespace: system
+  namespace: "{{ .Release.Namespace }}"

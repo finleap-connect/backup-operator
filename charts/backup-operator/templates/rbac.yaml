@@ -40,6 +40,25 @@ metadata:
   name: '{{ .Release.Name }}-backup-operator-manager-role'
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - backup.kubism.io
   resources:
   - consulbackupplans
@@ -79,6 +98,18 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -92,7 +123,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: '{{ .Release.Name }}-backup-operator'
-  namespace: system
+  namespace: '{{ .Release.Namespace }}'
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -105,4 +136,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: '{{ .Release.Name }}-backup-operator'
-  namespace: system
+  namespace: '{{ .Release.Namespace }}'

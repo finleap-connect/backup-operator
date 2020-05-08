@@ -87,6 +87,15 @@ func (e *HelmEnv) Install(namespace, release, chart string, args ...string) erro
 	return cmd.Run()
 }
 
+func (e *HelmEnv) Uninstall(namespace, release string, args ...string) error {
+	log := e.log.WithValues("namespace", namespace, "release", release, "args", args)
+	log.Info("uninstalling chart")
+	args = append([]string{"uninstall", "--namespace", namespace, release}, args...)
+	cmd := exec.Command(e.Bin, args...)
+	e.setupCmd(cmd)
+	return cmd.Run()
+}
+
 func (e *HelmEnv) Close() error {
 	return os.RemoveAll(e.Dir)
 }
