@@ -1,3 +1,5 @@
+SHELL := bash
+
 # Directory, where all required tools are located (absolute path required)
 TOOLS_DIR ?= $(shell cd tools && pwd)
 
