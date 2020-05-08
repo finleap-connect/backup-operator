@@ -69,4 +69,4 @@ jobs:
       python:
         - 3.6
       script:
-        - ./ci/publish.sh
+        - make helm-publish
