@@ -6,6 +6,10 @@ go:
   - 1.14.x
 services:
   - docker
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $HOME/gopath/pkg/mod
 
 git:
   ## depth set to false overrides travis default behavior to use shallow clones
