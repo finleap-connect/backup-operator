@@ -34,7 +34,7 @@ jobs:
       name: run tests
       script:
         - make kind-create
-        - make test
+        - make TEST_LONG="$TRAVIS_TAG" test
       after_success:
         - make coverage
 
