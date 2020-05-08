@@ -195,7 +195,9 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 			return kind.LoadDockerImage(workerImage)
 		})
 		Expect(g.Wait()).Should(Succeed())
-		defer helm.Uninstall(namespace, "op") // Make sure it is gone before other tests
+		defer func() {
+			_ = helm.Uninstall(namespace, "op") // Make sure it is gone before other tests
+		}()
 		var mongodbSecret corev1.Secret
 		Expect(k8sClient.Get(ctx, types.NamespacedName{
 			Namespace: namespace,
