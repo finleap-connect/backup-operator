@@ -6,18 +6,18 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
-  name: mongodbbackupplans.backup.kubism.io
+  name: backupplans.backup.kubism.io
 spec:
   group: backup.kubism.io
   names:
-    kind: MongoDBBackupPlan
-    listKind: MongoDBBackupPlanList
-    plural: mongodbbackupplans
-    singular: mongodbbackupplan
+    kind: BackupPlan
+    listKind: BackupPlanList
+    plural: backupplans
+    singular: backupplan
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: MongoDBBackupPlan is the Schema for the mongodbbackupplans API
+      description: BackupPlan is the Schema for the backupplans API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -182,16 +182,6 @@ spec:
           - activeDeadlineSeconds
           - retention
           - schedule
-          type: object
-        specMongoDb:
-          description: MongoDBBackupPlanSpec defines the desired state of MongoDBBackupPlan
-          properties:
-            uri:
-              description: Fully qualifying MongoDB URI connection string. Environment
-                variables will be evaluated before usage.
-              type: string
-          required:
-          - uri
           type: object
         status:
           description: BackupPlanStatus defines the observed state of BackupPlan

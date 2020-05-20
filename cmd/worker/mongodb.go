@@ -77,7 +77,7 @@ var mongodbCmd = &cobra.Command{
 		// Backup
 		mp.StartTimer()
 		name := fmt.Sprintf("backup-%s.tgz", time.Now().Format("20060102150405"))
-		src, err := mongodb.NewMongoDBSource(plan.Spec.URI, "", name)
+		src, err := mongodb.NewMongoDBSource(plan.MongoDbSpec.URI, "", name)
 		if err != nil {
 			return err
 		}

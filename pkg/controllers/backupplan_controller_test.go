@@ -40,7 +40,7 @@ const (
 	secretAccessKey = "TESTSECRETKEY"
 )
 
-type UpdateMongoDBBackupPlanFunc = func(spec *backupv1alpha1.MongoDBBackupPlanSpec)
+type UpdateMongoDBBackupPlanFunc = func(spec *backupv1alpha1.MongoDBBackupPlan)
 
 func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFunc) *backupv1alpha1.MongoDBBackupPlan {
 	plan := &backupv1alpha1.MongoDBBackupPlan{
@@ -48,11 +48,10 @@ func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFu
 			Namespace: namespace,
 			Name:      newTestName(),
 		},
-		Spec: backupv1alpha1.MongoDBBackupPlanSpec{
+		Spec: backupv1alpha1.BackupPlanSpec{
 			Schedule:              "* * * * *",
 			ActiveDeadlineSeconds: 3600,
 			Retention:             2,
-			URI:                   "mongodb://localhost:27017",
 			Pushgateway:           &backupv1alpha1.Pushgateway{},
 			Destination: &backupv1alpha1.Destination{
 				S3: &backupv1alpha1.S3{
@@ -64,9 +63,12 @@ func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFu
 				},
 			},
 		},
+		MongoDbSpec: backupv1alpha1.MongoDBBackupPlanSpec{
+			URI: "mongodb://localhost:27017",
+		},
 	}
 	for _, f := range updates {
-		f(&plan.Spec)
+		f(plan)
 	}
 	return plan
 }
@@ -203,8 +205,8 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 			Namespace: namespace,
 			Name:      "src-mongodb",
 		}, &mongodbSecret)).Should(Succeed())
-		plan := mustCreateNewMongoDBBackupPlan(namespace, func(spec *backupv1alpha1.MongoDBBackupPlanSpec) {
-			spec.Env = []corev1.EnvVar{
+		plan := mustCreateNewMongoDBBackupPlan(namespace, func(p *backupv1alpha1.MongoDBBackupPlan) {
+			p.Spec.Env = []corev1.EnvVar{
 				{
 					Name: "MONGODB_ROOT_PASSWORD",
 					ValueFrom: &corev1.EnvVarSource{
@@ -217,9 +219,9 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 					},
 				},
 			}
-			spec.URI = "mongodb://root:$MONGODB_ROOT_PASSWORD@src-mongodb:27017/admin"
-			spec.Destination.S3.Endpoint = "http://dst-minio:9000"
-			spec.Pushgateway.URL = "mon-prometheus-pushgateway:9091"
+			p.MongoDbSpec.URI = "mongodb://root:$MONGODB_ROOT_PASSWORD@src-mongodb:27017/admin"
+			p.Spec.Destination.S3.Endpoint = "http://dst-minio:9000"
+			p.Spec.Pushgateway.URL = "mon-prometheus-pushgateway:9091"
 		})
 		defer mustRemoveFinalizers(plan)
 		// res := mustReconcile(plan)

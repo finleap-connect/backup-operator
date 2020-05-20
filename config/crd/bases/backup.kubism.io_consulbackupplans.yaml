@@ -32,16 +32,12 @@ spec:
         metadata:
           type: object
         spec:
-          description: ConsulBackupPlanSpec defines the desired state of ConsulBackupPlan
+          description: BackupPlanSpec defines the desired state of BackupPlan
           properties:
             activeDeadlineSeconds:
               format: int64
               minimum: 1
               type: integer
-            address:
-              description: Address of Consul. Environment variables will be evaluated
-                before usage.
-              type: string
             destination:
               description: Destination for the backup. If none is provided the default
                 destination will be tried.
@@ -164,9 +160,6 @@ spec:
                 - name
                 type: object
               type: array
-            password:
-              description: Password to authenticate with consul
-              type: string
             pushgateway:
               description: Setup for metrics
               properties:
@@ -185,17 +178,29 @@ spec:
             schedule:
               description: Schedule in cron format
               type: string
+          required:
+          - activeDeadlineSeconds
+          - retention
+          - schedule
+          type: object
+        specConsul:
+          description: ConsulBackupPlanSpec defines the desired state of ConsulBackupPlan
+          properties:
+            address:
+              description: Address of Consul. Environment variables will be evaluated
+                before usage.
+              type: string
+            password:
+              description: Password to authenticate with consul
+              type: string
             username:
               description: Username to authenticate with consul
               type: string
           required:
-          - activeDeadlineSeconds
           - address
-          - retention
-          - schedule
           type: object
         status:
-          description: ConsulBackupPlanStatus defines the observed state of ConsulBackupPlan
+          description: BackupPlanStatus defines the observed state of BackupPlan
           properties:
             cronJob:
               description: 'INSERT ADDITIONAL STATUS FIELD - define observed state

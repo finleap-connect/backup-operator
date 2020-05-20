@@ -75,7 +75,7 @@ var consulCmd = &cobra.Command{
 		}()
 		// Backup
 		name := fmt.Sprintf("backup-%s.tgz", time.Now().Format("20060102150405"))
-		src, err := consul.NewConsulSource(plan.Spec.Address, util.FallbackToEnv(plan.Spec.Username, "CONSUL_HTTP_USERNAME"), util.FallbackToEnv(plan.Spec.Password, "CONSUL_HTTP_PASSWORD"), name)
+		src, err := consul.NewConsulSource(plan.ConsulSpec.Address, util.FallbackToEnv(plan.ConsulSpec.Username, "CONSUL_HTTP_USERNAME"), util.FallbackToEnv(plan.ConsulSpec.Password, "CONSUL_HTTP_PASSWORD"), name)
 		if err != nil {
 			return err
 		}
