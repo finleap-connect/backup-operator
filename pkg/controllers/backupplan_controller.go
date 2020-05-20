@@ -45,7 +45,7 @@ type BackupPlanReconciler struct {
 	Recorder           record.EventRecorder
 	DefaultDestination *backupv1alpha1.Destination // TODO: to implement
 	WorkerImage        string
-	Type               BackupPlan
+	Kind               string
 }
 
 // +kubebuilder:rbac:groups=backup.kubism.io,resources=mongodbbackupplans,verbs=get;list;watch;create;update;patch;delete
@@ -58,29 +58,28 @@ type BackupPlanReconciler struct {
 
 func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
-	log := r.Log.WithValues(r.Type.GetKind(), req.NamespacedName)
+	log := r.Log.WithValues(r.Kind, req.NamespacedName)
 
 	var err error
 	var plan BackupPlan
-	if _, ok := r.Type.(*backupv1alpha1.MongoDBBackupPlan); ok {
+	if r.Kind == backupv1alpha1.MongoDBBackupPlanKind {
 		var t backupv1alpha1.MongoDBBackupPlan
 		err = r.Get(ctx, req.NamespacedName, &t)
 		if err == nil {
 			plan = &t
 		}
-	}
-	if _, ok := r.Type.(*backupv1alpha1.ConsulBackupPlan); ok {
+	} else if r.Kind == backupv1alpha1.ConsulBackupPlanKind {
 		var t backupv1alpha1.ConsulBackupPlan
 		err = r.Get(ctx, req.NamespacedName, &t)
 		if err == nil {
 			plan = &t
 		}
 	} else {
-		return ctrl.Result{}, fmt.Errorf("type %v not implemented", r.Type.GetKind())
+		return ctrl.Result{}, fmt.Errorf("type %v not implemented", r.Kind)
 	}
 
 	if err != nil {
-		log.Error(err, fmt.Sprintf("unable to fetch %v", r.Type.GetKind()))
+		log.Error(err, fmt.Sprintf("unable to fetch %v", r.Kind))
 		// We'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
 		// on deleted requests.
@@ -274,10 +273,10 @@ func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	return ctrl.Result{}, nil
 }
 
-func (r *BackupPlanReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *BackupPlanReconciler) SetupWithManager(mgr ctrl.Manager, apiType runtime.Object) error {
 	r.Recorder = mgr.GetEventRecorderFor("backupplan-controller")
 	return ctrl.NewControllerManagedBy(mgr).
-		For(r.Type).
+		For(apiType).
 		Owns(&corev1.Secret{}).
 		Owns(&batchv1beta1.CronJob{}).
 		Complete(r)

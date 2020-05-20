@@ -130,7 +130,7 @@ var _ = BeforeSuite(func(done Done) {
 			Scheme:             scheme.Scheme,
 			DefaultDestination: nil, // TODO
 			WorkerImage:        workerImage,
-			Type:               &backupv1alpha1.MongoDBBackupPlan{},
+			Kind:               backupv1alpha1.MongoDBBackupPlanKind,
 		},
 		backupv1alpha1.ConsulBackupPlanKind: &BackupPlanReconciler{
 			Client:             k8sClient,
@@ -139,7 +139,7 @@ var _ = BeforeSuite(func(done Done) {
 			Scheme:             scheme.Scheme,
 			DefaultDestination: nil, // TODO
 			WorkerImage:        "test",
-			Type:               &backupv1alpha1.ConsulBackupPlan{},
+			Kind:               backupv1alpha1.ConsulBackupPlanKind,
 		},
 	}
 
