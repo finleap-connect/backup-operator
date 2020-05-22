@@ -43,26 +43,34 @@ const (
 type UpdateMongoDBBackupPlanFunc = func(spec *backupv1alpha1.MongoDBBackupPlan)
 type UpdateConsulBackupPlanFunc = func(spec *backupv1alpha1.ConsulBackupPlan)
 
-func newConsulBackupPlan(namespace string, updates ...UpdateConsulBackupPlanFunc) *backupv1alpha1.ConsulBackupPlan {
-	plan := &backupv1alpha1.ConsulBackupPlan{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-			Name:      newTestName(),
-		},
-		Spec: backupv1alpha1.BackupPlanSpec{
-			Schedule:              "* * * * *",
-			ActiveDeadlineSeconds: 3600,
-			Retention:             2,
-			Destination: &backupv1alpha1.Destination{
-				S3: &backupv1alpha1.S3{
-					Endpoint:        "localhost:8000",
-					Bucket:          "test",
-					UseSSL:          false,
-					AccessKeyID:     "a",
-					SecretAccessKey: "b",
-				},
+func newObjectMeta(namespace string) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Namespace: namespace,
+		Name:      newTestName(),
+	}
+}
+
+func newBackupPlanSpec(namespace string) backupv1alpha1.BackupPlanSpec {
+	return backupv1alpha1.BackupPlanSpec{
+		Schedule:              "* * * * *",
+		ActiveDeadlineSeconds: 3600,
+		Retention:             2,
+		Destination: &backupv1alpha1.Destination{
+			S3: &backupv1alpha1.S3{
+				Endpoint:        "localhost:8000",
+				Bucket:          "test",
+				UseSSL:          false,
+				AccessKeyID:     "a",
+				SecretAccessKey: "b",
 			},
 		},
+	}
+}
+
+func newConsulBackupPlan(namespace string, updates ...UpdateConsulBackupPlanFunc) backupv1alpha1.BackupPlan {
+	plan := &backupv1alpha1.ConsulBackupPlan{
+		ObjectMeta: newObjectMeta(namespace),
+		Spec:       newBackupPlanSpec(namespace),
 		ConsulSpec: backupv1alpha1.ConsulBackupPlanSpec{
 			Address: "localhost:27017",
 		},
@@ -73,27 +81,10 @@ func newConsulBackupPlan(namespace string, updates ...UpdateConsulBackupPlanFunc
 	return plan
 }
 
-func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFunc) *backupv1alpha1.MongoDBBackupPlan {
+func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFunc) backupv1alpha1.BackupPlan {
 	plan := &backupv1alpha1.MongoDBBackupPlan{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-			Name:      newTestName(),
-		},
-		Spec: backupv1alpha1.BackupPlanSpec{
-			Schedule:              "* * * * *",
-			ActiveDeadlineSeconds: 3600,
-			Retention:             2,
-			Pushgateway:           &backupv1alpha1.Pushgateway{},
-			Destination: &backupv1alpha1.Destination{
-				S3: &backupv1alpha1.S3{
-					Endpoint:        "localhost:8000",
-					Bucket:          "test",
-					UseSSL:          false,
-					AccessKeyID:     accessKeyID,
-					SecretAccessKey: secretAccessKey,
-				},
-			},
-		},
+		ObjectMeta: newObjectMeta(namespace),
+		Spec:       newBackupPlanSpec(namespace),
 		MongoDbSpec: backupv1alpha1.MongoDBBackupPlanSpec{
 			URI: "mongodb://localhost:27017",
 		},
@@ -104,13 +95,13 @@ func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFu
 	return plan
 }
 
-func mustCreateNewConsulBackupPlan(namespace string, updates ...UpdateConsulBackupPlanFunc) *backupv1alpha1.ConsulBackupPlan {
+func mustCreateNewConsulBackupPlan(namespace string, updates ...UpdateConsulBackupPlanFunc) backupv1alpha1.BackupPlan {
 	plan := newConsulBackupPlan(namespace, updates...)
 	Expect(k8sClient.Create(context.Background(), plan)).Should(Succeed())
 	return plan
 }
 
-func mustCreateNewMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFunc) *backupv1alpha1.MongoDBBackupPlan {
+func mustCreateNewMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFunc) backupv1alpha1.BackupPlan {
 	plan := newMongoDBBackupPlan(namespace, updates...)
 	Expect(k8sClient.Create(context.Background(), plan)).Should(Succeed())
 	return plan
@@ -160,13 +151,13 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 			// Check if the owned resources were freed
 			var secret corev1.Secret
 			Expect(client.IgnoreNotFound(k8sClient.Get(ctx, types.NamespacedName{
-				Namespace: plan.Status.Secret.Namespace,
-				Name:      plan.Status.Secret.Name,
+				Namespace: plan.GetStatus().Secret.Namespace,
+				Name:      plan.GetStatus().Secret.Name,
 			}, &secret))).Should(Succeed())
 			var cronJob batchv1beta1.CronJob
 			Expect(client.IgnoreNotFound(k8sClient.Get(ctx, types.NamespacedName{
-				Namespace: plan.Status.CronJob.Namespace,
-				Name:      plan.Status.CronJob.Name,
+				Namespace: plan.GetStatus().CronJob.Namespace,
+				Name:      plan.GetStatus().CronJob.Name,
 			}, &cronJob))).Should(Succeed())
 		})
 	})
@@ -191,15 +182,15 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 		Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
 		var secret corev1.Secret
 		Expect(k8sClient.Get(ctx, types.NamespacedName{
-			Namespace: plan.Status.Secret.Namespace,
-			Name:      plan.Status.Secret.Name,
+			Namespace: plan.GetStatus().Secret.Namespace,
+			Name:      plan.GetStatus().Secret.Name,
 		}, &secret)).Should(Succeed())
 		Expect(secret.Data).NotTo(BeNil())
 		raw, ok := secret.Data[secretFieldName]
 		Expect(ok).To(Equal(true))
 		var content backupv1alpha1.MongoDBBackupPlan
 		Expect(json.Unmarshal(raw, &content)).Should(Succeed())
-		Expect(content.Spec).To(Equal(plan.Spec))
+		Expect(content.Spec).To(Equal(plan.GetSpec()))
 	})
 	It("creates relevant CronJob", func() {
 		plan := mustCreateNewMongoDBBackupPlan(namespace)
@@ -209,8 +200,8 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 		Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
 		var cronJob batchv1beta1.CronJob
 		Expect(k8sClient.Get(ctx, types.NamespacedName{
-			Namespace: plan.Status.CronJob.Namespace,
-			Name:      plan.Status.CronJob.Name,
+			Namespace: plan.GetStatus().CronJob.Namespace,
+			Name:      plan.GetStatus().CronJob.Name,
 		}, &cronJob)).Should(Succeed())
 	})
 	It("works end-to-end", func() {
@@ -266,14 +257,14 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 		reconciled := false
 		for !reconciled {
 			Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
-			if plan.Status.CronJob != nil {
+			if plan.GetStatus().CronJob != nil {
 				reconciled = true
 			}
 		}
 		var cronJob batchv1beta1.CronJob
 		Expect(k8sClient.Get(ctx, types.NamespacedName{
-			Namespace: plan.Status.CronJob.Namespace,
-			Name:      plan.Status.CronJob.Name,
+			Namespace: plan.GetStatus().CronJob.Namespace,
+			Name:      plan.GetStatus().CronJob.Name,
 		}, &cronJob)).Should(Succeed())
 		spawned := false
 		for !spawned {
@@ -323,7 +314,7 @@ else
   echo "unexpected app label: $app"
   exit 2
 fi
-				`, accessKeyID, secretAccessKey, namespace, plan.ObjectMeta.Name, "mongodb")},
+				`, accessKeyID, secretAccessKey, namespace, plan.GetObjectMeta().Name, "mongodb")},
 			},
 		}
 		Expect(k8sClient.Create(ctx, &testjob)).Should(Succeed())
@@ -403,14 +394,14 @@ var _ = Describe("ConsulBackupPlanReconciler", func() {
 		Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
 		var secret corev1.Secret
 		Expect(k8sClient.Get(ctx, types.NamespacedName{
-			Namespace: plan.Status.Secret.Namespace,
-			Name:      plan.Status.Secret.Name,
+			Namespace: plan.GetStatus().Secret.Namespace,
+			Name:      plan.GetStatus().Secret.Name,
 		}, &secret)).Should(Succeed())
 		Expect(secret.Data).NotTo(BeNil())
 		raw, ok := secret.Data[secretFieldName]
 		Expect(ok).To(Equal(true))
 		var content backupv1alpha1.ConsulBackupPlan
 		Expect(json.Unmarshal(raw, &content)).Should(Succeed())
-		Expect(content.Spec).To(Equal(plan.Spec))
+		Expect(content.Spec).To(Equal(plan.GetSpec()))
 	})
 })
