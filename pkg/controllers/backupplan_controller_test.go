@@ -190,7 +190,7 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 		Expect(ok).To(Equal(true))
 		var content backupv1alpha1.MongoDBBackupPlan
 		Expect(json.Unmarshal(raw, &content)).Should(Succeed())
-		Expect(content.Spec).To(Equal(plan.GetSpec()))
+		Expect(content.Spec).To(Equal(*plan.GetSpec()))
 	})
 	It("creates relevant CronJob", func() {
 		plan := mustCreateNewMongoDBBackupPlan(namespace)
@@ -402,6 +402,6 @@ var _ = Describe("ConsulBackupPlanReconciler", func() {
 		Expect(ok).To(Equal(true))
 		var content backupv1alpha1.ConsulBackupPlan
 		Expect(json.Unmarshal(raw, &content)).Should(Succeed())
-		Expect(content.Spec).To(Equal(plan.GetSpec()))
+		Expect(content.Spec).To(Equal(*plan.GetSpec()))
 	})
 })
