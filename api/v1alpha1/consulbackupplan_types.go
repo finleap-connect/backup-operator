@@ -54,20 +54,20 @@ type ConsulBackupPlan struct {
 	ConsulSpec ConsulBackupPlanSpec `json:"specConsul,omitempty"`
 }
 
-func (p *ConsulBackupPlan) GetTypeMeta() metav1.TypeMeta {
-	return p.TypeMeta
+func (p *ConsulBackupPlan) GetTypeMeta() *metav1.TypeMeta {
+	return &p.TypeMeta
 }
 
-func (p *ConsulBackupPlan) GetObjectMeta() metav1.ObjectMeta {
-	return p.ObjectMeta
+func (p *ConsulBackupPlan) GetObjectMeta() *metav1.ObjectMeta {
+	return &p.ObjectMeta
 }
 
-func (p *ConsulBackupPlan) GetSpec() BackupPlanSpec {
-	return p.Spec
+func (p *ConsulBackupPlan) GetSpec() *BackupPlanSpec {
+	return &p.Spec
 }
 
-func (p *ConsulBackupPlan) GetStatus() BackupPlanStatus {
-	return p.Status
+func (p *ConsulBackupPlan) GetStatus() *BackupPlanStatus {
+	return &p.Status
 }
 
 func (p *ConsulBackupPlan) GetKind() string {

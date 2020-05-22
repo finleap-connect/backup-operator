@@ -25,10 +25,10 @@ import (
 type BackupPlan interface {
 	runtime.Object
 	metav1.Object
-	GetTypeMeta() metav1.TypeMeta
-	GetObjectMeta() metav1.ObjectMeta
-	GetSpec() v1alpha1.BackupPlanSpec
-	GetStatus() v1alpha1.BackupPlanStatus
+	GetTypeMeta() *metav1.TypeMeta
+	GetObjectMeta() *metav1.ObjectMeta
+	GetSpec() *v1alpha1.BackupPlanSpec
+	GetStatus() *v1alpha1.BackupPlanStatus
 	GetKind() string
 	GetCmd() string
 }

@@ -45,20 +45,20 @@ type MongoDBBackupPlan struct {
 	MongoDbSpec MongoDBBackupPlanSpec `json:"specMongoDb,omitempty"`
 }
 
-func (p *MongoDBBackupPlan) GetTypeMeta() metav1.TypeMeta {
-	return p.TypeMeta
+func (p *MongoDBBackupPlan) GetTypeMeta() *metav1.TypeMeta {
+	return &p.TypeMeta
 }
 
-func (p *MongoDBBackupPlan) GetObjectMeta() metav1.ObjectMeta {
-	return p.ObjectMeta
+func (p *MongoDBBackupPlan) GetObjectMeta() *metav1.ObjectMeta {
+	return &p.ObjectMeta
 }
 
-func (p *MongoDBBackupPlan) GetSpec() BackupPlanSpec {
-	return p.Spec
+func (p *MongoDBBackupPlan) GetSpec() *BackupPlanSpec {
+	return &p.Spec
 }
 
-func (p *MongoDBBackupPlan) GetStatus() BackupPlanStatus {
-	return p.Status
+func (p *MongoDBBackupPlan) GetStatus() *BackupPlanStatus {
+	return &p.Status
 }
 
 func (p *MongoDBBackupPlan) GetKind() string {
