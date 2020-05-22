@@ -40,11 +40,15 @@ const (
 	secretAccessKey = "TESTSECRETKEY"
 )
 
+// Add api types to test here
 var planTypes = [2]backupv1alpha1.BackupPlan{
 	&backupv1alpha1.ConsulBackupPlan{},
 	&backupv1alpha1.MongoDBBackupPlan{},
 }
 
+type CreateNewBackupPlanFunc = func(namespace string) backupv1alpha1.BackupPlan
+
+// Add function to create api types to test here
 var createTypeFuncs = map[string]CreateNewBackupPlanFunc{
 	backupv1alpha1.ConsulBackupPlanKind: func(namespace string) backupv1alpha1.BackupPlan {
 		return newConsulBackupPlan(namespace)
@@ -56,7 +60,6 @@ var createTypeFuncs = map[string]CreateNewBackupPlanFunc{
 
 type UpdateMongoDBBackupPlanFunc = func(spec *backupv1alpha1.MongoDBBackupPlan)
 type UpdateConsulBackupPlanFunc = func(spec *backupv1alpha1.ConsulBackupPlan)
-type CreateNewBackupPlanFunc = func(namespace string) backupv1alpha1.BackupPlan
 
 func newObjectMeta(namespace string) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
@@ -123,6 +126,7 @@ func mustCreateNewBackupPlan(planType backupv1alpha1.BackupPlan, namespace strin
 	return plan
 }
 
+// General backup reconciler tests
 var _ = Describe("BackupPlanReconciler", func() {
 	ctx := context.Background()
 	namespace := ""
@@ -236,6 +240,7 @@ var _ = Describe("BackupPlanReconciler", func() {
 	})
 })
 
+// MongoDB specific tests
 var _ = Describe("MongoDBBackupPlanReconciler", func() {
 	ctx := context.Background()
 	namespace := ""
