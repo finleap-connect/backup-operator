@@ -40,8 +40,23 @@ const (
 	secretAccessKey = "TESTSECRETKEY"
 )
 
+var planTypes = [2]backupv1alpha1.BackupPlan{
+	&backupv1alpha1.ConsulBackupPlan{},
+	&backupv1alpha1.MongoDBBackupPlan{},
+}
+
+var createTypeFuncs = map[string]CreateNewBackupPlanFunc{
+	backupv1alpha1.ConsulBackupPlanKind: func(namespace string) backupv1alpha1.BackupPlan {
+		return newConsulBackupPlan(namespace)
+	},
+	backupv1alpha1.MongoDBBackupPlanKind: func(namespace string) backupv1alpha1.BackupPlan {
+		return newMongoDBBackupPlan(namespace)
+	},
+}
+
 type UpdateMongoDBBackupPlanFunc = func(spec *backupv1alpha1.MongoDBBackupPlan)
 type UpdateConsulBackupPlanFunc = func(spec *backupv1alpha1.ConsulBackupPlan)
+type CreateNewBackupPlanFunc = func(namespace string) backupv1alpha1.BackupPlan
 
 func newObjectMeta(namespace string) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
@@ -95,19 +110,20 @@ func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFu
 	return plan
 }
 
-func mustCreateNewConsulBackupPlan(namespace string, updates ...UpdateConsulBackupPlanFunc) backupv1alpha1.BackupPlan {
-	plan := newConsulBackupPlan(namespace, updates...)
-	Expect(k8sClient.Create(context.Background(), plan)).Should(Succeed())
-	return plan
-}
-
 func mustCreateNewMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFunc) backupv1alpha1.BackupPlan {
 	plan := newMongoDBBackupPlan(namespace, updates...)
 	Expect(k8sClient.Create(context.Background(), plan)).Should(Succeed())
 	return plan
 }
 
-var _ = Describe("MongoDBBackupPlanReconciler", func() {
+func mustCreateNewBackupPlan(planType backupv1alpha1.BackupPlan, namespace string) backupv1alpha1.BackupPlan {
+	f := createTypeFuncs[planType.GetKind()]
+	plan := f(namespace)
+	Expect(k8sClient.Create(context.Background(), plan)).Should(Succeed())
+	return plan
+}
+
+var _ = Describe("BackupPlanReconciler", func() {
 	ctx := context.Background()
 	namespace := ""
 
@@ -120,54 +136,64 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 
 	It("can create MongoDBBackupPlans", func() {
 		Context("with missing data", func() {
-			Expect(k8sClient.Create(ctx, &backupv1alpha1.MongoDBBackupPlan{})).ShouldNot(Succeed())
+			for _, planType := range planTypes {
+				Expect(k8sClient.Create(ctx, planType.New())).ShouldNot(Succeed())
+			}
 		})
 		Context("with valid data", func() {
-			plan := mustCreateNewMongoDBBackupPlan(namespace)
-			defer mustRemoveFinalizers(plan)
+			for _, planType := range planTypes {
+				plan := mustCreateNewBackupPlan(planType, namespace)
+				defer mustRemoveFinalizers(plan)
+			}
 		})
 	})
 	It("can process MongoDBBackupPlans", func() {
 		Context("which are just created", func() {
-			plan := mustCreateNewMongoDBBackupPlan(namespace)
-			defer mustRemoveFinalizers(plan)
-			res := mustReconcile(plan)
-			Expect(res.Requeue).To(Equal(false))
+			for _, planType := range planTypes {
+				plan := mustCreateNewBackupPlan(planType, namespace)
+				defer mustRemoveFinalizers(plan)
+				res := mustReconcile(plan)
+				Expect(res.Requeue).To(Equal(false))
+			}
 		})
 		Context("which were deleted", func() {
-			plan := mustCreateNewMongoDBBackupPlan(namespace)
-			defer func() {
-				// If this test fails, we need to make sure the finalizers are removed
-				if err := k8sClient.Get(ctx, namespacedName(plan), plan); err == nil {
-					mustRemoveFinalizers(plan)
-				}
-			}()
-			res := mustReconcile(plan)
-			Expect(res.Requeue).To(Equal(false))
-			Expect(k8sClient.Delete(ctx, plan)).Should(Succeed())
-			Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
-			res = mustReconcile(plan)
-			Expect(res.Requeue).To(Equal(false))
-			// Check if the owned resources were freed
-			var secret corev1.Secret
-			Expect(client.IgnoreNotFound(k8sClient.Get(ctx, types.NamespacedName{
-				Namespace: plan.GetStatus().Secret.Namespace,
-				Name:      plan.GetStatus().Secret.Name,
-			}, &secret))).Should(Succeed())
-			var cronJob batchv1beta1.CronJob
-			Expect(client.IgnoreNotFound(k8sClient.Get(ctx, types.NamespacedName{
-				Namespace: plan.GetStatus().CronJob.Namespace,
-				Name:      plan.GetStatus().CronJob.Name,
-			}, &cronJob))).Should(Succeed())
+			for _, planType := range planTypes {
+				plan := mustCreateNewBackupPlan(planType, namespace)
+				defer func() {
+					// If this test fails, we need to make sure the finalizers are removed
+					if err := k8sClient.Get(ctx, namespacedName(plan), plan); err == nil {
+						mustRemoveFinalizers(plan)
+					}
+				}()
+				res := mustReconcile(plan)
+				Expect(res.Requeue).To(Equal(false))
+				Expect(k8sClient.Delete(ctx, plan)).Should(Succeed())
+				Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
+				res = mustReconcile(plan)
+				Expect(res.Requeue).To(Equal(false))
+				// Check if the owned resources were freed
+				var secret corev1.Secret
+				Expect(client.IgnoreNotFound(k8sClient.Get(ctx, types.NamespacedName{
+					Namespace: plan.GetStatus().Secret.Namespace,
+					Name:      plan.GetStatus().Secret.Name,
+				}, &secret))).Should(Succeed())
+				var cronJob batchv1beta1.CronJob
+				Expect(client.IgnoreNotFound(k8sClient.Get(ctx, types.NamespacedName{
+					Namespace: plan.GetStatus().CronJob.Namespace,
+					Name:      plan.GetStatus().CronJob.Name,
+				}, &cronJob))).Should(Succeed())
+			}
 		})
 	})
 	DescribeTable("can process MongoDBBackupPlans multiple times",
 		func(count int) {
-			plan := mustCreateNewMongoDBBackupPlan(namespace)
-			defer mustRemoveFinalizers(plan)
-			for i := 0; i < count; i++ {
-				res := mustReconcile(plan)
-				Expect(res.Requeue).To(Equal(false))
+			for _, planType := range planTypes {
+				plan := mustCreateNewBackupPlan(planType, namespace)
+				defer mustRemoveFinalizers(plan)
+				for i := 0; i < count; i++ {
+					res := mustReconcile(plan)
+					Expect(res.Requeue).To(Equal(false))
+				}
 			}
 		},
 		Entry("twice", 2),
@@ -175,35 +201,52 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 		Entry("five times", 5),
 	)
 	It("creates relevant Secret", func() {
-		plan := mustCreateNewMongoDBBackupPlan(namespace)
-		defer mustRemoveFinalizers(plan)
-		res := mustReconcile(plan)
-		Expect(res.Requeue).To(Equal(false))
-		Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
-		var secret corev1.Secret
-		Expect(k8sClient.Get(ctx, types.NamespacedName{
-			Namespace: plan.GetStatus().Secret.Namespace,
-			Name:      plan.GetStatus().Secret.Name,
-		}, &secret)).Should(Succeed())
-		Expect(secret.Data).NotTo(BeNil())
-		raw, ok := secret.Data[secretFieldName]
-		Expect(ok).To(Equal(true))
-		var content backupv1alpha1.MongoDBBackupPlan
-		Expect(json.Unmarshal(raw, &content)).Should(Succeed())
-		Expect(content.Spec).To(Equal(*plan.GetSpec()))
+		for _, planType := range planTypes {
+			plan := mustCreateNewBackupPlan(planType, namespace)
+			defer mustRemoveFinalizers(plan)
+			res := mustReconcile(plan)
+			Expect(res.Requeue).To(Equal(false))
+			Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
+			var secret corev1.Secret
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Namespace: plan.GetStatus().Secret.Namespace,
+				Name:      plan.GetStatus().Secret.Name,
+			}, &secret)).Should(Succeed())
+			Expect(secret.Data).NotTo(BeNil())
+			raw, ok := secret.Data[secretFieldName]
+			Expect(ok).To(Equal(true))
+			var content backupv1alpha1.MongoDBBackupPlan
+			Expect(json.Unmarshal(raw, &content)).Should(Succeed())
+			Expect(content.Spec).To(Equal(*plan.GetSpec()))
+		}
 	})
 	It("creates relevant CronJob", func() {
-		plan := mustCreateNewMongoDBBackupPlan(namespace)
-		defer mustRemoveFinalizers(plan)
-		res := mustReconcile(plan)
-		Expect(res.Requeue).To(Equal(false))
-		Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
-		var cronJob batchv1beta1.CronJob
-		Expect(k8sClient.Get(ctx, types.NamespacedName{
-			Namespace: plan.GetStatus().CronJob.Namespace,
-			Name:      plan.GetStatus().CronJob.Name,
-		}, &cronJob)).Should(Succeed())
+		for _, planType := range planTypes {
+			plan := mustCreateNewBackupPlan(planType, namespace)
+			defer mustRemoveFinalizers(plan)
+			res := mustReconcile(plan)
+			Expect(res.Requeue).To(Equal(false))
+			Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
+			var cronJob batchv1beta1.CronJob
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Namespace: plan.GetStatus().CronJob.Namespace,
+				Name:      plan.GetStatus().CronJob.Name,
+			}, &cronJob)).Should(Succeed())
+		}
 	})
+})
+
+var _ = Describe("MongoDBBackupPlanReconciler", func() {
+	ctx := context.Background()
+	namespace := ""
+
+	BeforeEach(func() {
+		namespace = mustCreateNamespace()
+	})
+	AfterEach(func() {
+		mustDeleteNamespace(namespace)
+	})
+
 	It("works end-to-end", func() {
 		if !shouldRunLongTests {
 			Skip("TEST_LONG not set")
@@ -327,81 +370,5 @@ fi
 			}
 		}
 		Expect(k8sClient.Delete(ctx, plan)).Should(Succeed())
-	})
-})
-
-var _ = Describe("ConsulBackupPlanReconciler", func() {
-	ctx := context.Background()
-	namespace := ""
-
-	BeforeEach(func() {
-		namespace = mustCreateNamespace()
-	})
-	AfterEach(func() {
-		mustDeleteNamespace(namespace)
-	})
-
-	It("can create ConsulBackupPlans", func() {
-		Context("with missing data", func() {
-			Expect(k8sClient.Create(ctx, &backupv1alpha1.ConsulBackupPlan{})).ShouldNot(Succeed())
-		})
-		Context("with valid data", func() {
-			plan := mustCreateNewConsulBackupPlan(namespace)
-			defer mustRemoveFinalizers(plan)
-		})
-	})
-	It("can process ConsulBackupPlans", func() {
-		Context("which are just created", func() {
-			plan := mustCreateNewConsulBackupPlan(namespace)
-			defer mustRemoveFinalizers(plan)
-			res := mustReconcile(plan)
-			Expect(res.Requeue).To(Equal(false))
-		})
-		Context("which were deleted", func() {
-			plan := mustCreateNewConsulBackupPlan(namespace)
-			defer func() {
-				// If this test fails, we need to make sure the finalizers are removed
-				if err := k8sClient.Get(ctx, namespacedName(plan), plan); err == nil {
-					mustRemoveFinalizers(plan)
-				}
-			}()
-			res := mustReconcile(plan)
-			Expect(res.Requeue).To(Equal(false))
-			Expect(k8sClient.Delete(ctx, plan)).Should(Succeed())
-			Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
-			res = mustReconcile(plan)
-			Expect(res.Requeue).To(Equal(false))
-		})
-	})
-	DescribeTable("can process ConsulBackupPlans multiple times",
-		func(count int) {
-			plan := mustCreateNewConsulBackupPlan(namespace)
-			defer mustRemoveFinalizers(plan)
-			for i := 0; i < count; i++ {
-				res := mustReconcile(plan)
-				Expect(res.Requeue).To(Equal(false))
-			}
-		},
-		Entry("twice", 2),
-		Entry("three times", 3),
-		Entry("five times", 5),
-	)
-	It("creates relevant Secret", func() {
-		plan := mustCreateNewConsulBackupPlan(namespace)
-		defer mustRemoveFinalizers(plan)
-		res := mustReconcile(plan)
-		Expect(res.Requeue).To(Equal(false))
-		Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
-		var secret corev1.Secret
-		Expect(k8sClient.Get(ctx, types.NamespacedName{
-			Namespace: plan.GetStatus().Secret.Namespace,
-			Name:      plan.GetStatus().Secret.Name,
-		}, &secret)).Should(Succeed())
-		Expect(secret.Data).NotTo(BeNil())
-		raw, ok := secret.Data[secretFieldName]
-		Expect(ok).To(Equal(true))
-		var content backupv1alpha1.ConsulBackupPlan
-		Expect(json.Unmarshal(raw, &content)).Should(Succeed())
-		Expect(content.Spec).To(Equal(*plan.GetSpec()))
 	})
 })
