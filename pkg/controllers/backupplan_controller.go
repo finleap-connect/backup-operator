@@ -60,10 +60,8 @@ func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	ctx := context.Background()
 	log := r.Log.WithValues(r.Type.GetKind(), req.NamespacedName)
 
-	var err error
 	var plan backupv1alpha1.BackupPlan = r.Type.New()
-
-	err = r.Get(ctx, req.NamespacedName, plan)
+	err := r.Get(ctx, req.NamespacedName, plan)
 	if err != nil {
 		log.Error(err, fmt.Sprintf("unable to fetch %v", r.Type.GetKind()))
 		// We'll ignore not-found errors, since they can't be fixed by an immediate
@@ -255,7 +253,6 @@ func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		r.Recorder.Event(plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Failed to update MongoDBBackupPlan: %v", err))
 		return ctrl.Result{}, err
 	}
-
 	return ctrl.Result{}, nil
 }
 
