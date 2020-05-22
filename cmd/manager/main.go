@@ -74,7 +74,7 @@ func main() {
 		Scheme:             mgr.GetScheme(),
 		DefaultDestination: nil, // TODO
 		WorkerImage:        workerImage,
-		Kind:               backupv1alpha1.MongoDBBackupPlanKind,
+		Type:               &backupv1alpha1.MongoDBBackupPlan{},
 	}).SetupWithManager(mgr, &backupv1alpha1.MongoDBBackupPlan{}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MongoDBBackupPlan")
 		os.Exit(1)
@@ -85,7 +85,7 @@ func main() {
 		Scheme:             mgr.GetScheme(),
 		DefaultDestination: nil, // TODO
 		WorkerImage:        workerImage,
-		Kind:               backupv1alpha1.ConsulBackupPlanKind,
+		Type:               &backupv1alpha1.ConsulBackupPlan{},
 	}).SetupWithManager(mgr, &backupv1alpha1.ConsulBackupPlan{}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ConsulBackupPlan")
 		os.Exit(1)

@@ -18,6 +18,8 @@ package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const BackupPlanKind = "BackupPlan"
@@ -61,4 +63,17 @@ type BackupPlanStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 	CronJob *corev1.ObjectReference `json:"cronJob,omitempty"`
 	Secret  *corev1.ObjectReference `json:"secret,omitempty"`
+}
+
+// +kubebuilder:object:generate:=false
+type BackupPlan interface {
+	runtime.Object
+	metav1.Object
+	GetTypeMeta() *metav1.TypeMeta
+	GetObjectMeta() *metav1.ObjectMeta
+	GetSpec() *BackupPlanSpec
+	GetStatus() *BackupPlanStatus
+	GetKind() string
+	GetCmd() string
+	New() BackupPlan
 }

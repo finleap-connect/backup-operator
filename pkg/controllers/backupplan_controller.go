@@ -45,7 +45,7 @@ type BackupPlanReconciler struct {
 	Recorder           record.EventRecorder
 	DefaultDestination *backupv1alpha1.Destination // TODO: to implement
 	WorkerImage        string
-	Kind               string
+	Type               backupv1alpha1.BackupPlan
 }
 
 // +kubebuilder:rbac:groups=backup.kubism.io,resources=mongodbbackupplans,verbs=get;list;watch;create;update;patch;delete
@@ -58,28 +58,14 @@ type BackupPlanReconciler struct {
 
 func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
-	log := r.Log.WithValues(r.Kind, req.NamespacedName)
+	log := r.Log.WithValues(r.Type.GetKind(), req.NamespacedName)
 
 	var err error
-	var plan BackupPlan
-	if r.Kind == backupv1alpha1.MongoDBBackupPlanKind {
-		var t backupv1alpha1.MongoDBBackupPlan
-		err = r.Get(ctx, req.NamespacedName, &t)
-		if err == nil {
-			plan = &t
-		}
-	} else if r.Kind == backupv1alpha1.ConsulBackupPlanKind {
-		var t backupv1alpha1.ConsulBackupPlan
-		err = r.Get(ctx, req.NamespacedName, &t)
-		if err == nil {
-			plan = &t
-		}
-	} else {
-		return ctrl.Result{}, fmt.Errorf("type %v not implemented", r.Kind)
-	}
+	var plan backupv1alpha1.BackupPlan = r.Type.New()
 
+	err = r.Get(ctx, req.NamespacedName, plan)
 	if err != nil {
-		log.Error(err, fmt.Sprintf("unable to fetch %v", r.Kind))
+		log.Error(err, fmt.Sprintf("unable to fetch %v", r.Type.GetKind()))
 		// We'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
 		// on deleted requests.

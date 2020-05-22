@@ -78,6 +78,10 @@ func (p *ConsulBackupPlan) GetCmd() string {
 	return ConsulBackupPlanWorkerCommand
 }
 
+func (p *ConsulBackupPlan) New() BackupPlan {
+	return &ConsulBackupPlan{}
+}
+
 // +kubebuilder:object:root=true
 
 // ConsulBackupPlanList contains a list of ConsulBackupPlan

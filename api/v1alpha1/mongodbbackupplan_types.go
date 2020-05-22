@@ -69,6 +69,10 @@ func (p *MongoDBBackupPlan) GetCmd() string {
 	return MongoDBBackupPlanWorkerCommand
 }
 
+func (p *MongoDBBackupPlan) New() BackupPlan {
+	return &MongoDBBackupPlan{}
+}
+
 // +kubebuilder:object:root=true
 
 // MongoDBBackupPlanList contains a list of MongoDBBackupPlan
