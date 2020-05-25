@@ -73,6 +73,8 @@ Using the command above will generate several classes for you:
 * `controllers/<somebackupplan>_controller.go`
   * Please add the annotations for your type to the `Reconcile` function in file [backupplan_controller.go](pkg/controllers/backupplan_controller.go) and delete the generated controller file
 
+Please have a look at the existing types, e.g. the [mongodbbackupplan_types.go](api/v1alpha1/mongodbbackupplan_types.go). All backup plans use the base types provided in [backupplan_types.go](api/v1alpha1/backupplan_types.go) for the general backup plan settings. Additional settings needed must be created by you, like it has been done for the existing plans. New backup plan types have to implement the interface `BackupPlan` so that the generic controller implementation will work for your new type.
+
 In addition to the operator specifics you have to implement a new command as part of the worker below `cmd/worker` like for the existing ones, e.g. [`mongodb`](cmd/worker/mongodb.go).
 
 Please add tests for all new parts added to the operator.
