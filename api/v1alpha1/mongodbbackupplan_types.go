@@ -25,6 +25,8 @@ const MongoDBBackupPlanWorkerCommand = "mongodb"
 
 // MongoDBBackupPlanSpec defines the desired state of MongoDBBackupPlan
 type MongoDBBackupPlanSpec struct {
+	BackupPlanSpec `json:",inline"`
+
 	// Fully qualifying MongoDB URI connection string. Environment variables
 	// will be evaluated before usage.
 	URI string `json:"uri"`
@@ -37,10 +39,8 @@ type MongoDBBackupPlan struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   BackupPlanSpec   `json:"spec,omitempty"`
-	Status BackupPlanStatus `json:"status,omitempty"`
-
-	MongoDbSpec MongoDBBackupPlanSpec `json:"specMongoDb,omitempty"`
+	Spec   MongoDBBackupPlanSpec `json:"spec,omitempty"`
+	Status BackupPlanStatus      `json:"status,omitempty"`
 }
 
 func (p *MongoDBBackupPlan) GetTypeMeta() *metav1.TypeMeta {
@@ -52,7 +52,7 @@ func (p *MongoDBBackupPlan) GetObjectMeta() *metav1.ObjectMeta {
 }
 
 func (p *MongoDBBackupPlan) GetSpec() *BackupPlanSpec {
-	return &p.Spec
+	return &p.Spec.BackupPlanSpec
 }
 
 func (p *MongoDBBackupPlan) GetStatus() *BackupPlanStatus {

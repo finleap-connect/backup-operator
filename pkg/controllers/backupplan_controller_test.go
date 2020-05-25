@@ -88,9 +88,9 @@ func newBackupPlanSpec(namespace string) backupv1alpha1.BackupPlanSpec {
 func newConsulBackupPlan(namespace string, updates ...UpdateConsulBackupPlanFunc) backupv1alpha1.BackupPlan {
 	plan := &backupv1alpha1.ConsulBackupPlan{
 		ObjectMeta: newObjectMeta(namespace),
-		Spec:       newBackupPlanSpec(namespace),
-		ConsulSpec: backupv1alpha1.ConsulBackupPlanSpec{
-			Address: "localhost:27017",
+		Spec: backupv1alpha1.ConsulBackupPlanSpec{
+			BackupPlanSpec: newBackupPlanSpec(namespace),
+			Address:        "localhost:27017",
 		},
 	}
 	for _, f := range updates {
@@ -102,9 +102,9 @@ func newConsulBackupPlan(namespace string, updates ...UpdateConsulBackupPlanFunc
 func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFunc) backupv1alpha1.BackupPlan {
 	plan := &backupv1alpha1.MongoDBBackupPlan{
 		ObjectMeta: newObjectMeta(namespace),
-		Spec:       newBackupPlanSpec(namespace),
-		MongoDbSpec: backupv1alpha1.MongoDBBackupPlanSpec{
-			URI: "mongodb://localhost:27017",
+		Spec: backupv1alpha1.MongoDBBackupPlanSpec{
+			BackupPlanSpec: newBackupPlanSpec(namespace),
+			URI:            "mongodb://localhost:27017",
 		},
 	}
 	for _, f := range updates {
@@ -138,7 +138,7 @@ var _ = Describe("BackupPlanReconciler", func() {
 		mustDeleteNamespace(namespace)
 	})
 
-	It("can create MongoDBBackupPlans", func() {
+	It("can create BackupPlans", func() {
 		Context("with missing data", func() {
 			for _, planType := range planTypes {
 				Expect(k8sClient.Create(ctx, planType.New())).ShouldNot(Succeed())
@@ -151,7 +151,7 @@ var _ = Describe("BackupPlanReconciler", func() {
 			}
 		})
 	})
-	It("can process MongoDBBackupPlans", func() {
+	It("can process BackupPlans", func() {
 		Context("which are just created", func() {
 			for _, planType := range planTypes {
 				plan := mustCreateNewBackupPlan(planType, namespace)
@@ -189,7 +189,7 @@ var _ = Describe("BackupPlanReconciler", func() {
 			}
 		})
 	})
-	DescribeTable("can process MongoDBBackupPlans multiple times",
+	DescribeTable("can process BackupPlans multiple times",
 		func(count int) {
 			for _, planType := range planTypes {
 				plan := mustCreateNewBackupPlan(planType, namespace)
@@ -219,9 +219,9 @@ var _ = Describe("BackupPlanReconciler", func() {
 			Expect(secret.Data).NotTo(BeNil())
 			raw, ok := secret.Data[secretFieldName]
 			Expect(ok).To(Equal(true))
-			var content backupv1alpha1.MongoDBBackupPlan
+			content := plan.New()
 			Expect(json.Unmarshal(raw, &content)).Should(Succeed())
-			Expect(content.Spec).To(Equal(*plan.GetSpec()))
+			Expect(content.GetSpec()).To(Equal(plan.GetSpec()))
 		}
 	})
 	It("creates relevant CronJob", func() {
@@ -295,7 +295,7 @@ var _ = Describe("MongoDBBackupPlanReconciler", func() {
 					},
 				},
 			}
-			p.MongoDbSpec.URI = "mongodb://root:$MONGODB_ROOT_PASSWORD@src-mongodb:27017/admin"
+			p.Spec.URI = "mongodb://root:$MONGODB_ROOT_PASSWORD@src-mongodb:27017/admin"
 			p.Spec.Destination.S3.Endpoint = "http://dst-minio:9000"
 			p.Spec.Pushgateway.URL = "mon-prometheus-pushgateway:9091"
 		})

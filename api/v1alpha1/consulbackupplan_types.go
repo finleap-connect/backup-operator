@@ -25,6 +25,8 @@ const ConsulBackupPlanWorkerCommand = "consul"
 
 // ConsulBackupPlanSpec defines the desired state of ConsulBackupPlan
 type ConsulBackupPlanSpec struct {
+	BackupPlanSpec `json:",inline"`
+
 	// Address of Consul. Environment variables
 	// will be evaluated before usage.
 	Address string `json:"address"`
@@ -45,10 +47,8 @@ type ConsulBackupPlan struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   BackupPlanSpec   `json:"spec,omitempty"`
-	Status BackupPlanStatus `json:"status,omitempty"`
-
-	ConsulSpec ConsulBackupPlanSpec `json:"specConsul,omitempty"`
+	Spec   ConsulBackupPlanSpec `json:"spec,omitempty"`
+	Status BackupPlanStatus     `json:"status,omitempty"`
 }
 
 func (p *ConsulBackupPlan) GetTypeMeta() *metav1.TypeMeta {
@@ -60,7 +60,7 @@ func (p *ConsulBackupPlan) GetObjectMeta() *metav1.ObjectMeta {
 }
 
 func (p *ConsulBackupPlan) GetSpec() *BackupPlanSpec {
-	return &p.Spec
+	return &p.Spec.BackupPlanSpec
 }
 
 func (p *ConsulBackupPlan) GetStatus() *BackupPlanStatus {
