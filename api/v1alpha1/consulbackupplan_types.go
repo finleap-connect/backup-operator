@@ -23,9 +23,6 @@ import (
 const ConsulBackupPlanKind = "ConsulBackupPlan"
 const ConsulBackupPlanWorkerCommand = "consul"
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // ConsulBackupPlanSpec defines the desired state of ConsulBackupPlan
 type ConsulBackupPlanSpec struct {
 	// Address of Consul. Environment variables

@@ -23,8 +23,6 @@ import (
 const MongoDBBackupPlanKind = "MongoDBBackupPlan"
 const MongoDBBackupPlanWorkerCommand = "mongodb"
 
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // MongoDBBackupPlanSpec defines the desired state of MongoDBBackupPlan
 type MongoDBBackupPlanSpec struct {
 	// Fully qualifying MongoDB URI connection string. Environment variables

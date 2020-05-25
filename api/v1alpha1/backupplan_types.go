@@ -24,14 +24,8 @@ import (
 
 const BackupPlanKind = "BackupPlan"
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // BackupPlanSpec defines the desired state of BackupPlan
 type BackupPlanSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// Schedule in cron format
 	Schedule string `json:"schedule"`
 
@@ -59,13 +53,13 @@ type BackupPlanSpec struct {
 
 // BackupPlanStatus defines the observed state of BackupPlan
 type BackupPlanStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 	CronJob *corev1.ObjectReference `json:"cronJob,omitempty"`
 	Secret  *corev1.ObjectReference `json:"secret,omitempty"`
 }
 
 // +kubebuilder:object:generate:=false
+
+// BackupPlan defines the interface of all BackupPlans
 type BackupPlan interface {
 	runtime.Object
 	metav1.Object
