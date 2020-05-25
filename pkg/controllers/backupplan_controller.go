@@ -250,7 +250,7 @@ func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 	if err := r.Update(ctx, plan); err != nil {
 		log.Error(err, "status update failed")
-		r.Recorder.Event(plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Failed to update MongoDBBackupPlan: %v", err))
+		r.Recorder.Event(plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Failed to update BackupPlan: %v", err))
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
