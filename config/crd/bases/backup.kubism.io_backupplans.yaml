@@ -6,18 +6,18 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
-  name: consulbackupplans.backup.kubism.io
+  name: backupplans.backup.kubism.io
 spec:
   group: backup.kubism.io
   names:
-    kind: ConsulBackupPlan
-    listKind: ConsulBackupPlanList
-    plural: consulbackupplans
-    singular: consulbackupplan
+    kind: BackupPlan
+    listKind: BackupPlanList
+    plural: backupplans
+    singular: backupplan
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: ConsulBackupPlan is the Schema for the consulbackupplans API
+      description: BackupPlan is the Schema for the backupplans API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -32,16 +32,12 @@ spec:
         metadata:
           type: object
         spec:
-          description: ConsulBackupPlanSpec defines the desired state of ConsulBackupPlan
+          description: BackupPlanSpec defines the desired state of BackupPlan
           properties:
             activeDeadlineSeconds:
               format: int64
               minimum: 1
               type: integer
-            address:
-              description: Address of Consul. Environment variables will be evaluated
-                before usage.
-              type: string
             destination:
               description: Destination for the backup. If none is provided the default
                 destination will be tried.
@@ -164,9 +160,6 @@ spec:
                 - name
                 type: object
               type: array
-            password:
-              description: Password to authenticate with consul
-              type: string
             pushgateway:
               description: Setup for metrics
               properties:
@@ -185,12 +178,8 @@ spec:
             schedule:
               description: Schedule in cron format
               type: string
-            username:
-              description: Username to authenticate with consul
-              type: string
           required:
           - activeDeadlineSeconds
-          - address
           - retention
           - schedule
           type: object
@@ -198,8 +187,9 @@ spec:
           description: BackupPlanStatus defines the observed state of BackupPlan
           properties:
             cronJob:
-              description: ObjectReference contains enough information to let you
-                inspect or modify the referred object.
+              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                of cluster Important: Run "make" to regenerate code after modifying
+                this file'
               properties:
                 apiVersion:
                   description: API version of the referent.

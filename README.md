@@ -38,6 +38,9 @@ To make sure those can be properly used in tests, several helpers were implement
 
 The tests depend on `docker` and `kind` and use [`ginkgo`](https://github.com/onsi/ginkgo) and [`gomega`](https://github.com/onsi/gomega). To spin up containers for tests [`ory/dockertest`](https://github.com/ory/dockertest) is used. For the controller tests `kind` is used, which has the advantage, compared to the more lightweight kubebuilder assets approach, to properly handle finalizers and allow integration tests.
 
+#### Adding a new backup type
+
+If you've extended the operator you need to test that the controller reconciles your new backup plan correctly. To do this, you have to add your new api type to variable `planTypes` in the file [backupplan_controller_test.go](pkg/controllers/backupplan_controller_test.go). Additionally you have to provide a function to create a new instance of your new type and add it to the variable `createTypeFuncs` in the same file. After this all controller related functionally will be tested with your newly created type as well.
 
 ### Kubebuilder
 
@@ -68,8 +71,9 @@ Using the command above will generate several classes for you:
 * `api/<version>/<somebackupplan>_types.go`
   * Add the spec and other necessary stuff for your new Kind here
 * `controllers/<somebackupplan>_controller.go`
-  * Please move the file to `pkg/controllers/<somebackupplan>_controller.go`
-  * Implement the controller for your new Kind
+  * Please add the annotations for your type to the `Reconcile` function in file [backupplan_controller.go](pkg/controllers/backupplan_controller.go) and delete the generated controller file
+
+Please have a look at the existing types, e.g. the [mongodbbackupplan_types.go](api/v1alpha1/mongodbbackupplan_types.go). All backup plans use the base types provided in [backupplan_types.go](api/v1alpha1/backupplan_types.go) for the general backup plan settings. Additional settings needed must be created by you, like it has been done for the existing plans. New backup plan types have to implement the interface `BackupPlan` so that the generic controller implementation will work for your new type.
 
 In addition to the operator specifics you have to implement a new command as part of the worker below `cmd/worker` like for the existing ones, e.g. [`mongodb`](cmd/worker/mongodb.go).
 

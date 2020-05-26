@@ -68,23 +68,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.MongoDBBackupPlanReconciler{
+	if err = (&controllers.BackupPlanReconciler{
 		Client:             mgr.GetClient(),
 		Log:                ctrl.Log.WithName("controllers").WithName("MongoDBBackupPlan"),
 		Scheme:             mgr.GetScheme(),
 		DefaultDestination: nil, // TODO
 		WorkerImage:        workerImage,
-	}).SetupWithManager(mgr); err != nil {
+		Type:               &backupv1alpha1.MongoDBBackupPlan{},
+	}).SetupWithManager(mgr, &backupv1alpha1.MongoDBBackupPlan{}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MongoDBBackupPlan")
 		os.Exit(1)
 	}
-	if err = (&controllers.ConsulBackupPlanReconciler{
+	if err = (&controllers.BackupPlanReconciler{
 		Client:             mgr.GetClient(),
 		Log:                ctrl.Log.WithName("controllers").WithName("ConsulBackupPlan"),
 		Scheme:             mgr.GetScheme(),
 		DefaultDestination: nil, // TODO
 		WorkerImage:        workerImage,
-	}).SetupWithManager(mgr); err != nil {
+		Type:               &backupv1alpha1.ConsulBackupPlan{},
+	}).SetupWithManager(mgr, &backupv1alpha1.ConsulBackupPlan{}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ConsulBackupPlan")
 		os.Exit(1)
 	}

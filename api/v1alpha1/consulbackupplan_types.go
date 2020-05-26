@@ -17,34 +17,15 @@ limitations under the License.
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const ConsulBackupPlanKind = "ConsulDBBackupPlan"
-
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const ConsulBackupPlanKind = "ConsulBackupPlan"
+const ConsulBackupPlanWorkerCommand = "consul"
 
 // ConsulBackupPlanSpec defines the desired state of ConsulBackupPlan
 type ConsulBackupPlanSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Schedule in cron format
-	Schedule string `json:"schedule"`
-
-	// +kubebuilder:validation:Minimum=1
-	//
-	ActiveDeadlineSeconds int64 `json:"activeDeadlineSeconds"`
-
-	// +kubebuilder:validation:Minimum=1
-	// Number of backups to keep
-	Retention int64 `json:"retention"`
-
-	// +optional
-	// Environments for the CronJob
-	Env []corev1.EnvVar `json:"env,omitempty"`
+	BackupPlanSpec `json:",inline"`
 
 	// Address of Consul. Environment variables
 	// will be evaluated before usage.
@@ -57,23 +38,6 @@ type ConsulBackupPlanSpec struct {
 	// +optional
 	// Password to authenticate with consul
 	Password string `json:"password,omitempty"`
-
-	// +optional
-	// Setup for metrics
-	Pushgateway *Pushgateway `json:"pushgateway,omitempty"`
-
-	// +optional
-	// Destination for the backup. If none is provided the default destination
-	// will be tried.
-	Destination *Destination `json:"destination,omitempty"`
-}
-
-// ConsulBackupPlanStatus defines the observed state of ConsulBackupPlan
-type ConsulBackupPlanStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	CronJob *corev1.ObjectReference `json:"cronJob,omitempty"`
-	Secret  *corev1.ObjectReference `json:"secret,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -83,8 +47,36 @@ type ConsulBackupPlan struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ConsulBackupPlanSpec   `json:"spec,omitempty"`
-	Status ConsulBackupPlanStatus `json:"status,omitempty"`
+	Spec   ConsulBackupPlanSpec `json:"spec,omitempty"`
+	Status BackupPlanStatus     `json:"status,omitempty"`
+}
+
+func (p *ConsulBackupPlan) GetTypeMeta() *metav1.TypeMeta {
+	return &p.TypeMeta
+}
+
+func (p *ConsulBackupPlan) GetObjectMeta() *metav1.ObjectMeta {
+	return &p.ObjectMeta
+}
+
+func (p *ConsulBackupPlan) GetSpec() *BackupPlanSpec {
+	return &p.Spec.BackupPlanSpec
+}
+
+func (p *ConsulBackupPlan) GetStatus() *BackupPlanStatus {
+	return &p.Status
+}
+
+func (p *ConsulBackupPlan) GetKind() string {
+	return ConsulBackupPlanKind
+}
+
+func (p *ConsulBackupPlan) GetCmd() string {
+	return ConsulBackupPlanWorkerCommand
+}
+
+func (p *ConsulBackupPlan) New() BackupPlan {
+	return &ConsulBackupPlan{}
 }
 
 // +kubebuilder:object:root=true

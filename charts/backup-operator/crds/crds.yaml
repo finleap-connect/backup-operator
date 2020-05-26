@@ -195,12 +195,11 @@ spec:
           - schedule
           type: object
         status:
-          description: ConsulBackupPlanStatus defines the observed state of ConsulBackupPlan
+          description: BackupPlanStatus defines the observed state of BackupPlan
           properties:
             cronJob:
-              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
-                of cluster Important: Run "make" to regenerate code after modifying
-                this file'
+              description: ObjectReference contains enough information to let you
+                inspect or modify the referred object.
               properties:
                 apiVersion:
                   description: API version of the referent.
@@ -475,12 +474,11 @@ spec:
           - uri
           type: object
         status:
-          description: MongoDBBackupPlanStatus defines the observed state of MongoDBBackupPlan
+          description: BackupPlanStatus defines the observed state of BackupPlan
           properties:
             cronJob:
-              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
-                of cluster Important: Run "make" to regenerate code after modifying
-                this file'
+              description: ObjectReference contains enough information to let you
+                inspect or modify the referred object.
               properties:
                 apiVersion:
                   description: API version of the referent.

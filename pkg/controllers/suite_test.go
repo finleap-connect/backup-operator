@@ -41,6 +41,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
 	"github.com/kubism/backup-operator/pkg/testutil"
@@ -50,10 +51,6 @@ import (
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-type reconciler interface {
-	Reconcile(req ctrl.Request) (ctrl.Result, error)
-}
-
 var (
 	config    *rest.Config
 	k8sClient client.Client
@@ -61,7 +58,7 @@ var (
 	kind      *testutil.KindEnv
 	helm      *testutil.HelmEnv
 
-	reconcilers map[string]reconciler
+	reconcilers map[string]reconcile.Reconciler
 
 	workerImage string = os.Getenv("DOCKER_IMG")
 
@@ -125,22 +122,24 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sClient).ToNot(BeNil())
 
-	reconcilers = map[string]reconciler{
-		backupv1alpha1.MongoDBBackupPlanKind: &MongoDBBackupPlanReconciler{
+	reconcilers = map[string]reconcile.Reconciler{
+		backupv1alpha1.MongoDBBackupPlanKind: &BackupPlanReconciler{
 			Client:             k8sClient,
 			Log:                logf.Log.WithName("controllers").WithName("MongoDBBackupPlan"),
 			Recorder:           &record.FakeRecorder{},
 			Scheme:             scheme.Scheme,
 			DefaultDestination: nil, // TODO
 			WorkerImage:        workerImage,
+			Type:               &backupv1alpha1.MongoDBBackupPlan{},
 		},
-		backupv1alpha1.ConsulBackupPlanKind: &ConsulBackupPlanReconciler{
+		backupv1alpha1.ConsulBackupPlanKind: &BackupPlanReconciler{
 			Client:             k8sClient,
 			Log:                logf.Log.WithName("controllers").WithName("ConsulBackupPlan"),
 			Recorder:           &record.FakeRecorder{},
 			Scheme:             scheme.Scheme,
 			DefaultDestination: nil, // TODO
 			WorkerImage:        "test",
+			Type:               &backupv1alpha1.ConsulBackupPlan{},
 		},
 	}
 
@@ -186,7 +185,7 @@ func newRequestFor(obj runtime.Object) ctrl.Request {
 }
 
 func mustReconcile(obj runtime.Object) ctrl.Result {
-	var reconciler reconciler
+	var reconciler reconcile.Reconciler
 	if _, ok := obj.(*backupv1alpha1.MongoDBBackupPlan); ok {
 		reconciler = reconcilers[backupv1alpha1.MongoDBBackupPlanKind]
 	} else if _, ok := obj.(*backupv1alpha1.ConsulBackupPlan); ok {

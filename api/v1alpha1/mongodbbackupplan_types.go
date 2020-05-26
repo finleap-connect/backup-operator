@@ -17,54 +17,19 @@ limitations under the License.
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const MongoDBBackupPlanKind = "MongoDBBackupPlan"
-
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const MongoDBBackupPlanWorkerCommand = "mongodb"
 
 // MongoDBBackupPlanSpec defines the desired state of MongoDBBackupPlan
 type MongoDBBackupPlanSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Schedule in cron format
-	Schedule string `json:"schedule"`
-
-	// +kubebuilder:validation:Minimum=1
-	//
-	ActiveDeadlineSeconds int64 `json:"activeDeadlineSeconds"`
-
-	// +kubebuilder:validation:Minimum=1
-	// Number of backups to keep
-	Retention int64 `json:"retention"`
-
-	// +optional
-	// Environments for the CronJob
-	Env []corev1.EnvVar `json:"env,omitempty"`
+	BackupPlanSpec `json:",inline"`
 
 	// Fully qualifying MongoDB URI connection string. Environment variables
 	// will be evaluated before usage.
 	URI string `json:"uri"`
-
-	// +optional
-	// Setup for metrics
-	Pushgateway *Pushgateway `json:"pushgateway,omitempty"`
-
-	// +optional
-	// Destination for the backup. If none is provided the default destination
-	// will be tried.
-	Destination *Destination `json:"destination,omitempty"`
-}
-
-// MongoDBBackupPlanStatus defines the observed state of MongoDBBackupPlan
-type MongoDBBackupPlanStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	CronJob *corev1.ObjectReference `json:"cronJob,omitempty"`
-	Secret  *corev1.ObjectReference `json:"secret,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -74,8 +39,36 @@ type MongoDBBackupPlan struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   MongoDBBackupPlanSpec   `json:"spec,omitempty"`
-	Status MongoDBBackupPlanStatus `json:"status,omitempty"`
+	Spec   MongoDBBackupPlanSpec `json:"spec,omitempty"`
+	Status BackupPlanStatus      `json:"status,omitempty"`
+}
+
+func (p *MongoDBBackupPlan) GetTypeMeta() *metav1.TypeMeta {
+	return &p.TypeMeta
+}
+
+func (p *MongoDBBackupPlan) GetObjectMeta() *metav1.ObjectMeta {
+	return &p.ObjectMeta
+}
+
+func (p *MongoDBBackupPlan) GetSpec() *BackupPlanSpec {
+	return &p.Spec.BackupPlanSpec
+}
+
+func (p *MongoDBBackupPlan) GetStatus() *BackupPlanStatus {
+	return &p.Status
+}
+
+func (p *MongoDBBackupPlan) GetKind() string {
+	return MongoDBBackupPlanKind
+}
+
+func (p *MongoDBBackupPlan) GetCmd() string {
+	return MongoDBBackupPlanWorkerCommand
+}
+
+func (p *MongoDBBackupPlan) New() BackupPlan {
+	return &MongoDBBackupPlan{}
 }
 
 // +kubebuilder:object:root=true
