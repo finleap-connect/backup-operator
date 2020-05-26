@@ -82,6 +82,7 @@ func newBackupPlanSpec(namespace string) backupv1alpha1.BackupPlanSpec {
 				SecretAccessKey: "b",
 			},
 		},
+		Pushgateway: &backupv1alpha1.Pushgateway{},
 	}
 }
 
