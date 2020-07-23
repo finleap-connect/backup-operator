@@ -5,3 +5,5 @@ image:
   repository: kubismio/backup-operator
   tag: latest
 
+crds:
+  create: true
