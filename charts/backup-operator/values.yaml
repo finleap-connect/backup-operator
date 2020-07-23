@@ -6,4 +6,4 @@ image:
   tag: latest
 
 crds:
-  create: true
+  create: false
