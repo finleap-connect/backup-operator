@@ -5,6 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubism/backup-operator)](https://goreportcard.com/report/github.com/kubism/backup-operator)
 [![Coverage Status](https://coveralls.io/repos/github/kubism/backup-operator/badge.svg?branch=master)](https://coveralls.io/github/kubism/backup-operator?branch=master)
 [![Docker Image Version (latest semver)](https://img.shields.io/docker/v/kubismio/backup-operator.svg?sort=semver)](https://hub.docker.com/r/kubismio/backup-operator/tags)
+[![Maintainability](https://api.codeclimate.com/v1/badges/5f5e31a56c7c0555121a/maintainability)](https://codeclimate.com/github/kubism/backup-operator/maintainability)
 
 ## Usage
 
