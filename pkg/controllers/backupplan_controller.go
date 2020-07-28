@@ -257,7 +257,7 @@ func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 }
 
 func (r *BackupPlanReconciler) SetupWithManager(mgr ctrl.Manager, name string) error {
-	r.Recorder = mgr.GetEventRecorderFor("backupplan-controller")
+	r.Recorder = mgr.GetEventRecorderFor(name)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(r.Type).
 		Owns(&corev1.Secret{}).
