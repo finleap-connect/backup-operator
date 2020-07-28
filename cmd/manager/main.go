@@ -75,7 +75,7 @@ func main() {
 		DefaultDestination: nil, // TODO
 		WorkerImage:        workerImage,
 		Type:               &backupv1alpha1.MongoDBBackupPlan{},
-	}).SetupWithManager(mgr, &backupv1alpha1.MongoDBBackupPlan{}); err != nil {
+	}).SetupWithManager(mgr, "mongodbbackupplan"); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MongoDBBackupPlan")
 		os.Exit(1)
 	}
@@ -86,7 +86,7 @@ func main() {
 		DefaultDestination: nil, // TODO
 		WorkerImage:        workerImage,
 		Type:               &backupv1alpha1.ConsulBackupPlan{},
-	}).SetupWithManager(mgr, &backupv1alpha1.ConsulBackupPlan{}); err != nil {
+	}).SetupWithManager(mgr, "consulbackupplan"); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ConsulBackupPlan")
 		os.Exit(1)
 	}

@@ -256,11 +256,12 @@ func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	return ctrl.Result{}, nil
 }
 
-func (r *BackupPlanReconciler) SetupWithManager(mgr ctrl.Manager, apiType runtime.Object) error {
+func (r *BackupPlanReconciler) SetupWithManager(mgr ctrl.Manager, name string) error {
 	r.Recorder = mgr.GetEventRecorderFor("backupplan-controller")
 	return ctrl.NewControllerManagedBy(mgr).
-		For(apiType).
+		For(r.Type).
 		Owns(&corev1.Secret{}).
 		Owns(&batchv1beta1.CronJob{}).
+		Named(name).
 		Complete(r)
 }
