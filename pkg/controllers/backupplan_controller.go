@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
@@ -158,7 +157,7 @@ func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	if secret.Data == nil {
 		secret.Data = map[string][]byte{}
 	}
-	raw, err := json.Marshal(plan)
+	raw, err := plan.GetSecretData()
 	if err != nil {
 		// TODO: the follow can potentially be used to extract information from the outputted json \o/
 		r.Recorder.Event(plan, corev1.EventTypeWarning, "Problem", fmt.Sprintf("Unable to marshal plan: %v", err))

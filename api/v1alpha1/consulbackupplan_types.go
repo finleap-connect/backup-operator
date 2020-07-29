@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"encoding/json"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -73,6 +75,17 @@ func (p *ConsulBackupPlan) GetKind() string {
 
 func (p *ConsulBackupPlan) GetCmd() string {
 	return ConsulBackupPlanWorkerCommand
+}
+
+func (p *ConsulBackupPlan) GetSecretData() ([]byte, error) {
+	reduced := ConsulBackupPlan{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: p.Namespace,
+			Name:      p.Name,
+		},
+		Spec: p.Spec,
+	}
+	return json.Marshal(&reduced)
 }
 
 func (p *ConsulBackupPlan) New() BackupPlan {

@@ -69,5 +69,6 @@ type BackupPlan interface {
 	GetStatus() *BackupPlanStatus
 	GetKind() string
 	GetCmd() string
+	GetSecretData() ([]byte, error)
 	New() BackupPlan
 }
