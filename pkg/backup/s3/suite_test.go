@@ -55,7 +55,9 @@ var _ = BeforeSuite(func(done Done) {
 	var err error
 	log := logger.WithName("s3setup")
 	By("bootstrapping both mongodbs")
-	pool, err = dockertest.NewPool("")
+	log.Info("creating certs")
+	testutil.CreateCertificates("localhost", true)
+	pool, err = dockertest.NewTLSPool("", "certs")
 	Expect(err).ToNot(HaveOccurred())
 	log.Info("spawn src mongo container")
 	srcResource, err = pool.Run("mongo", "4.2", nil)
