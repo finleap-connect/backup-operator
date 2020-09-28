@@ -81,9 +81,17 @@ var consulCmd = &cobra.Command{
 		}
 		prefix := fmt.Sprintf("%s/%s", plan.ObjectMeta.Namespace, plan.ObjectMeta.Name)
 		s3c := plan.Spec.Destination.S3
-
-		encryptionKey := util.FallbackToEnv(s3c.EncryptionKey, "S3_ENCRYPTION_KEY")
-		dst, err := s3.NewS3Destination(s3c.Endpoint, util.FallbackToEnv(s3c.AccessKeyID, "S3_SECRET_ACCESS_KEY"), util.FallbackToEnv(s3c.SecretAccessKey, "S3_SECRET_ACCESS_KEY"), util.NilIfEmpty(encryptionKey), s3c.UseSSL, s3c.Bucket, prefix)
+		conf := &s3.S3DestinationConf{
+			Endpoint:            s3c.Endpoint,
+			AccessKey:           util.FallbackToEnv(s3c.AccessKeyID, "S3_SECRET_ACCESS_KEY"),
+			SecretKey:           util.FallbackToEnv(s3c.SecretAccessKey, "S3_SECRET_ACCESS_KEY"),
+			EncryptionKey:       util.NilIfEmpty(util.FallbackToEnv(s3c.EncryptionKey, "S3_ENCRYPTION_KEY")),
+			EncryptionAlgorithm: util.NilIfEmpty(util.FallbackToEnv(s3c.EncryptionKey, "S3_ENCRYPTION_ALGORITHM")),
+			UseSSL:              s3c.UseSSL,
+			Bucket:              s3c.Bucket,
+			Prefix:              prefix,
+		}
+		dst, err := s3.NewS3Destination(conf)
 		if err != nil {
 			return err
 		}

@@ -53,6 +53,8 @@ spec:
                       type: string
                     bucket:
                       type: string
+                    encryptionAlgorithm:
+                      type: string
                     encryptionKey:
                       type: string
                     endpoint:
@@ -335,6 +337,8 @@ spec:
                     accessKeyID:
                       type: string
                     bucket:
+                      type: string
+                    encryptionAlgorithm:
                       type: string
                     encryptionKey:
                       type: string

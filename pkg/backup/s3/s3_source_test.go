@@ -31,13 +31,55 @@ var _ = Describe("S3Source", func() {
 		data := []byte("temporarycontent")
 		bucket := "bucketa"
 		key := "keya"
-		src, err := NewS3Source(endpoint, accessKeyID, secretAccessKey, nil, false, bucket, key)
+
+		confSrc := &S3SourceConf{
+			Endpoint:  endpoint,
+			AccessKey: accessKeyID,
+			SecretKey: secretAccessKey,
+			UseSSL:    false,
+			Bucket:    bucket,
+			Key:       key,
+		}
+
+		src, err := NewS3Source(confSrc)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
 		_, err = src.Client.PutObject(&s3.PutObjectInput{
 			Body:   bytes.NewReader(data),
 			Bucket: &bucket,
 			Key:    &key,
+		})
+		Expect(err).ToNot(HaveOccurred())
+		dst, _ := mem.NewBufferDestination()
+		written, err := src.Stream(dst)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(written).To(BeNumerically(">", 0))
+		Expect(dst.Data[key]).Should(Equal(data))
+	})
+	It("should read encrypted s3 key to buffer", func() {
+		data := []byte("temporarycontent")
+		bucket := "bucketa"
+		key := "keya"
+		encryptionKey := "keyenc"
+
+		confSrc := &S3SourceConf{
+			Endpoint:      endpoint,
+			AccessKey:     accessKeyID,
+			SecretKey:     secretAccessKey,
+			EncryptionKey: &encryptionKey,
+			UseSSL:        true,
+			Bucket:        bucket,
+			Key:           key,
+		}
+
+		src, err := NewS3Source(confSrc)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(src).ToNot(BeNil())
+		_, err = src.Client.PutObject(&s3.PutObjectInput{
+			Body:           bytes.NewReader(data),
+			Bucket:         &bucket,
+			Key:            &key,
+			SSECustomerKey: &encryptionKey,
 		})
 		Expect(err).ToNot(HaveOccurred())
 		dst, _ := mem.NewBufferDestination()

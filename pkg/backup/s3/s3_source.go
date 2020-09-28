@@ -32,12 +32,23 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-func NewS3Source(endpoint, accessKeyID, secretAccessKey string, encryptionKey *string, useSSL bool, bucket, key string) (*S3Source, error) {
+type S3SourceConf struct {
+	Endpoint            string
+	AccessKey           string
+	SecretKey           string
+	EncryptionKey       *string
+	EncryptionAlgorithm *string
+	UseSSL              bool
+	Bucket              string
+	Key                 string
+}
+
+func NewS3Source(conf *S3SourceConf) (*S3Source, error) {
 	newSession, err := session.NewSession(&aws.Config{
-		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
-		Endpoint:         aws.String(endpoint),
+		Credentials:      credentials.NewStaticCredentials(conf.AccessKey, conf.SecretKey, ""),
+		Endpoint:         aws.String(conf.Endpoint),
 		Region:           aws.String("us-east-1"),
-		DisableSSL:       aws.Bool(!useSSL),
+		DisableSSL:       aws.Bool(!conf.UseSSL),
 		S3ForcePathStyle: aws.Bool(true),
 	})
 	if err != nil {
@@ -46,7 +57,7 @@ func NewS3Source(endpoint, accessKeyID, secretAccessKey string, encryptionKey *s
 	client := s3.New(newSession)
 	// Create bucket, if not exists
 	_, err = client.CreateBucket(&s3.CreateBucketInput{
-		Bucket: aws.String(bucket),
+		Bucket: aws.String(conf.Bucket),
 	})
 	if err != nil { // If bucket already exists ignore error
 		if aerr, ok := err.(awserr.Error); ok {
@@ -60,10 +71,10 @@ func NewS3Source(endpoint, accessKeyID, secretAccessKey string, encryptionKey *s
 	return &S3Source{
 		Session:       newSession,
 		Client:        client,
-		EncryptionKey: encryptionKey,
+		EncryptionKey: conf.EncryptionKey,
 		Downloader:    s3manager.NewDownloader(newSession),
-		Bucket:        bucket,
-		Key:           key,
+		Bucket:        conf.Bucket,
+		Key:           conf.Key,
 		log:           logger.WithName("s3src"),
 	}, nil
 }
