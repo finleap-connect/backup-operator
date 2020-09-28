@@ -53,6 +53,8 @@ spec:
                       type: string
                     bucket:
                       type: string
+                    encryptionKey:
+                      type: string
                     endpoint:
                       type: string
                     secretAccessKey:

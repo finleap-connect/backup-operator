@@ -83,7 +83,10 @@ var mongodbCmd = &cobra.Command{
 		}
 		prefix := fmt.Sprintf("%s/%s", plan.ObjectMeta.Namespace, plan.ObjectMeta.Name)
 		s3c := plan.Spec.Destination.S3
-		dst, err := s3.NewS3Destination(s3c.Endpoint, util.FallbackToEnv(s3c.AccessKeyID, "S3_SECRET_ACCESS_KEY"), util.FallbackToEnv(s3c.SecretAccessKey, "S3_SECRET_ACCESS_KEY"), s3c.UseSSL, s3c.Bucket, prefix)
+
+		encryptionKey := util.FallbackToEnv(s3c.EncryptionKey, "S3_ENCRYPTION_KEY")
+
+		dst, err := s3.NewS3Destination(s3c.Endpoint, util.FallbackToEnv(s3c.AccessKeyID, "S3_SECRET_ACCESS_KEY"), util.FallbackToEnv(s3c.SecretAccessKey, "S3_SECRET_ACCESS_KEY"), util.NilIfEmpty(encryptionKey), s3c.UseSSL, s3c.Bucket, prefix)
 		if err != nil {
 			return err
 		}

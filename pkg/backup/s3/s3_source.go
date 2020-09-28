@@ -32,7 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-func NewS3Source(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket, key string) (*S3Source, error) {
+func NewS3Source(endpoint, accessKeyID, secretAccessKey string, encryptionKey *string, useSSL bool, bucket, key string) (*S3Source, error) {
 	newSession, err := session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 		Endpoint:         aws.String(endpoint),
@@ -58,22 +58,24 @@ func NewS3Source(endpoint, accessKeyID, secretAccessKey string, useSSL bool, buc
 		}
 	}
 	return &S3Source{
-		Session:    newSession,
-		Client:     client,
-		Downloader: s3manager.NewDownloader(newSession),
-		Bucket:     bucket,
-		Key:        key,
-		log:        logger.WithName("s3src"),
+		Session:       newSession,
+		Client:        client,
+		EncryptionKey: encryptionKey,
+		Downloader:    s3manager.NewDownloader(newSession),
+		Bucket:        bucket,
+		Key:           key,
+		log:           logger.WithName("s3src"),
 	}, nil
 }
 
 type S3Source struct {
-	Session    *session.Session
-	Client     *s3.S3
-	Downloader *s3manager.Downloader
-	Bucket     string
-	Key        string
-	log        logger.Logger
+	Session       *session.Session
+	Client        *s3.S3
+	Downloader    *s3manager.Downloader
+	Bucket        string
+	Key           string
+	EncryptionKey *string
+	log           logger.Logger
 }
 
 func (s *S3Source) Stream(dst backup.Destination) (int64, error) {
@@ -81,8 +83,9 @@ func (s *S3Source) Stream(dst backup.Destination) (int64, error) {
 	// Use sequential writes to be able tu use stub implementation
 	s.Downloader.Concurrency = 1
 	params := &s3.GetObjectInput{
-		Bucket: &s.Bucket,
-		Key:    &s.Key,
+		Bucket:         &s.Bucket,
+		Key:            &s.Key,
+		SSECustomerKey: s.EncryptionKey,
 	}
 	pr, pw := io.Pipe()
 	errc := make(chan error, 1)

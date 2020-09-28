@@ -137,7 +137,7 @@ helm-publish: $(HELM3)
 tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/kustomize $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/helm3 $(TOOLS_DIR)/goveralls $(TOOLS_DIR)/gover
 
 $(TOOLS_DIR)/kind:
-	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/kind@v0.7.0)
+	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/kind@v0.9.0)
 
 $(TOOLS_DIR)/ginkgo:
 	$(shell $(TOOLS_DIR)/goget-wrapper github.com/onsi/ginkgo/ginkgo@v1.12.0)

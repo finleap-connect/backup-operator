@@ -31,7 +31,7 @@ var _ = Describe("S3Source", func() {
 		data := []byte("temporarycontent")
 		bucket := "bucketa"
 		key := "keya"
-		src, err := NewS3Source(endpoint, accessKeyID, secretAccessKey, false, bucket, key)
+		src, err := NewS3Source(endpoint, accessKeyID, secretAccessKey, nil, false, bucket, key)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
 		_, err = src.Client.PutObject(&s3.PutObjectInput{

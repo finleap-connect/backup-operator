@@ -34,3 +34,10 @@ func RemoveString(slice []string, str string) (result []string) {
 	}
 	return
 }
+
+func NilIfEmpty(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
+}

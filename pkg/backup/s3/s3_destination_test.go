@@ -39,7 +39,7 @@ var _ = Describe("S3Destination", func() {
 		bucket := "bucketb"
 		key := "keyb"
 		src, _ := mem.NewBufferSource(key, data)
-		dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket, "")
+		dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, nil, false, bucket, "")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dst).ToNot(BeNil())
 		written, err := src.Stream(dst)
@@ -59,7 +59,7 @@ var _ = Describe("S3Destination", func() {
 		func(retention int, count int) {
 			data := []byte("testcontent")
 			bucket := fmt.Sprintf("bucket%d-%d", retention, count)
-			dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket, "")
+			dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, nil, false, bucket, "")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(dst).ToNot(BeNil())
 			for i := 0; i < count; i++ {
@@ -111,7 +111,7 @@ var _ = Describe("S3Destination", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
 		bucket := "bucketc"
-		dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, false, bucket, "")
+		dst, err := NewS3Destination(endpoint, accessKeyID, secretAccessKey, nil, false, bucket, "")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dst).ToNot(BeNil())
 		written, err := src.Stream(dst)
@@ -126,7 +126,7 @@ var _ = Describe("S3Destination", func() {
 		_, err = downloader.Download(buf, &input)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(len(buf.Bytes())).Should(BeNumerically(">", 100))
-		src, err = NewS3Source(endpoint, accessKeyID, secretAccessKey, false, bucket, name)
+		src, err = NewS3Source(endpoint, accessKeyID, secretAccessKey, nil, false, bucket, name)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
 		mdst, err := mongodb.NewMongoDBDestination(dstURI)

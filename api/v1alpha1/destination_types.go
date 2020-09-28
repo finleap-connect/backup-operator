@@ -33,4 +33,6 @@ type S3 struct {
 	AccessKeyID string `json:"accessKeyID,omitempty"`
 	// +optional
 	SecretAccessKey string `json:"secretAccessKey,omitempty"`
+	// +optional
+	EncryptionKey string `json:"encryptionKey,omitempty"`
 }
