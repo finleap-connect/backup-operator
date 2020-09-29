@@ -18,6 +18,8 @@ package testutil
 
 import (
 	"context"
+	"crypto/tls"
+	"net/http"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -33,18 +35,23 @@ func WaitForS3(pool *dockertest.Pool, endpoint, accessKeyID, secretAccessKey str
 			Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 			Endpoint:         aws.String(endpoint),
 			Region:           aws.String("us-east-1"),
-			DisableSSL:       aws.Bool(true),
+			DisableSSL:       aws.Bool(false),
 			S3ForcePathStyle: aws.Bool(true),
 		})
 		if err != nil {
 			return err
 		}
-		client := s3.New(newSession)
+
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client := &http.Client{Transport: tr}
+		s3Client := s3.New(newSession, aws.NewConfig().WithHTTPClient(client))
 		input := &s3.ListBucketsInput{}
 		ctx := context.Background()
 		ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 		defer cancel()
-		_, err = client.ListBucketsWithContext(ctx, input)
+		_, err = s3Client.ListBucketsWithContext(ctx, input)
 		return err
 	})
 }

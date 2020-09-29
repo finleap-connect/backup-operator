@@ -41,12 +41,12 @@ var _ = Describe("S3Destination", func() {
 		src, _ := mem.NewBufferSource(key, data)
 
 		conf := &S3DestinationConf{
-			Endpoint:  endpoint,
-			AccessKey: accessKeyID,
-			SecretKey: secretAccessKey,
-			UseSSL:    false,
-			Bucket:    bucket,
-			Prefix:    "",
+			Endpoint:           endpoint,
+			AccessKey:          accessKeyID,
+			SecretKey:          secretAccessKey,
+			InsecureSkipVerify: true,
+			Bucket:             bucket,
+			Prefix:             "",
 		}
 
 		dst, err := NewS3Destination(conf)
@@ -60,7 +60,7 @@ var _ = Describe("S3Destination", func() {
 			Key:    &key,
 		}
 		buf := aws.NewWriteAtBuffer([]byte{})
-		downloader := s3manager.NewDownloader(dst.Session)
+		downloader := s3manager.NewDownloaderWithClient(dst.Client)
 		_, err = downloader.Download(buf, &input)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(buf.Bytes()).Should(Equal(data))
@@ -71,12 +71,12 @@ var _ = Describe("S3Destination", func() {
 			bucket := fmt.Sprintf("bucket%d-%d", retention, count)
 
 			conf := &S3DestinationConf{
-				Endpoint:  endpoint,
-				AccessKey: accessKeyID,
-				SecretKey: secretAccessKey,
-				UseSSL:    false,
-				Bucket:    bucket,
-				Prefix:    "",
+				Endpoint:           endpoint,
+				AccessKey:          accessKeyID,
+				SecretKey:          secretAccessKey,
+				InsecureSkipVerify: true,
+				Bucket:             bucket,
+				Prefix:             "",
 			}
 
 			dst, err := NewS3Destination(conf)
@@ -133,12 +133,12 @@ var _ = Describe("S3Destination", func() {
 		bucket := "bucketc"
 
 		conf := &S3DestinationConf{
-			Endpoint:  endpoint,
-			AccessKey: accessKeyID,
-			SecretKey: secretAccessKey,
-			UseSSL:    false,
-			Bucket:    bucket,
-			Prefix:    "",
+			Endpoint:           endpoint,
+			AccessKey:          accessKeyID,
+			SecretKey:          secretAccessKey,
+			InsecureSkipVerify: true,
+			Bucket:             bucket,
+			Prefix:             "",
 		}
 
 		dst, err := NewS3Destination(conf)
@@ -152,18 +152,18 @@ var _ = Describe("S3Destination", func() {
 			Key:    &name,
 		}
 		buf := aws.NewWriteAtBuffer([]byte{})
-		downloader := s3manager.NewDownloader(dst.Session)
+		downloader := s3manager.NewDownloaderWithClient(dst.Client)
 		_, err = downloader.Download(buf, &input)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(len(buf.Bytes())).Should(BeNumerically(">", 100))
 
 		confSrc := &S3SourceConf{
-			Endpoint:  endpoint,
-			AccessKey: accessKeyID,
-			SecretKey: secretAccessKey,
-			UseSSL:    false,
-			Bucket:    bucket,
-			Key:       name,
+			Endpoint:           endpoint,
+			AccessKey:          accessKeyID,
+			SecretKey:          secretAccessKey,
+			InsecureSkipVerify: true,
+			Bucket:             bucket,
+			Key:                name,
 		}
 		src, err = NewS3Source(confSrc)
 		Expect(err).ToNot(HaveOccurred())

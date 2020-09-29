@@ -27,8 +27,8 @@ WORKER_BIN ?= bin/worker
 DOCKER_TAG ?= latest
 DOCKER_IMG ?= kubismio/backup-operator:$(DOCKER_TAG)
 
-KIND_CLUSTER ?= test
-KIND_IMAGE ?= kindest/node:v1.16.4
+KIND_CLUSTER ?= backup-operator-test
+KIND_CONFIG ?= config/kind/kindconf.yaml
 
 HELM_CHART_NAME ?= backup-operator
 HELM_CHART_DIR ?= charts/$(HELM_CHART_NAME)
@@ -103,7 +103,7 @@ docker-is-running:
 	}
 
 kind-create: $(KIND)
-	$(KIND) create cluster --image $(KIND_IMAGE) --name $(KIND_CLUSTER) --wait 5m
+	$(KIND) create cluster --config $(KIND_CONFIG) --name $(KIND_CLUSTER) --kubeconfig /tmp/kind-$(KIND_CLUSTER)-config --wait 5m
 
 kind-is-running: $(KIND)
 	@echo "Checking if kind cluster with name '$(KIND_CLUSTER)' is running..."
@@ -116,7 +116,7 @@ kind-is-running: $(KIND)
 kind-get-kubeconfig: $(KIND)
 	$(KIND) get kubeconfig --name $(KIND_CLUSTER) > /tmp/kind-$(KIND_CLUSTER)-config
 	@echo "Created untracked config file in '/tmp/kind-$(KIND_CLUSTER)-config. Use as follows:"
-	@echo "export KUBECONFIG=\"/tmp/kind-$(KIND_CLUSTER)-config\""
+	@echo "kubectl --kubeconfig "/tmp/kind-$(KIND_CLUSTER)-config\" get no"
 
 kind-delete: $(KIND)
 	$(KIND) delete cluster --name $(KIND_CLUSTER)
@@ -137,7 +137,7 @@ helm-publish: $(HELM3)
 tools: $(TOOLS_DIR)/kind $(TOOLS_DIR)/ginkgo $(TOOLS_DIR)/controller-gen $(TOOLS_DIR)/kustomize $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/helm3 $(TOOLS_DIR)/goveralls $(TOOLS_DIR)/gover
 
 $(TOOLS_DIR)/kind:
-	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/kind@v0.9.0)
+	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/kind@v0.7.0)
 
 $(TOOLS_DIR)/ginkgo:
 	$(shell $(TOOLS_DIR)/goget-wrapper github.com/onsi/ginkgo/ginkgo@v1.12.0)

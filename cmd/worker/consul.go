@@ -86,8 +86,8 @@ var consulCmd = &cobra.Command{
 			AccessKey:           util.FallbackToEnv(s3c.AccessKeyID, "S3_SECRET_ACCESS_KEY"),
 			SecretKey:           util.FallbackToEnv(s3c.SecretAccessKey, "S3_SECRET_ACCESS_KEY"),
 			EncryptionKey:       util.NilIfEmpty(util.FallbackToEnv(s3c.EncryptionKey, "S3_ENCRYPTION_KEY")),
-			EncryptionAlgorithm: util.NilIfEmpty(util.FallbackToEnv(s3c.EncryptionKey, "S3_ENCRYPTION_ALGORITHM")),
-			UseSSL:              s3c.UseSSL,
+			EncryptionAlgorithm: util.FallbackToEnv(s3c.EncryptionAlgorithm, "S3_ENCRYPTION_ALGORITHM"),
+			DisableSSL:          !s3c.UseSSL,
 			Bucket:              s3c.Bucket,
 			Prefix:              prefix,
 		}

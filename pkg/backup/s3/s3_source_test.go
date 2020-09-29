@@ -33,12 +33,12 @@ var _ = Describe("S3Source", func() {
 		key := "keya"
 
 		confSrc := &S3SourceConf{
-			Endpoint:  endpoint,
-			AccessKey: accessKeyID,
-			SecretKey: secretAccessKey,
-			UseSSL:    false,
-			Bucket:    bucket,
-			Key:       key,
+			Endpoint:           endpoint,
+			AccessKey:          accessKeyID,
+			SecretKey:          secretAccessKey,
+			InsecureSkipVerify: true,
+			Bucket:             bucket,
+			Key:                key,
 		}
 
 		src, err := NewS3Source(confSrc)
@@ -60,26 +60,27 @@ var _ = Describe("S3Source", func() {
 		data := []byte("temporarycontent")
 		bucket := "bucketa"
 		key := "keya"
-		encryptionKey := "keyenc"
 
 		confSrc := &S3SourceConf{
-			Endpoint:      endpoint,
-			AccessKey:     accessKeyID,
-			SecretKey:     secretAccessKey,
-			EncryptionKey: &encryptionKey,
-			UseSSL:        true,
-			Bucket:        bucket,
-			Key:           key,
+			Endpoint:            endpoint,
+			AccessKey:           accessKeyID,
+			SecretKey:           secretAccessKey,
+			EncryptionKey:       &encryptionKey,
+			EncryptionAlgorithm: encryptionAlgorithm,
+			InsecureSkipVerify:  true,
+			Bucket:              bucket,
+			Key:                 key,
 		}
 
 		src, err := NewS3Source(confSrc)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(src).ToNot(BeNil())
 		_, err = src.Client.PutObject(&s3.PutObjectInput{
-			Body:           bytes.NewReader(data),
-			Bucket:         &bucket,
-			Key:            &key,
-			SSECustomerKey: &encryptionKey,
+			Body:                 bytes.NewReader(data),
+			Bucket:               &confSrc.Bucket,
+			Key:                  &confSrc.Key,
+			SSECustomerKey:       confSrc.EncryptionKey,
+			SSECustomerAlgorithm: &confSrc.EncryptionAlgorithm,
 		})
 		Expect(err).ToNot(HaveOccurred())
 		dst, _ := mem.NewBufferDestination()

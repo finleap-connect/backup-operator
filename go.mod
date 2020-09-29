@@ -12,7 +12,7 @@ require (
 	github.com/mongodb/mongo-tools-common v2.0.3+incompatible
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
-	github.com/ory/dockertest/v3 v3.5.5
+	github.com/ory/dockertest/v3 v3.6.0
 	github.com/prometheus/client_golang v1.2.0
 	github.com/spf13/cobra v0.0.5
 	github.com/xdg/stringprep v1.0.0 // indirect

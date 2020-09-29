@@ -17,6 +17,8 @@ limitations under the License.
 package s3
 
 import (
+	"crypto/tls"
+	"net/http"
 	"path/filepath"
 	"sort"
 
@@ -36,8 +38,9 @@ type S3DestinationConf struct {
 	AccessKey           string
 	SecretKey           string
 	EncryptionKey       *string
-	EncryptionAlgorithm *string
-	UseSSL              bool
+	EncryptionAlgorithm string
+	DisableSSL          bool
+	InsecureSkipVerify  bool
 	Bucket              string
 	Prefix              string
 }
@@ -47,13 +50,23 @@ func NewS3Destination(conf *S3DestinationConf) (*S3Destination, error) {
 		Credentials:      credentials.NewStaticCredentials(conf.AccessKey, conf.SecretKey, ""),
 		Endpoint:         aws.String(conf.Endpoint),
 		Region:           aws.String("us-east-1"),
-		DisableSSL:       aws.Bool(!conf.UseSSL),
+		DisableSSL:       aws.Bool(conf.DisableSSL),
 		S3ForcePathStyle: aws.Bool(true),
 	})
 	if err != nil {
 		return nil, err
 	}
-	client := s3.New(newSession)
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: conf.InsecureSkipVerify},
+	}
+	cl := &http.Client{Transport: tr}
+	client := s3.New(newSession, aws.NewConfig().WithHTTPClient(cl))
+
+	if conf.EncryptionKey != nil && conf.EncryptionAlgorithm == "" {
+		conf.EncryptionAlgorithm = DefaultEncryptionAlgorithm
+	}
+
 	// Create bucket, if not exists
 	_, err = client.CreateBucket(&s3.CreateBucketInput{
 		Bucket: aws.String(conf.Bucket),
@@ -68,13 +81,14 @@ func NewS3Destination(conf *S3DestinationConf) (*S3Destination, error) {
 		}
 	}
 	return &S3Destination{
-		Session:       newSession,
-		Client:        client,
-		EncryptionKey: conf.EncryptionKey,
-		Uploader:      s3manager.NewUploader(newSession),
-		Bucket:        conf.Bucket,
-		Prefix:        conf.Prefix,
-		log:           logger.WithName("s3dst"),
+		Session:             newSession,
+		Client:              client,
+		EncryptionKey:       conf.EncryptionKey,
+		EncryptionAlgorithm: conf.EncryptionAlgorithm,
+		Uploader:            s3manager.NewUploaderWithClient(client),
+		Bucket:              conf.Bucket,
+		Prefix:              conf.Prefix,
+		log:                 logger.WithName("s3dst"),
 	}, nil
 }
 
@@ -82,7 +96,7 @@ type S3Destination struct {
 	Session             *session.Session
 	Client              *s3.S3
 	EncryptionKey       *string
-	EncryptionAlgorithm *string
+	EncryptionAlgorithm string
 	Uploader            *s3manager.Uploader
 	Bucket              string
 	Prefix              string
@@ -92,12 +106,20 @@ type S3Destination struct {
 func (s *S3Destination) Store(obj backup.Object) (int64, error) {
 	key := filepath.Join(s.Prefix, obj.ID)
 	params := &s3manager.UploadInput{
-		Bucket:               &s.Bucket,
-		Key:                  &key,
-		Body:                 obj.Data,
-		SSECustomerKey:       s.EncryptionKey,
-		SSECustomerAlgorithm: s.EncryptionAlgorithm,
+		Bucket: &s.Bucket,
+		Key:    &key,
+		Body:   obj.Data,
 	}
+
+	if s.EncryptionKey != nil {
+		if s.EncryptionAlgorithm == "" {
+			params.SSECustomerAlgorithm = aws.String(DefaultEncryptionAlgorithm)
+		} else {
+			params.SSECustomerAlgorithm = &s.EncryptionAlgorithm
+		}
+		params.SSECustomerKey = s.EncryptionKey
+	}
+
 	s.log.Info("upload starting", "bucket", s.Bucket, "key", key)
 	res, err := s.Uploader.Upload(params)
 	if err != nil {
