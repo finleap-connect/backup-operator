@@ -79,7 +79,7 @@ vet:
 
 # Generate self-signed cert for minio tls
 minio-selfsigned:
-	@mkdir pkg/backup/s3/certs
+	@mkdir -p pkg/backup/s3/certs
 	@openssl req -x509 -nodes -days 730 -newkey rsa:2048 -keyout pkg/backup/s3/certs/private.key -out pkg/backup/s3/certs/public.crt -config config/test/openssl.conf
 
 # Generate manifests e.g. CRD, RBAC etc.

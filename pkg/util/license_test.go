@@ -45,6 +45,7 @@ limitations under the License.
 
 var skip = map[string]bool{
 	"../../api/v1alpha1/zz_generated.deepcopy.go": true,
+	"../../pkg/backup/s3/certs":                   true,
 }
 
 var _ = Describe("License", func() {
