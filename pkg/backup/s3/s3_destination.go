@@ -63,10 +63,6 @@ func NewS3Destination(conf *S3DestinationConf) (*S3Destination, error) {
 	cl := &http.Client{Transport: tr}
 	client := s3.New(newSession, aws.NewConfig().WithHTTPClient(cl))
 
-	if conf.EncryptionKey != nil && conf.EncryptionAlgorithm == "" {
-		conf.EncryptionAlgorithm = DefaultEncryptionAlgorithm
-	}
-
 	// Create bucket, if not exists
 	_, err = client.CreateBucket(&s3.CreateBucketInput{
 		Bucket: aws.String(conf.Bucket),
@@ -126,10 +122,22 @@ func (s *S3Destination) Store(obj backup.Object) (int64, error) {
 		return 0, err
 	}
 	s.log.Info("upload successful", "result", res)
-	head, err := s.Client.HeadObject(&s3.HeadObjectInput{
+
+	headObjectInput := &s3.HeadObjectInput{
 		Bucket: &s.Bucket,
 		Key:    &key,
-	})
+	}
+
+	if s.EncryptionKey != nil {
+		if s.EncryptionAlgorithm == "" {
+			headObjectInput.SSECustomerAlgorithm = aws.String(DefaultEncryptionAlgorithm)
+		} else {
+			headObjectInput.SSECustomerAlgorithm = &s.EncryptionAlgorithm
+		}
+		headObjectInput.SSECustomerKey = s.EncryptionKey
+	}
+
+	head, err := s.Client.HeadObject(headObjectInput)
 	if err != nil {
 		return 0, err
 	}

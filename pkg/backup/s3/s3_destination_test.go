@@ -46,7 +46,6 @@ var _ = Describe("S3Destination", func() {
 			SecretKey:          secretAccessKey,
 			InsecureSkipVerify: true,
 			Bucket:             bucket,
-			Prefix:             "",
 		}
 
 		dst, err := NewS3Destination(conf)
@@ -65,6 +64,40 @@ var _ = Describe("S3Destination", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(buf.Bytes()).Should(Equal(data))
 	})
+	It("should read buffer to s3 encrypted", func() {
+		data := []byte("temporarycontent")
+		bucket := "bucketd"
+		key := "keyd"
+		src, _ := mem.NewBufferSource(key, data)
+
+		conf := &S3DestinationConf{
+			Endpoint:            endpoint,
+			AccessKey:           accessKeyID,
+			SecretKey:           secretAccessKey,
+			InsecureSkipVerify:  true,
+			EncryptionKey:       &encryptionKey,
+			EncryptionAlgorithm: encryptionAlgorithm,
+			Bucket:              bucket,
+		}
+
+		dst, err := NewS3Destination(conf)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dst).ToNot(BeNil())
+		written, err := src.Stream(dst)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(written).To(BeNumerically(">", 0))
+		input := s3.GetObjectInput{
+			Bucket:               &bucket,
+			Key:                  &key,
+			SSECustomerKey:       conf.EncryptionKey,
+			SSECustomerAlgorithm: &conf.EncryptionAlgorithm,
+		}
+		buf := aws.NewWriteAtBuffer([]byte{})
+		downloader := s3manager.NewDownloaderWithClient(dst.Client)
+		_, err = downloader.Download(buf, &input)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(buf.Bytes()).Should(Equal(data))
+	})
 	DescribeTable("ensure retention for values",
 		func(retention int, count int) {
 			data := []byte("testcontent")
@@ -76,7 +109,6 @@ var _ = Describe("S3Destination", func() {
 				SecretKey:          secretAccessKey,
 				InsecureSkipVerify: true,
 				Bucket:             bucket,
-				Prefix:             "",
 			}
 
 			dst, err := NewS3Destination(conf)
@@ -164,6 +196,52 @@ var _ = Describe("S3Destination", func() {
 			InsecureSkipVerify: true,
 			Bucket:             bucket,
 			Key:                name,
+		}
+		src, err = NewS3Source(confSrc)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(src).ToNot(BeNil())
+		mdst, err := mongodb.NewMongoDBDestination(dstURI)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(mdst).ToNot(BeNil())
+		_, err = src.Stream(mdst)
+		Expect(err).ToNot(HaveOccurred())
+		err = testutil.FindTestData(dstURI)
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("should stream from MongoDBSource to encrypted S3Destination and back", func() {
+		name := "backup.tgz"
+		src, err := mongodb.NewMongoDBSource(srcURI, "", name)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(src).ToNot(BeNil())
+		bucket := "buckete"
+
+		conf := &S3DestinationConf{
+			Endpoint:            endpoint,
+			AccessKey:           accessKeyID,
+			SecretKey:           secretAccessKey,
+			EncryptionKey:       &encryptionKey,
+			EncryptionAlgorithm: encryptionAlgorithm,
+			InsecureSkipVerify:  true,
+			Bucket:              bucket,
+		}
+
+		dst, err := NewS3Destination(conf)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dst).ToNot(BeNil())
+		written, err := src.Stream(dst)
+		Expect(written).To(BeNumerically(">", 0))
+		Expect(err).ToNot(HaveOccurred())
+
+		confSrc := &S3SourceConf{
+			Endpoint:            endpoint,
+			AccessKey:           accessKeyID,
+			SecretKey:           secretAccessKey,
+			EncryptionKey:       &encryptionKey,
+			EncryptionAlgorithm: encryptionAlgorithm,
+			InsecureSkipVerify:  true,
+			Bucket:              bucket,
+			Key:                 name,
 		}
 		src, err = NewS3Source(confSrc)
 		Expect(err).ToNot(HaveOccurred())
