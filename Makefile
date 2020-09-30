@@ -27,8 +27,8 @@ WORKER_BIN ?= bin/worker
 DOCKER_TAG ?= latest
 DOCKER_IMG ?= kubismio/backup-operator:$(DOCKER_TAG)
 
-KIND_CLUSTER ?= test
-KIND_IMAGE ?= kindest/node:v1.16.4
+KIND_CLUSTER ?= backup-operator-test
+KIND_CONFIG ?= config/kind/kindconf.yaml
 
 HELM_CHART_NAME ?= backup-operator
 HELM_CHART_DIR ?= charts/$(HELM_CHART_NAME)
@@ -40,7 +40,7 @@ TEST_LONG ?=
 
 export
 
-.PHONY: all test lint fmt vet install uninstall deploy manifests docker-build docker-push tools docker-is-running kind-create kind-delete kind-is-running check-test-long
+.PHONY: all test lint fmt vet install uninstall deploy manifests docker-build docker-push tools docker-is-running kind-create kind-delete kind-is-running check-test-long minio-selfsigned
 
 all: $(MANAGER_BIN) $(WORKER_BIN) tools
 
@@ -50,10 +50,10 @@ $(MANAGER_BIN): generate fmt vet
 $(WORKER_BIN): generate fmt vet
 	$(GO) build -o $(WORKER_BIN) ./cmd/worker/...
 
-test: generate fmt vet manifests docker-is-running kind-is-running check-test-long $(GINKGO) $(KUBEBUILDER) $(HELM3)
+test: generate fmt vet manifests docker-is-running kind-is-running minio-selfsigned check-test-long $(GINKGO) $(KUBEBUILDER) $(HELM3)
 	$(GINKGO) -r -v -cover pkg
 
-test-%: generate fmt vet manifests docker-is-running kind-is-running check-test-long $(GINKGO) $(KUBEBUILDER) $(HELM3)
+test-%: generate fmt vet manifests docker-is-running kind-is-running minio-selfsigned check-test-long $(GINKGO) $(KUBEBUILDER) $(HELM3)
 	$(GINKGO) -r -v -cover pkg/$*
 
 # If e2e/integration tests are running we need to build the image beforehand
@@ -76,6 +76,11 @@ fmt:
 
 vet:
 	$(GO) vet ./...
+
+# Generate self-signed cert for minio tls
+minio-selfsigned:
+	@mkdir -p pkg/backup/s3/certs
+	@openssl req -x509 -nodes -days 730 -newkey rsa:2048 -keyout pkg/backup/s3/certs/private.key -out pkg/backup/s3/certs/public.crt -config config/test/openssl.conf
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: $(CONTROLLER_GEN) $(KUSTOMIZE)
@@ -103,7 +108,7 @@ docker-is-running:
 	}
 
 kind-create: $(KIND)
-	$(KIND) create cluster --image $(KIND_IMAGE) --name $(KIND_CLUSTER) --wait 5m
+	$(KIND) create cluster --config $(KIND_CONFIG) --name $(KIND_CLUSTER) --kubeconfig /tmp/kind-$(KIND_CLUSTER)-config --wait 5m
 
 kind-is-running: $(KIND)
 	@echo "Checking if kind cluster with name '$(KIND_CLUSTER)' is running..."
@@ -116,7 +121,7 @@ kind-is-running: $(KIND)
 kind-get-kubeconfig: $(KIND)
 	$(KIND) get kubeconfig --name $(KIND_CLUSTER) > /tmp/kind-$(KIND_CLUSTER)-config
 	@echo "Created untracked config file in '/tmp/kind-$(KIND_CLUSTER)-config. Use as follows:"
-	@echo "export KUBECONFIG=\"/tmp/kind-$(KIND_CLUSTER)-config\""
+	@echo "kubectl --kubeconfig "/tmp/kind-$(KIND_CLUSTER)-config\" get no"
 
 kind-delete: $(KIND)
 	$(KIND) delete cluster --name $(KIND_CLUSTER)

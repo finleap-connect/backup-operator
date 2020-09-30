@@ -5,6 +5,7 @@
 !/tools/helm3-install
 /bin
 /reports
+**/certs/*
 
 *.coverprofile
 

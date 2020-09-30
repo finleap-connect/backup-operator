@@ -46,3 +46,15 @@ var _ = Describe("RemoveString", func() {
 		Expect(RemoveString(expected, element)).Should(Equal(expected))
 	})
 })
+
+var _ = Describe("NilIfEmpty", func() {
+	It("returns nil if empty", func() {
+		input := ""
+		var expected *string
+		Expect(NilIfEmpty(input)).Should(Equal(expected))
+	})
+	It("returns *string if not empty", func() {
+		input := "foo"
+		Expect(NilIfEmpty(input)).Should(Equal(&input))
+	})
+})

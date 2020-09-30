@@ -17,7 +17,9 @@ limitations under the License.
 package s3
 
 import (
+	"crypto/rand"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/kubism/backup-operator/pkg/logger"
@@ -31,18 +33,20 @@ import (
 )
 
 var (
-	pool        *dockertest.Pool
-	srcResource *dockertest.Resource
-	dstResource *dockertest.Resource
-	srcURI      string
-	dstURI      string
-	s3Resource  *dockertest.Resource
-	endpoint    string
+	pool          *dockertest.Pool
+	srcResource   *dockertest.Resource
+	dstResource   *dockertest.Resource
+	srcURI        string
+	dstURI        string
+	s3Resource    *dockertest.Resource
+	endpoint      string
+	encryptionKey string
 )
 
 const (
-	accessKeyID     = "TESTACCESSKEY"
-	secretAccessKey = "TESTSECRETKEY"
+	accessKeyID         = "TESTACCESSKEY"
+	secretAccessKey     = "TESTSECRETKEY"
+	encryptionAlgorithm = "AES256"
 )
 
 func TestS3(t *testing.T) {
@@ -54,6 +58,12 @@ func TestS3(t *testing.T) {
 var _ = BeforeSuite(func(done Done) {
 	var err error
 	log := logger.WithName("s3setup")
+	path, err := os.Getwd()
+	Expect(err).ToNot(HaveOccurred())
+	key := make([]byte, 32)
+	_, err = rand.Read(key)
+	Expect(err).ToNot(HaveOccurred())
+	encryptionKey = string(key)
 	By("bootstrapping both mongodbs")
 	pool, err = dockertest.NewPool("")
 	Expect(err).ToNot(HaveOccurred())
@@ -77,6 +87,7 @@ var _ = BeforeSuite(func(done Done) {
 			fmt.Sprintf("MINIO_ACCESS_KEY=%s", accessKeyID),
 			fmt.Sprintf("MINIO_SECRET_KEY=%s", secretAccessKey),
 		},
+		Mounts: []string{fmt.Sprintf("%s/certs:/root/.minio/certs", path)},
 	}
 	s3Resource, err = pool.RunWithOptions(options)
 	Expect(err).ToNot(HaveOccurred())

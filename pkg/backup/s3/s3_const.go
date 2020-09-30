@@ -14,30 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package util
+package s3
 
-func ContainsString(slice []string, str string) bool {
-	for _, item := range slice {
-		if item == str {
-			return true
-		}
-	}
-	return false
-}
-
-func RemoveString(slice []string, str string) (result []string) {
-	for _, item := range slice {
-		if item == str {
-			continue
-		}
-		result = append(result, item)
-	}
-	return
-}
-
-func NilIfEmpty(value string) *string {
-	if value == "" {
-		return nil
-	}
-	return &value
-}
+const DefaultEncryptionAlgorithm = "AES256"

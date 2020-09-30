@@ -17,6 +17,8 @@ limitations under the License.
 package s3
 
 import (
+	"crypto/tls"
+	"net/http"
 	"path/filepath"
 	"sort"
 
@@ -31,21 +33,39 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket, prefix string) (*S3Destination, error) {
+type S3DestinationConf struct {
+	Endpoint            string
+	AccessKey           string
+	SecretKey           string
+	EncryptionKey       *string
+	EncryptionAlgorithm string
+	DisableSSL          bool
+	InsecureSkipVerify  bool
+	Bucket              string
+	Prefix              string
+}
+
+func NewS3Destination(conf *S3DestinationConf) (*S3Destination, error) {
 	newSession, err := session.NewSession(&aws.Config{
-		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
-		Endpoint:         aws.String(endpoint),
+		Credentials:      credentials.NewStaticCredentials(conf.AccessKey, conf.SecretKey, ""),
+		Endpoint:         aws.String(conf.Endpoint),
 		Region:           aws.String("us-east-1"),
-		DisableSSL:       aws.Bool(!useSSL),
+		DisableSSL:       aws.Bool(conf.DisableSSL),
 		S3ForcePathStyle: aws.Bool(true),
 	})
 	if err != nil {
 		return nil, err
 	}
-	client := s3.New(newSession)
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: conf.InsecureSkipVerify},
+	}
+	cl := &http.Client{Transport: tr}
+	client := s3.New(newSession, aws.NewConfig().WithHTTPClient(cl))
+
 	// Create bucket, if not exists
 	_, err = client.CreateBucket(&s3.CreateBucketInput{
-		Bucket: aws.String(bucket),
+		Bucket: aws.String(conf.Bucket),
 	})
 	if err != nil { // If bucket already exists ignore error
 		if aerr, ok := err.(awserr.Error); ok {
@@ -57,22 +77,26 @@ func NewS3Destination(endpoint, accessKeyID, secretAccessKey string, useSSL bool
 		}
 	}
 	return &S3Destination{
-		Session:  newSession,
-		Client:   client,
-		Uploader: s3manager.NewUploader(newSession),
-		Bucket:   bucket,
-		Prefix:   prefix,
-		log:      logger.WithName("s3dst"),
+		Session:             newSession,
+		Client:              client,
+		EncryptionKey:       conf.EncryptionKey,
+		EncryptionAlgorithm: conf.EncryptionAlgorithm,
+		Uploader:            s3manager.NewUploaderWithClient(client),
+		Bucket:              conf.Bucket,
+		Prefix:              conf.Prefix,
+		log:                 logger.WithName("s3dst"),
 	}, nil
 }
 
 type S3Destination struct {
-	Session  *session.Session
-	Client   *s3.S3
-	Uploader *s3manager.Uploader
-	Bucket   string
-	Prefix   string
-	log      logger.Logger
+	Session             *session.Session
+	Client              *s3.S3
+	EncryptionKey       *string
+	EncryptionAlgorithm string
+	Uploader            *s3manager.Uploader
+	Bucket              string
+	Prefix              string
+	log                 logger.Logger
 }
 
 func (s *S3Destination) Store(obj backup.Object) (int64, error) {
@@ -82,16 +106,38 @@ func (s *S3Destination) Store(obj backup.Object) (int64, error) {
 		Key:    &key,
 		Body:   obj.Data,
 	}
+
+	if s.EncryptionKey != nil {
+		if s.EncryptionAlgorithm == "" {
+			params.SSECustomerAlgorithm = aws.String(DefaultEncryptionAlgorithm)
+		} else {
+			params.SSECustomerAlgorithm = &s.EncryptionAlgorithm
+		}
+		params.SSECustomerKey = s.EncryptionKey
+	}
+
 	s.log.Info("upload starting", "bucket", s.Bucket, "key", key)
 	res, err := s.Uploader.Upload(params)
 	if err != nil {
 		return 0, err
 	}
 	s.log.Info("upload successful", "result", res)
-	head, err := s.Client.HeadObject(&s3.HeadObjectInput{
+
+	headObjectInput := &s3.HeadObjectInput{
 		Bucket: &s.Bucket,
 		Key:    &key,
-	})
+	}
+
+	if s.EncryptionKey != nil {
+		if s.EncryptionAlgorithm == "" {
+			headObjectInput.SSECustomerAlgorithm = aws.String(DefaultEncryptionAlgorithm)
+		} else {
+			headObjectInput.SSECustomerAlgorithm = &s.EncryptionAlgorithm
+		}
+		headObjectInput.SSECustomerKey = s.EncryptionKey
+	}
+
+	head, err := s.Client.HeadObject(headObjectInput)
 	if err != nil {
 		return 0, err
 	}

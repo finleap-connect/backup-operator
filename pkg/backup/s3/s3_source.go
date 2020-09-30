@@ -17,8 +17,10 @@ limitations under the License.
 package s3
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
+	"net/http"
 	"time"
 
 	"github.com/kubism/backup-operator/pkg/backup"
@@ -32,21 +34,39 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-func NewS3Source(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket, key string) (*S3Source, error) {
+type S3SourceConf struct {
+	Endpoint            string
+	AccessKey           string
+	SecretKey           string
+	EncryptionKey       *string
+	EncryptionAlgorithm string
+	DisableSSL          bool
+	InsecureSkipVerify  bool
+	Bucket              string
+	Key                 string
+}
+
+func NewS3Source(conf *S3SourceConf) (*S3Source, error) {
 	newSession, err := session.NewSession(&aws.Config{
-		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
-		Endpoint:         aws.String(endpoint),
+		Credentials:      credentials.NewStaticCredentials(conf.AccessKey, conf.SecretKey, ""),
+		Endpoint:         aws.String(conf.Endpoint),
 		Region:           aws.String("us-east-1"),
-		DisableSSL:       aws.Bool(!useSSL),
+		DisableSSL:       aws.Bool(conf.DisableSSL),
 		S3ForcePathStyle: aws.Bool(true),
 	})
 	if err != nil {
 		return nil, err
 	}
-	client := s3.New(newSession)
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: conf.InsecureSkipVerify},
+	}
+	cl := &http.Client{Transport: tr}
+	client := s3.New(newSession, aws.NewConfig().WithHTTPClient(cl))
+
 	// Create bucket, if not exists
 	_, err = client.CreateBucket(&s3.CreateBucketInput{
-		Bucket: aws.String(bucket),
+		Bucket: aws.String(conf.Bucket),
 	})
 	if err != nil { // If bucket already exists ignore error
 		if aerr, ok := err.(awserr.Error); ok {
@@ -57,23 +77,28 @@ func NewS3Source(endpoint, accessKeyID, secretAccessKey string, useSSL bool, buc
 			return nil, err
 		}
 	}
+
 	return &S3Source{
-		Session:    newSession,
-		Client:     client,
-		Downloader: s3manager.NewDownloader(newSession),
-		Bucket:     bucket,
-		Key:        key,
-		log:        logger.WithName("s3src"),
+		Session:             newSession,
+		Client:              client,
+		EncryptionKey:       conf.EncryptionKey,
+		EncryptionAlgorithm: conf.EncryptionAlgorithm,
+		Downloader:          s3manager.NewDownloaderWithClient(client),
+		Bucket:              conf.Bucket,
+		Key:                 conf.Key,
+		log:                 logger.WithName("s3src"),
 	}, nil
 }
 
 type S3Source struct {
-	Session    *session.Session
-	Client     *s3.S3
-	Downloader *s3manager.Downloader
-	Bucket     string
-	Key        string
-	log        logger.Logger
+	Session             *session.Session
+	Client              *s3.S3
+	Downloader          *s3manager.Downloader
+	Bucket              string
+	Key                 string
+	EncryptionKey       *string
+	EncryptionAlgorithm string
+	log                 logger.Logger
 }
 
 func (s *S3Source) Stream(dst backup.Destination) (int64, error) {
@@ -84,6 +109,16 @@ func (s *S3Source) Stream(dst backup.Destination) (int64, error) {
 		Bucket: &s.Bucket,
 		Key:    &s.Key,
 	}
+
+	if s.EncryptionKey != nil {
+		if s.EncryptionAlgorithm == "" {
+			params.SSECustomerAlgorithm = aws.String(DefaultEncryptionAlgorithm)
+		} else {
+			params.SSECustomerAlgorithm = &s.EncryptionAlgorithm
+		}
+		params.SSECustomerKey = s.EncryptionKey
+	}
+
 	pr, pw := io.Pipe()
 	errc := make(chan error, 1)
 	defer close(errc)

@@ -53,6 +53,10 @@ spec:
                       type: string
                     bucket:
                       type: string
+                    encryptionAlgorithm:
+                      type: string
+                    encryptionKey:
+                      type: string
                     endpoint:
                       type: string
                     secretAccessKey:
@@ -333,6 +337,10 @@ spec:
                     accessKeyID:
                       type: string
                     bucket:
+                      type: string
+                    encryptionAlgorithm:
+                      type: string
+                    encryptionKey:
                       type: string
                     endpoint:
                       type: string
