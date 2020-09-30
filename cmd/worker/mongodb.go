@@ -85,7 +85,7 @@ var mongodbCmd = &cobra.Command{
 		s3c := plan.Spec.Destination.S3
 		conf := &s3.S3DestinationConf{
 			Endpoint:            s3c.Endpoint,
-			AccessKey:           util.FallbackToEnv(s3c.AccessKeyID, "S3_SECRET_ACCESS_KEY"),
+			AccessKey:           util.FallbackToEnv(s3c.AccessKeyID, "S3_ACCESS_KEY_ID"),
 			SecretKey:           util.FallbackToEnv(s3c.SecretAccessKey, "S3_SECRET_ACCESS_KEY"),
 			EncryptionKey:       util.NilIfEmpty(util.FallbackToEnv(s3c.EncryptionKey, "S3_ENCRYPTION_KEY")),
 			EncryptionAlgorithm: util.FallbackToEnv(s3c.EncryptionAlgorithm, "S3_ENCRYPTION_ALGORITHM"),
