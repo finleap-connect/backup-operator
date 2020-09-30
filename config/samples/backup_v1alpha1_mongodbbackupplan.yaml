@@ -1,7 +1,50 @@
 apiVersion: backup.kubism.io/v1alpha1
 kind: MongoDBBackupPlan
 metadata:
-  name: mongodbbackupplan-sample
+  name: my-mongodb-backup
 spec:
-  # Add fields here
-  foo: bar
+  schedule: "0 22 * * *"
+  activeDeadlineSeconds: 3600
+  retention: 3
+  uri: "$MONGODB_URI"
+  pushgateway:
+    url: my-pushgateway:9102
+  destination:
+    s3:
+      endpoint: my-s3:9000
+      bucket: my-mongodbbackup
+      useSSL: true
+      accessKeyID: $S3_ACCESS_KEY_ID
+      secretAccessKey: $S3_SECRET_ACCESS_KEY
+      encryptionKey: $S3_ENCRYPTION_KEY
+  env:
+    - name: MONGODB_USERNAME
+      value: myuser
+    - name: MONGODB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: mongodb-password
+          name: my-mongodb-credentials
+    - name: MONGODB_DATABASE
+      value: mydatabase
+    - name: MONGODB_HOSTS
+      value: my-mongodb-primary-0.my-mongodb-headless:27017,my-mongodb-secondary-0.my-mongodb-headless:27017,my-mongodb-secondary-1.my-mongodb-headless:27017
+    - name: MONGODB_OPTIONS
+      value: ?replicaSet=rs0
+    - name: MONGODB_URI
+      value: mongodb://$(MONGODB_USERNAME):$(MONGODB_PASSWORD)@$(MONGODB_HOSTS)/$(MONGODB_DATABASE)$(MONGODB_OPTIONS)
+    - name: S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: my-s3-credentials
+          key: S3_ACCESS_KEY_ID
+    - name: S3_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: my-s3-credentials
+          key: S3_SECRET_ACCESS_KEY
+    - name: S3_ENCRYPTION_KEY
+      valueFrom:
+        secretKeyRef:
+          name: my-s3-credentials
+          key: S3_ENCRYPTION_KEY
