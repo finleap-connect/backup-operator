@@ -18,13 +18,13 @@ package mongodb
 
 import (
 	"fmt"
+	"github.com/mongodb/mongo-tools/common/options"
 	"io"
 	"regexp"
 	"time"
 
 	"github.com/kubism/backup-operator/pkg/backup"
 	"github.com/kubism/backup-operator/pkg/logger"
-	"github.com/mongodb/mongo-tools-common/options"
 	"github.com/mongodb/mongo-tools/mongodump"
 )
 
@@ -51,7 +51,13 @@ type mongoDBSource struct {
 
 func (m *mongoDBSource) Stream(dst backup.Destination) (int64, error) {
 	log := m.log
-	opts := options.New("mongodump", "custom", "custom", mongodump.Usage, options.EnabledOptions{Auth: true, Connection: true, Namespace: true, URI: true})
+	opts := options.New("mongodump",
+		"custom",
+		"custom",
+		mongodump.Usage,
+		true,
+		options.EnabledOptions{Auth: true, Connection: true, Namespace: true, URI: true},
+	)
 	inputOpts := &mongodump.InputOptions{}
 	opts.AddOptions(inputOpts)
 	outputOpts := &mongodump.OutputOptions{}
@@ -61,7 +67,6 @@ func (m *mongoDBSource) Stream(dst backup.Destination) (int64, error) {
 		"--archive",
 		"--gzip",
 	}
-	opts.URI.AddKnownURIParameters(options.KnownURIOptionsReadPreference)
 	_, err := opts.ParseArgs(args)
 	if err != nil {
 		return 0, err
