@@ -2,8 +2,9 @@ name: Build Backup Operator       # Name of workflow
 on: [push]
 jobs:
   Tests:                          # Name of job 
-    runs-on: golang-1.16.5
+    runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - run: echo "🐧 🐸 🐸 🐸 Damudda 🎉"
       - run: make kind-create
       - run: make test
