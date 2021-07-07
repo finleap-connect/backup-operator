@@ -4,7 +4,11 @@ jobs:
   Tests:                          # Name of job 
     runs-on: ubuntu-latest
     steps:
+      # FIXME: 
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+          with:
+            go-version: '^1.16.5'
       - run: echo "🐧 🐸 🐸 🐸 Damudda 🎉"
       - run: make kind-create
       - run: make test
