@@ -1,0 +1,7 @@
+name: Build Backup Operator       # Name of workflow
+on: [push]
+jobs:
+  Build:                          # Name of job 
+    runs-on: ubuntu-latest        # FIXME: not the best image option
+    steps:
+      - run: echo "🐧 🐸 🐸 🐸 Damudda 🎉"
