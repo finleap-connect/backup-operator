@@ -1,7 +1,15 @@
 name: Build Backup Operator       # Name of workflow
 on: [push]
 jobs:
-  Build:                          # Name of job 
-    runs-on: ubuntu-latest        # FIXME: not the best image option
+  Tests:                          # Name of job 
+    runs-on: golang-1.16.5
     steps:
       - run: echo "🐧 🐸 🐸 🐸 Damudda 🎉"
+      - run: make kind-create
+      - run: make test
+    services:
+      docker:
+        image: "docker:20"
+    env:
+      DOCKER_TLS_CERTDIR: ""
+      DOCKER_HOST: "tcp://docker:2375"
