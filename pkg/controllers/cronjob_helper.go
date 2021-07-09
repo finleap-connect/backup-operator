@@ -33,21 +33,24 @@ var (
 	WorkerConfigFilePath = filepath.Join(WorkerConfigMountPath, "plan.json")
 )
 
-func UpdateCronJobSpec(cronJob *batchv1beta1.CronJob, secretRef *corev1.ObjectReference, schedule string, activeDeadlineSeconds int64, image string, env []corev1.EnvVar, subcmd string) error {
+func UpdateCronJobSpec(cronJob *batchv1beta1.CronJob, secretRef *corev1.ObjectReference, schedule string, activeDeadlineSeconds int64, image string, env []corev1.EnvVar, subcmd string,
+	volumes []corev1.Volume,
+	volumeMounts []corev1.VolumeMount) error {
 	cronJob.Spec.Schedule = schedule
 	jobSpec := &cronJob.Spec.JobTemplate.Spec
 	jobSpec.ActiveDeadlineSeconds = &activeDeadlineSeconds
 	podSpec := &jobSpec.Template.Spec
-	podSpec.Volumes = []corev1.Volume{
-		{
-			Name: WorkerConfigVolumeName,
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: secretRef.Name,
-				},
+
+	podSpec.Volumes = append(volumes, corev1.Volume{
+		Name: WorkerConfigVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: secretRef.Name,
 			},
 		},
-	}
+	},
+	)
+
 	podSpec.Containers = []corev1.Container{
 		{
 			Name:            WorkerContainerName,
@@ -56,13 +59,12 @@ func UpdateCronJobSpec(cronJob *batchv1beta1.CronJob, secretRef *corev1.ObjectRe
 			Env:             env,
 			Command:         []string{"/worker"},
 			Args:            []string{subcmd, WorkerConfigFilePath},
-			VolumeMounts: []corev1.VolumeMount{
-				{
+			VolumeMounts: append(volumeMounts,
+				corev1.VolumeMount{
 					Name:      WorkerConfigVolumeName,
 					MountPath: WorkerConfigMountPath,
 					ReadOnly:  true,
-				},
-			},
+				}),
 		},
 	}
 	podSpec.RestartPolicy = corev1.RestartPolicyOnFailure

@@ -219,7 +219,9 @@ func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		spec.ActiveDeadlineSeconds,
 		r.WorkerImage,
 		spec.Env,
-		plan.GetCmd()) // TODO: const?
+		plan.GetCmd(),
+		spec.Volumes,
+		spec.VolumeMounts) // TODO: const?
 	if err != nil {
 		return ctrl.Result{}, err
 	}
