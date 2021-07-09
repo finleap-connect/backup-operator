@@ -49,6 +49,14 @@ type BackupPlanSpec struct {
 	// Destination for the backup. If none is provided the default destination
 	// will be tried.
 	Destination *Destination `json:"destination,omitempty"`
+
+	// +optional
+	// Volumes to  bind to the pod
+	Volumes []corev1.Volume `json:"volumes,omitempty"`
+
+	// +optional
+	// VolumeMounts for the pod's container
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
 }
 
 // BackupPlanStatus defines the observed state of BackupPlan
