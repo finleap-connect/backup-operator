@@ -48,12 +48,13 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }} # see id meta in previous step
           labels: ${{ steps.meta.outputs.labels }} # see id meta in previous step
   PublishChart:
-    needs: Build # Note this key can be value or list
+    #needs: Build # Note this key can be value or list
     # for the if statement see: https://github.community/t/trigger-job-on-tag-push-only/18076
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    #if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: helm/chart-releaser-action@v1.2.1
+      - run: pip3 install --no-cache-dir -r ci/dev-requirements.txt
+      - run: ./ci/publish.sh
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CHART_PUSH_KEY: "${{ secrets.CHART_PUSH_KEY }}"

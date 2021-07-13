@@ -5,13 +5,12 @@ export PATH="$PATH:$PWD/tools"
 echo "Setting up helm..."
 ln -sf $PWD/tools/helm3 $PWD/tools/helm
 
-echo "Decrypting deploy_key..."
 set -eu
 
-# Decrypt a private SSH key having its public key registered on GitHub. It will
+# Get a private SSH key from the Github secrets. It will
 # be used to establish an identity with rights to push to the git repository
 # hosting our Helm charts: https://github.com/kubism/charts
-openssl aes-256-cbc -K $encrypted_189e52c2c347_key -iv $encrypted_189e52c2c347_iv -in ci/deploy_key.enc -out ci/deploy_key -d
+echo $CHART_PUSH_KEY > ci/deploy_key
 chmod 0400 ci/deploy_key
 
 # Activate logging of bash commands now that the sensitive stuff is done
