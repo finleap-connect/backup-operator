@@ -1,5 +1,8 @@
 name: Build Backup Operator       # Name of workflow
 on: [push]
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 jobs:
   Tests:                          # Name of job 
     runs-on: ubuntu-20.04
