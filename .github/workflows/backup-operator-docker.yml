@@ -25,6 +25,7 @@ jobs:
           go-version: '^1.16.5'
       - run: make lint
   Build:
+    needs: [Tests, Lint]
     runs-on: ubuntu-20.04
     steps:
       # https://docs.github.com/en/actions/guides/publishing-docker-images#publishing-images-to-github-packages
@@ -45,6 +46,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }} # see id meta in previous step
           labels: ${{ steps.meta.outputs.labels }} # see id meta in previous step
   PublishChart:
+    needs: Build
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
