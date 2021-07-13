@@ -39,5 +39,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: {% raw %}${{ steps.meta.outputs.tags }} # see id: meta in previous step
-          labels: ${{ steps.meta.outputs.labels }} # see id: meta in previous step
+          tags: {% raw %}${{ steps.meta.outputs.tags }} # see id meta in previous step
+          labels: ${{ steps.meta.outputs.labels }} # see id meta in previous step
