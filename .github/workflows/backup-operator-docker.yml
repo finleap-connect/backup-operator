@@ -14,10 +14,30 @@ jobs:
           cluster_name: backup-operator-test
       - run: make test
   Lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.16.5'
-      - run: make lint 
+      - run: make lint
+  Build:
+    runs-on: ubuntu-20.04
+    steps:
+      # https://docs.github.com/en/actions/guides/publishing-docker-images#publishing-images-to-github-packages
+      - uses: actions/checkout@v2
+      - uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta                   # Used to pass data into next step
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}{% raw %}
+      - uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: .
+          push: true
+          tags: {% raw %}${{ steps.meta.outputs.tags }} # see id: meta in previous step
+          labels: ${{ steps.meta.outputs.labels }} # see id: meta in previous step
