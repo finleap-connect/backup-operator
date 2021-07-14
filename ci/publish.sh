@@ -23,7 +23,7 @@ set -x
 export GIT_SSH_COMMAND="ssh -i ${PWD}/ci/deploy_key"
 
 echo "Publishing chart via chartpress..."
-if [ "${TRAVIS_TAG:-}" == "" ]; then
+if [ "${SOURCE_TAG:-}" == "" ]; then
     # Using --long, we are ensured to get a build suffix, which ensures we don't
     # build the same tag twice.
     chartpress --skip-build --publish-chart --long
