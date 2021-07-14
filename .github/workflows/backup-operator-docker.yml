@@ -54,6 +54,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - run: git config --global user.email "deploy-bot@kubism.github.com"
+      - run: git config --global user.name "Deploy Bot"
       - run: pip3 install --no-cache-dir -r ci/dev-requirements.txt
       - run: ./ci/publish.sh
         env:
