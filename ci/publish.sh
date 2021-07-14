@@ -12,7 +12,7 @@ set -eu
 # Get a private SSH key from the Github secrets. It will
 # be used to establish an identity with rights to push to the git repository
 # hosting our Helm charts: https://github.com/kubism/charts
-echo $CHART_PUSH_KEY > ${PWD}/ci/deploy_key
+echo "$CHART_PUSH_KEY" > ${PWD}/ci/deploy_key
 chmod 0400 ${PWD}/ci/deploy_key
 
 # Activate logging of bash commands now that the sensitive stuff is done
