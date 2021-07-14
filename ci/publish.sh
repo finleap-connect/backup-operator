@@ -24,14 +24,15 @@ export GIT_SSH_COMMAND="ssh -i ${PWD}/ci/deploy_key"
 
 echo "Publishing chart via chartpress..."
 SOURCE_TAG=${GITHUB_REF#refs/tags/}
+IMAGE_PREFIX=ghcr.io/kubism/
 if [ "${SOURCE_TAG:-}" == "" ]; then
     # Using --long, we are ensured to get a build suffix, which ensures we don't
     # build the same tag twice.
-    chartpress --skip-build --publish-chart --long
+    chartpress --skip-build --publish-chart --long --image-prefix $IMAGE_PREFIX
 else
     # Setting a tag explicitly enforces a rebuild if this tag had already been
     # built and we wanted to override it.
-    chartpress --skip-build --publish-chart --tag "${SOURCE_TAG}"
+    chartpress --skip-build --publish-chart --tag "${SOURCE_TAG}" --image-prefix $IMAGE_PREFIX
 fi
 
 # Let us log the changes chartpress did, it should include replacements for
