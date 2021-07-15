@@ -2,7 +2,7 @@
 
 replicaCount: 1
 image:
-  repository: kubismio/backup-operator
+  repository: ghcr.io/kubism/backup-operator
   tag: latest
 
 crds:

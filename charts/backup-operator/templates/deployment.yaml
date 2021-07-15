@@ -28,6 +28,7 @@ spec:
         command:
         - /manager
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        worker-image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         name: manager
         ports:
         - containerPort: 443
