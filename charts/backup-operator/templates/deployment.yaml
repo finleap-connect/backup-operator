@@ -25,7 +25,7 @@ spec:
       containers:
       - args:
         - --enable-leader-election
-        - --worker-image {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        - --worker-image={{ .Values.image.repository }}:{{ .Values.image.tag }}
         command:
         - /manager
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
