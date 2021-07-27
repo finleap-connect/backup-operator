@@ -37,4 +37,6 @@ type S3 struct {
 	EncryptionKey string `json:"encryptionKey,omitempty"`
 	// +optional
 	EncryptionAlgorithm string `json:"encryptionAlgorithm,omitempty"`
+	// +optional
+	PartSize int64 `json:"partSize,omitempty"`
 }

@@ -92,6 +92,7 @@ var mongodbCmd = &cobra.Command{
 			DisableSSL:          !s3c.UseSSL,
 			Bucket:              s3c.Bucket,
 			Prefix:              prefix,
+			PartSize:			 util.DefaultIfZeroValue(s3c.PartSize, 5*1024*1024),
 		}
 		dst, err := s3.NewS3Destination(conf)
 		if err != nil {
