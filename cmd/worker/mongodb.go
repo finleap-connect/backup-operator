@@ -19,6 +19,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"io/ioutil"
 	"os"
 	"time"
@@ -92,6 +93,7 @@ var mongodbCmd = &cobra.Command{
 			DisableSSL:          !s3c.UseSSL,
 			Bucket:              s3c.Bucket,
 			Prefix:              prefix,
+			PartSize:            util.DefaultIfZeroValueInt64(s3c.PartSize, s3manager.MinUploadPartSize),
 		}
 		dst, err := s3.NewS3Destination(conf)
 		if err != nil {

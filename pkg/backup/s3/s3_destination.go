@@ -43,6 +43,7 @@ type S3DestinationConf struct {
 	InsecureSkipVerify  bool
 	Bucket              string
 	Prefix              string
+	PartSize            int64
 }
 
 func NewS3Destination(conf *S3DestinationConf) (*S3Destination, error) {
@@ -81,10 +82,12 @@ func NewS3Destination(conf *S3DestinationConf) (*S3Destination, error) {
 		Client:              client,
 		EncryptionKey:       conf.EncryptionKey,
 		EncryptionAlgorithm: conf.EncryptionAlgorithm,
-		Uploader:            s3manager.NewUploaderWithClient(client),
-		Bucket:              conf.Bucket,
-		Prefix:              conf.Prefix,
-		log:                 logger.WithName("s3dst"),
+		Uploader: s3manager.NewUploaderWithClient(client, func(u *s3manager.Uploader) {
+			u.PartSize = conf.PartSize
+		}),
+		Bucket: conf.Bucket,
+		Prefix: conf.Prefix,
+		log:    logger.WithName("s3dst"),
 	}, nil
 }
 
