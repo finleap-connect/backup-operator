@@ -16,7 +16,7 @@ limitations under the License.
 
 package util
 
-func DefaultIfZeroValue(value int64, defaultValue int64) int64 {
+func DefaultIfZeroValueInt64(value int64, defaultValue int64) int64 {
 	if value == 0 {
 		return defaultValue
 	}
