@@ -1,6 +1,6 @@
 module github.com/kubism/backup-operator
 
-go 1.13
+go 1.16
 
 require (
 	github.com/aws/aws-sdk-go v1.34.28
