@@ -38,7 +38,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - id: meta                   # Used to pass data into next step
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        uses: docker/metadata-action@e5622373a38e60fb6d795a4421e56882f2d7a681
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
       - uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
