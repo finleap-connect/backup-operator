@@ -80,7 +80,7 @@ func newBackupPlanSpec(namespace string) backupv1alpha1.BackupPlanSpec {
 				UseSSL:          false,
 				AccessKeyID:     accessKeyID,
 				SecretAccessKey: secretAccessKey,
-				PartSize: 5242880,
+				PartSize:        5242880,
 			},
 		},
 		Pushgateway: &backupv1alpha1.Pushgateway{},
