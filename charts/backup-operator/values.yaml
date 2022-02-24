@@ -4,6 +4,3 @@ replicaCount: 1
 image:
   repository: ghcr.io/kubism/backup-operator
   tag: latest
-
-crds:
-  create: false
