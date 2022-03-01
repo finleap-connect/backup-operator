@@ -32,7 +32,7 @@ jobs:
     steps:
       # https://docs.github.com/en/actions/guides/publishing-docker-images#publishing-images-to-github-packages
       - uses: actions/checkout@v2
-      - uses: docker/login-action@6af3c118c8376c675363897acf1757f7a9be6583
+      - uses: docker/login-action@bb984efc561711aaa26e433c32c3521176eae55b
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
