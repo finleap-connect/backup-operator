@@ -24,3 +24,11 @@ func FallbackToEnv(value string, envName string) string {
 	}
 	return value
 }
+
+func EnvWithDefault(name string, d string) string {
+	value := os.Getenv(name)
+	if value == "" {
+		value = d
+	}
+	return value
+}

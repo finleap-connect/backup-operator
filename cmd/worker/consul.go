@@ -90,6 +90,7 @@ var consulCmd = &cobra.Command{
 			DisableSSL:          !s3c.UseSSL,
 			Bucket:              s3c.Bucket,
 			Prefix:              prefix,
+			Region:              util.EnvWithDefault("us-east-1", "S3_REGION"),
 		}
 		dst, err := s3.NewS3Destination(conf)
 		if err != nil {
