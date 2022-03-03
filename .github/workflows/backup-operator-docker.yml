@@ -7,7 +7,7 @@ jobs:
   Tests:                          # Name of job 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.16.5'
@@ -19,7 +19,7 @@ jobs:
   Lint:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.16.5'
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       # https://docs.github.com/en/actions/guides/publishing-docker-images#publishing-images-to-github-packages
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: docker/login-action@6af3c118c8376c675363897acf1757f7a9be6583
         with:
           registry: ${{ env.REGISTRY }}
@@ -53,7 +53,7 @@ jobs:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: git config --global user.email "deploy-bot@kubism.github.com"
       - run: git config --global user.name "Deploy Bot"
       - run: pip3 install --no-cache-dir -r ci/dev-requirements.txt
