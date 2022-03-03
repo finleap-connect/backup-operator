@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/aws/aws-sdk-go v1.43.5
-	github.com/go-logr/logr v0.1.0
+	github.com/go-logr/logr v1.2.2
 	github.com/go-logr/zapr v0.1.0
 	github.com/hashicorp/consul/api v1.12.0
 	github.com/mongodb/mongo-tools v0.0.0-20220222145442-9a0003067b69
