@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.43.5
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
-	github.com/hashicorp/consul/api v1.11.0
+	github.com/hashicorp/consul/api v1.12.0
 	github.com/mongodb/mongo-tools v0.0.0-20220222145442-9a0003067b69
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.18.1
