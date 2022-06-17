@@ -3,32 +3,33 @@ on: [push]
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  GO_VERSION: 1.18.x
 jobs:
   Tests:                          # Name of job 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: '^1.16.5'
+          go-version: ${{ env.GO_VERSION }}
       - uses: helm/kind-action@v1.2.0
         with:
           version: 'v0.11.1'
           cluster_name: backup-operator-test
       - run: make test
   Lint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: '^1.16.5'
+          go-version: ${{ env.GO_VERSION }}
       - run: make lint
   Build:
     needs: [Tests, Lint]
     # for the if statement see https://github.community/t/trigger-job-on-tag-push-only/18076
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       # https://docs.github.com/en/actions/guides/publishing-docker-images#publishing-images-to-github-packages
       - uses: actions/checkout@v3
@@ -51,7 +52,7 @@ jobs:
     needs: Build # Note this key can be value or list
     # for the if statement see: https://github.community/t/trigger-job-on-tag-push-only/18076
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - run: git config --global user.email "deploy-bot@kubism.github.com"
