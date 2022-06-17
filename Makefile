@@ -145,7 +145,7 @@ $(TOOLS_DIR)/kind:
 	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/kind@v0.7.0)
 
 $(TOOLS_DIR)/ginkgo:
-	$(shell $(TOOLS_DIR)/goget-wrapper github.com/onsi/ginkgo/ginkgo@v1.12.0)
+	$(shell $(TOOLS_DIR)/goget-wrapper github.com/onsi/ginkgo/ginkgo@v1.16.5)
 
 $(TOOLS_DIR)/controller-gen:
 	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5)
@@ -154,7 +154,7 @@ $(TOOLS_DIR)/kustomize:
 	$(shell $(TOOLS_DIR)/goget-wrapper sigs.k8s.io/kustomize/kustomize/v3@v3.5.3)
 
 $(TOOLS_DIR)/golangci-lint:
-	$(shell curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TOOLS_DIR) v1.25.0)
+	$(shell curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TOOLS_DIR) v1.46.1)
 
 $(TOOLS_DIR)/kubebuilder $(TOOLS_DIR)/kubectl $(TOOLS_DIR)/kube-apiserver $(TOOLS_DIR)/etcd:
 	$(shell $(TOOLS_DIR)/kubebuilder-install)
