@@ -1,5 +1,8 @@
 name: Build Backup Operator       # Name of workflow
-on: [push]
+on:
+  push:
+    tags:
+      - v*
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
