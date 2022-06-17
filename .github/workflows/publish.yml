@@ -1,0 +1,48 @@
+name: Publish CI
+
+on:
+  push:
+    tags:
+      - v*
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  GO_VERSION: 1.18.x
+jobs:
+  Build:
+    needs: [Tests, Lint]
+    # for the if statement see https://github.community/t/trigger-job-on-tag-push-only/18076
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      # https://docs.github.com/en/actions/guides/publishing-docker-images#publishing-images-to-github-packages
+      - uses: actions/checkout@v3
+      - uses: docker/login-action@dd4fa0671be5250ee6f50aedf4cb05514abda2c7
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta                   # Used to pass data into next step
+        uses: docker/metadata-action@e5622373a38e60fb6d795a4421e56882f2d7a681
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }} # see id meta in previous step
+          labels: ${{ steps.meta.outputs.labels }} # see id meta in previous step
+  PublishChart:
+    needs: Build # Note this key can be value or list
+    # for the if statement see: https://github.community/t/trigger-job-on-tag-push-only/18076
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: git config --global user.email "deploy-bot@kubism.github.com"
+      - run: git config --global user.name "Deploy Bot"
+      - run: pip3 install --no-cache-dir -r ci/dev-requirements.txt
+      - run: ./ci/publish.sh
+        env:
+          CHART_PUSH_KEY: "${{ secrets.CHART_PUSH_KEY }}"
