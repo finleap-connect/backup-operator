@@ -12,7 +12,7 @@ require (
 	github.com/onsi/gomega v1.18.1
 	github.com/ory/dockertest/v3 v3.8.1
 	github.com/prometheus/client_golang v1.4.0
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.5.0
 	go.mongodb.org/mongo-driver v1.8.3
 	go.uber.org/zap v1.17.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
