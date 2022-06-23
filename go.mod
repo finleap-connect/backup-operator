@@ -3,7 +3,7 @@ module github.com/kubism/backup-operator
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go v1.43.5
+	github.com/aws/aws-sdk-go v1.44.40
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
 	github.com/hashicorp/consul/api v1.12.0
