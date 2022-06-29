@@ -17,8 +17,8 @@ limitations under the License.
 package consul
 
 import (
-	"github.com/kubism/backup-operator/pkg/backup"
-	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/finleap-connect/backup-operator/pkg/backup"
+	"github.com/finleap-connect/backup-operator/pkg/logger"
 
 	consulApi "github.com/hashicorp/consul/api"
 )

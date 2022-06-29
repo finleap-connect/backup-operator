@@ -21,27 +21,29 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const bar = "bar"
+
 var _ = Describe("ContainsString", func() {
 	It("finds expected string", func() {
-		expected := "bar"
+		expected := bar
 		list := []string{"foo", expected}
 		Expect(ContainsString(list, expected)).Should(Equal(true))
 	})
 	It("does not find unexpected string", func() {
-		list := []string{"foo", "bar"}
+		list := []string{"foo", bar}
 		Expect(ContainsString(list, "baz")).Should(Equal(false))
 	})
 })
 
 var _ = Describe("RemoveString", func() {
 	It("removes element if found", func() {
-		element := "bar"
+		element := bar
 		expected := []string{"foo"}
 		input := append(expected, element)
 		Expect(RemoveString(input, element)).Should(Equal(expected))
 	})
 	It("does not remove anything without match", func() {
-		element := "bar"
+		element := bar
 		expected := []string{"foo", "baz"}
 		Expect(RemoveString(expected, element)).Should(Equal(expected))
 	})

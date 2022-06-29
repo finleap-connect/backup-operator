@@ -19,7 +19,7 @@ package mem
 import (
 	"bytes"
 
-	"github.com/kubism/backup-operator/pkg/backup"
+	"github.com/finleap-connect/backup-operator/pkg/backup"
 )
 
 func NewBufferSource(name string, data []byte) (*BufferSource, error) {

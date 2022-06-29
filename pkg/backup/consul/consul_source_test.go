@@ -21,7 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kubism/backup-operator/pkg/backup/fs"
+	"github.com/finleap-connect/backup-operator/pkg/backup/fs"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

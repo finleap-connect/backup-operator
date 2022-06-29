@@ -23,12 +23,12 @@ import (
 	"os"
 	"time"
 
-	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
-	"github.com/kubism/backup-operator/pkg/backup/consul"
-	"github.com/kubism/backup-operator/pkg/backup/s3"
-	"github.com/kubism/backup-operator/pkg/logger"
-	"github.com/kubism/backup-operator/pkg/metrics"
-	"github.com/kubism/backup-operator/pkg/util"
+	backupv1alpha1 "github.com/finleap-connect/backup-operator/api/v1alpha1"
+	"github.com/finleap-connect/backup-operator/pkg/backup/consul"
+	"github.com/finleap-connect/backup-operator/pkg/backup/s3"
+	"github.com/finleap-connect/backup-operator/pkg/logger"
+	"github.com/finleap-connect/backup-operator/pkg/metrics"
+	"github.com/finleap-connect/backup-operator/pkg/util"
 	"github.com/spf13/cobra"
 )
 

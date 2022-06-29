@@ -22,9 +22,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kubism/backup-operator/pkg/logger"
-	"github.com/kubism/backup-operator/pkg/testutil"
-	"github.com/onsi/ginkgo/reporters"
+	"github.com/finleap-connect/backup-operator/pkg/logger"
+	"github.com/finleap-connect/backup-operator/pkg/testutil"
 	"github.com/ory/dockertest/v3"
 	dc "github.com/ory/dockertest/v3/docker"
 
@@ -51,8 +50,7 @@ const (
 
 func TestS3(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("../../../reports/s3-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "S3", []Reporter{junitReporter})
+	RunSpecs(t, "S3")
 }
 
 var _ = BeforeSuite(func(done Done) {

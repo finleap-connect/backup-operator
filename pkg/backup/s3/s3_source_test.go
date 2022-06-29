@@ -20,7 +20,7 @@ import (
 	"bytes"
 
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/kubism/backup-operator/pkg/backup/mem"
+	"github.com/finleap-connect/backup-operator/pkg/backup/mem"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

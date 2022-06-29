@@ -20,7 +20,7 @@ import (
 	"flag"
 	"os"
 
-	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/finleap-connect/backup-operator/pkg/logger"
 	"github.com/spf13/cobra"
 )
 

@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kubism/backup-operator/pkg/backup"
+	"github.com/finleap-connect/backup-operator/pkg/backup"
 )
 
 func NewFileSource(fp string) (backup.Source, error) {

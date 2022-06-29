@@ -19,8 +19,8 @@ package mongodb
 import (
 	"fmt"
 
-	"github.com/kubism/backup-operator/pkg/backup"
-	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/finleap-connect/backup-operator/pkg/backup"
+	"github.com/finleap-connect/backup-operator/pkg/logger"
 	"github.com/mongodb/mongo-tools/mongorestore"
 )
 
