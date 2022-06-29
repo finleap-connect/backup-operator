@@ -13,7 +13,7 @@ require (
 	github.com/ory/dockertest/v3 v3.8.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/spf13/cobra v1.5.0
-	go.mongodb.org/mongo-driver v1.8.3
+	go.mongodb.org/mongo-driver v1.9.1
 	go.uber.org/zap v1.21.0
 	k8s.io/api v0.23.5
 	k8s.io/apimachinery v0.23.5
