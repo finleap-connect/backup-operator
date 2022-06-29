@@ -5,7 +5,7 @@ metadata:
   name: mongodbbackupplan-viewer-role
 rules:
 - apiGroups:
-  - backup.kubism.io
+  - backup.finleap.cloud
   resources:
   - mongodbbackupplans
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - backup.kubism.io
+  - backup.finleap.cloud
   resources:
   - mongodbbackupplans/status
   verbs:

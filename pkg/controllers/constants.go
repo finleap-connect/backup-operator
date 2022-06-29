@@ -17,6 +17,6 @@ limitations under the License.
 package controllers
 
 const (
-	finalizerName   = "backup.kubism.io"
+	finalizerName   = "backup.finleap.cloud"
 	secretFieldName = "plan.json"
 )

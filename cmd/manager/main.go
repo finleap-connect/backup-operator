@@ -61,7 +61,7 @@ func main() {
 		MetricsBindAddress: metricsAddr,
 		Port:               9443,
 		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "3f729da4.kubism.io",
+		LeaderElectionID:   "3f729da4.finleap.cloud",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

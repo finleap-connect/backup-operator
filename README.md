@@ -8,9 +8,26 @@
 
 ## Usage
 
-### Setup
+## Quick start
 
-Find the helm chart for the backup-operator at the [Kubism.io Helm Charts](https://kubism.github.io/charts/#chart-backup-operator).
+Add the helm repository to your list of repos:
+
+```bash
+helm repo add finleap-connect https://finleap-connect.github.io/charts/
+helm repo update
+```
+
+Execute the following to get the complete list of values available:
+
+```bash
+helm show values finleap-connect/backup-operator --version <VERSION>
+```
+
+Install operator with the following command:
+
+```bash
+helm install finleap-connect/backup-operator --name myrealease --version <VERSION> --values values.yaml
+```
 
 ### Backup for MongoDB
 

@@ -1,4 +1,4 @@
-domain: kubism.io
+domain: backup.finleap.cloud
 repo: github.com/finleap-connect/backup-operator
 resources:
 - group: backup
@@ -7,4 +7,4 @@ resources:
 - group: backup
   kind: ConsulBackupPlan
   version: v1alpha1
-version: "2"
+version: "3"

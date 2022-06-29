@@ -59,7 +59,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - backup.kubism.io
+  - backup.finleap.cloud
   resources:
   - consulbackupplans
   verbs:
@@ -71,7 +71,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - backup.kubism.io
+  - backup.finleap.cloud
   resources:
   - consulbackupplans/status
   verbs:
@@ -79,7 +79,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - backup.kubism.io
+  - backup.finleap.cloud
   resources:
   - mongodbbackupplans
   verbs:
@@ -91,7 +91,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - backup.kubism.io
+  - backup.finleap.cloud
   resources:
   - mongodbbackupplans/status
   verbs:

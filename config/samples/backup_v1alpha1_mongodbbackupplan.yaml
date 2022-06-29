@@ -1,4 +1,4 @@
-apiVersion: backup.kubism.io/v1alpha1
+apiVersion: backup.finleap.cloud/v1alpha1
 kind: MongoDBBackupPlan
 metadata:
   name: my-mongodb-backup

@@ -47,10 +47,10 @@ type BackupPlanReconciler struct {
 	Type               backupv1alpha1.BackupPlan
 }
 
-// +kubebuilder:rbac:groups=backup.kubism.io,resources=mongodbbackupplans,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.kubism.io,resources=mongodbbackupplans/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=backup.kubism.io,resources=consulbackupplans,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.kubism.io,resources=consulbackupplans/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.finleap.cloud,resources=mongodbbackupplans,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=backup.finleap.cloud,resources=mongodbbackupplans/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.finleap.cloud,resources=consulbackupplans,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=backup.finleap.cloud,resources=consulbackupplans/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=batch,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch

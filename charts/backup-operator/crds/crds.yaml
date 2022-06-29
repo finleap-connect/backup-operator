@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: consulbackupplans.backup.kubism.io
+  name: consulbackupplans.backup.finleap.cloud
 spec:
-  group: backup.kubism.io
+  group: backup.finleap.cloud
   names:
     kind: ConsulBackupPlan
     listKind: ConsulBackupPlanList
@@ -1854,9 +1854,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: mongodbbackupplans.backup.kubism.io
+  name: mongodbbackupplans.backup.finleap.cloud
 spec:
-  group: backup.kubism.io
+  group: backup.finleap.cloud
   names:
     kind: MongoDBBackupPlan
     listKind: MongoDBBackupPlanList
