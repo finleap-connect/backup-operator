@@ -23,6 +23,7 @@ import (
 
 	"github.com/finleap-connect/backup-operator/pkg/logger"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/push"
 )
 
@@ -115,7 +116,7 @@ func NewMetricsPublisher(c *MetricsPublisherConfig) MetricsPublisher {
 	}
 
 	registry := prometheus.NewRegistry()
-	registry.MustRegister(p.completionTime, p.duration, p.sizeInBytes, prometheus.NewGoCollector())
+	registry.MustRegister(p.completionTime, p.duration, p.sizeInBytes, collectors.NewGoCollector())
 
 	pusher := push.New(c.URL, c.Job).Gatherer(registry)
 
