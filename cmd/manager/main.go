@@ -20,10 +20,15 @@ import (
 	"flag"
 	"os"
 
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	// to ensure that exec-entrypoint and run can make use of them.
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
 	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	backupv1alpha1 "github.com/finleap-connect/backup-operator/api/v1alpha1"
@@ -37,19 +42,23 @@ var (
 )
 
 func init() {
-	_ = clientgoscheme.AddToScheme(scheme)
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	_ = backupv1alpha1.AddToScheme(scheme)
-	// +kubebuilder:scaffold:scheme
+	utilruntime.Must(backupv1alpha1.AddToScheme(scheme))
+	//+kubebuilder:scaffold:scheme
 }
 
 func main() {
-	var metricsAddr string
-	var workerImage string
-	var enableLeaderElection bool
-	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
+	var (
+		probeAddr            string
+		metricsAddr          string
+		workerImage          string
+		enableLeaderElection bool
+	)
+	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.StringVar(&workerImage, "worker-image", "kubismio/backup-operator:latest", "The image for the worker jobs.")
-	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
+	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
 	flag.Parse()
@@ -57,11 +66,12 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
-		Port:               9443,
-		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "3f729da4.finleap.cloud",
+		Scheme:                 scheme,
+		MetricsBindAddress:     metricsAddr,
+		HealthProbeBindAddress: probeAddr,
+		Port:                   9443,
+		LeaderElection:         enableLeaderElection,
+		LeaderElectionID:       "3f729da4.backup.finleap.cloud",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -69,28 +79,35 @@ func main() {
 	}
 
 	if err = (&controllers.BackupPlanReconciler{
-		Client:             mgr.GetClient(),
-		Log:                ctrl.Log.WithName("controllers").WithName("MongoDBBackupPlan"),
-		Scheme:             mgr.GetScheme(),
-		DefaultDestination: nil, // TODO
-		WorkerImage:        workerImage,
-		Type:               &backupv1alpha1.MongoDBBackupPlan{},
+		Client:      mgr.GetClient(),
+		Log:         ctrl.Log.WithName("controllers").WithName("MongoDBBackupPlan"),
+		Scheme:      mgr.GetScheme(),
+		WorkerImage: workerImage,
+		Type:        &backupv1alpha1.MongoDBBackupPlan{},
 	}).SetupWithManager(mgr, "mongodbbackupplan"); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MongoDBBackupPlan")
 		os.Exit(1)
 	}
 	if err = (&controllers.BackupPlanReconciler{
-		Client:             mgr.GetClient(),
-		Log:                ctrl.Log.WithName("controllers").WithName("ConsulBackupPlan"),
-		Scheme:             mgr.GetScheme(),
-		DefaultDestination: nil, // TODO
-		WorkerImage:        workerImage,
-		Type:               &backupv1alpha1.ConsulBackupPlan{},
+		Client:      mgr.GetClient(),
+		Log:         ctrl.Log.WithName("controllers").WithName("ConsulBackupPlan"),
+		Scheme:      mgr.GetScheme(),
+		WorkerImage: workerImage,
+		Type:        &backupv1alpha1.ConsulBackupPlan{},
 	}).SetupWithManager(mgr, "consulbackupplan"); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ConsulBackupPlan")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
+
+	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up health check")
+		os.Exit(1)
+	}
+	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up ready check")
+		os.Exit(1)
+	}
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

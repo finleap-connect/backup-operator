@@ -1,35 +1,41 @@
-{{ $name := (printf "%s-backup-operator" .Release.Name) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: {{ include "backup-operator.fullname" . }}
   labels:
-    control-plane: controller-manager
-    app: {{ $name }}
-  name: {{ $name }}
-  namespace: {{ .Release.Namespace }}
+    {{- include "backup-operator.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      control-plane: controller-manager
-      app: {{ $name }}
+      {{- include "backup-operator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
       annotations:
-        prometheus.io/scrape: "true"
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
-        control-plane: controller-manager
-        app: {{ $name }}
+        {{- include "backup-operator.selectorLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ .Release.Name }}-backup-operator
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "backup-operator.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-      - args:
-        - --enable-leader-election
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        args:
+        - --leader-elect
         - --worker-image="{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         command:
         - /manager
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        name: manager
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 443
           name: webhook-server
@@ -38,7 +44,5 @@ spec:
           name: metrics
           protocol: TCP
         resources:
-          requests:
-            cpu: 100m
-            memory: 100Mi
-      terminationGracePeriodSeconds: 10
+            {{- toYaml .Values.resources | nindent 12 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
