@@ -4,5 +4,5 @@ metadata:
   name: leader-election-rolebinding
 subjects:
 - kind: ServiceAccount
-  name: "{{ .Release.Name }}-backup-operator"
+  name: '{{ include "backup-operator.serviceAccountName" . }}'
   namespace: "{{ .Release.Namespace }}"
