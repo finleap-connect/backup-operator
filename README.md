@@ -1,11 +1,10 @@
 # Backup Operator
 
-[![Go Documentation](https://img.shields.io/badge/go-doc-blue.svg?style=flat)](https://pkg.go.dev/mod/github.com/finleap-connect/backup-operator?tab=packages)
-[![Build Backup Operator](https://github.com/finleap-connect/backup-operator/actions/workflows/backup-operator-docker.yml/badge.svg)](https://github.com/finleap-connect/backup-operator/actions/workflows/backup-operator-docker.yml)
+[![Build status](https://github.com/finleap-connect/backup-operator/actions/workflows/golang.yaml/badge.svg)](https://github.com/finleap-connect/backup-operator/actions/workflows/golang.yaml)
+[![Coverage Status](https://coveralls.io/repos/github/finleap-connect/backup-operator/badge.svg?branch=main)](https://coveralls.io/github/finleap-connect/backup-operator?branch=main)
 [![Go Report Card](https://goreportcard.com/badge/github.com/finleap-connect/backup-operator)](https://goreportcard.com/report/github.com/finleap-connect/backup-operator)
-[![Coverage Status](https://coveralls.io/repos/github/kubism/backup-operator/badge.svg?branch=master)](https://coveralls.io/github/kubism/backup-operator?branch=master)
-[![Docker Image Version (latest semver)](https://img.shields.io/docker/v/kubismio/backup-operator.svg?sort=semver)](https://hub.docker.com/r/kubismio/backup-operator/tags)
-[![Maintainability](https://api.codeclimate.com/v1/badges/5f5e31a56c7c0555121a/maintainability)](https://codeclimate.com/github/kubism/backup-operator/maintainability)
+[![Go Reference](https://pkg.go.dev/badge/github.com/finleap-connect/backup-operator.svg)](https://pkg.go.dev/github.com/finleap-connect/backup-operator)
+[![GitHub release](https://img.shields.io/github/release/finleap-connect/backup-operator.svg)](https://github.com/finleap-connect/backup-operator/releases)
 
 ## Usage
 
