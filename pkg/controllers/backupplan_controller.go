@@ -24,7 +24,7 @@ import (
 	"github.com/finleap-connect/backup-operator/pkg/util"
 
 	"github.com/go-logr/logr"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -100,7 +100,7 @@ func (r *BackupPlanReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 				}
 			}
 			if status.CronJob != nil {
-				if err := r.Delete(ctx, &batchv1beta1.CronJob{
+				if err := r.Delete(ctx, &batchv1.CronJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: status.CronJob.Namespace,
 						Name:      status.CronJob.Name,
@@ -187,7 +187,7 @@ func (r *BackupPlanReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	status.Secret = secretRef
 
 	// Finally create or update the CronJob
-	var cronJob batchv1beta1.CronJob
+	var cronJob batchv1.CronJob
 	// If CronJob does not exist, let's create a new one
 	if status.CronJob != nil {
 		err := r.Get(ctx, types.NamespacedName{
@@ -261,7 +261,7 @@ func (r *BackupPlanReconciler) SetupWithManager(mgr ctrl.Manager, name string) e
 	return ctrl.NewControllerManagedBy(mgr).
 		For(r.Type).
 		Owns(&corev1.Secret{}).
-		Owns(&batchv1beta1.CronJob{}).
+		Owns(&batchv1.CronJob{}).
 		Named(name).
 		Complete(r)
 }

@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 
 	backupv1alpha1 "github.com/finleap-connect/backup-operator/api/v1alpha1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -166,7 +166,7 @@ var _ = Describe("BackupPlanReconciler", func() {
 					Namespace: plan.GetStatus().Secret.Namespace,
 					Name:      plan.GetStatus().Secret.Name,
 				}, &secret))).Should(Succeed())
-				var cronJob batchv1beta1.CronJob
+				var cronJob batchv1.CronJob
 				Expect(client.IgnoreNotFound(k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: plan.GetStatus().CronJob.Namespace,
 					Name:      plan.GetStatus().CronJob.Name,
@@ -216,7 +216,7 @@ var _ = Describe("BackupPlanReconciler", func() {
 			res := mustReconcile(ctx, plan)
 			Expect(res.Requeue).To(Equal(false))
 			Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
-			var cronJob batchv1beta1.CronJob
+			var cronJob batchv1.CronJob
 			Expect(k8sClient.Get(ctx, types.NamespacedName{
 				Namespace: plan.GetStatus().CronJob.Namespace,
 				Name:      plan.GetStatus().CronJob.Name,
