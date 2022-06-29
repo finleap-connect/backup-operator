@@ -17,7 +17,7 @@ limitations under the License.
 package mongodb
 
 import (
-	"github.com/kubism/backup-operator/pkg/testutil"
+	"github.com/finleap-connect/backup-operator/pkg/testutil"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

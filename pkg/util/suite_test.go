@@ -17,7 +17,6 @@ limitations under the License.
 package util
 
 import (
-	"github.com/onsi/ginkgo/reporters"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -26,6 +25,5 @@ import (
 
 func TestUtil(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("../../reports/util-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "Utility", []Reporter{junitReporter})
+	RunSpecs(t, "Utility")
 }

@@ -23,7 +23,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/finleap-connect/backup-operator/pkg/logger"
 )
 
 type KindEnvConfig struct {

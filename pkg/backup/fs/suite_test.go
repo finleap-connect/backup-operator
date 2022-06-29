@@ -17,7 +17,6 @@ limitations under the License.
 package fs
 
 import (
-	"github.com/onsi/ginkgo/reporters"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -26,6 +25,5 @@ import (
 
 func TestFS(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("../../../reports/fs-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "FS", []Reporter{junitReporter})
+	RunSpecs(t, "FS")
 }

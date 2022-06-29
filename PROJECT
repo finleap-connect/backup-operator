@@ -1,5 +1,5 @@
 domain: kubism.io
-repo: github.com/kubism/backup-operator
+repo: github.com/finleap-connect/backup-operator
 resources:
 - group: backup
   kind: MongoDBBackupPlan

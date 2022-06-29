@@ -21,7 +21,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/finleap-connect/backup-operator/pkg/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 )

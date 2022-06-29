@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
-	"github.com/kubism/backup-operator/pkg/util"
+	backupv1alpha1 "github.com/finleap-connect/backup-operator/api/v1alpha1"
+	"github.com/finleap-connect/backup-operator/pkg/util"
 
 	"github.com/go-logr/logr"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
@@ -55,8 +55,7 @@ type BackupPlanReconciler struct {
 // +kubebuilder:rbac:groups=batch,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
-func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *BackupPlanReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues(r.Type.GetKind(), req.NamespacedName)
 
 	var plan backupv1alpha1.BackupPlan = r.Type.New()
