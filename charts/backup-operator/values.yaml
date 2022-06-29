@@ -1,6 +1,10 @@
 # This is a YAML-formatted file.
 
 replicaCount: 1
+
 image:
-  repository: ghcr.io/kubism/backup-operator
-  tag: latest
+  repository: ghcr.io/finleap-connect/backup-operator
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+  

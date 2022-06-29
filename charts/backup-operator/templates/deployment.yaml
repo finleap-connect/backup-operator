@@ -25,10 +25,10 @@ spec:
       containers:
       - args:
         - --enable-leader-election
-        - --worker-image={{ .Values.image.repository }}:{{ .Values.image.tag }}
+        - --worker-image="{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         command:
         - /manager
-        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         name: manager
         ports:
         - containerPort: 443
