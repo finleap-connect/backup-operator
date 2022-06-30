@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/aws/aws-sdk-go v1.43.5
-	github.com/go-logr/logr v1.2.0
-	github.com/go-logr/zapr v1.2.0
+	github.com/go-logr/logr v1.2.2
+	github.com/go-logr/zapr v1.2.3
 	github.com/hashicorp/consul/api v1.13.0
 	github.com/mongodb/mongo-tools v0.0.0-20220222145442-9a0003067b69
 	github.com/onsi/ginkgo v1.16.5
