@@ -1,5 +1,5 @@
 namespace: "{{ .Release.Namespace }}"
-namePrefix: "{{ .Release.Name }}-backup-operator-"
+namePrefix: '{{ include "backup-operator.fullname" . }}-'
 
 bases:
 - ../rbac
