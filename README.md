@@ -1,5 +1,5 @@
 # Backup Operator
-![Coverage](https://img.shields.io/badge/Coverage-1-red)
+![Coverage](https://img.shields.io/badge/Coverage-0-red)
 
 [![Build status](https://github.com/finleap-connect/backup-operator/actions/workflows/golang.yaml/badge.svg)](https://github.com/finleap-connect/backup-operator/actions/workflows/golang.yaml)
 [![Coverage Status](https://coveralls.io/repos/github/finleap-connect/backup-operator/badge.svg?branch=main)](https://coveralls.io/github/finleap-connect/backup-operator?branch=main)
