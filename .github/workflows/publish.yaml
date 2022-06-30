@@ -20,7 +20,7 @@ on:
       - v*
 
 env:
-  GO_MODULE: github.com/finleap-connect/backupoperator
+  GO_MODULE: github.com/finleap-connect/backup-operator
   CHART_DIR: charts/backup-operator
 
 jobs:
