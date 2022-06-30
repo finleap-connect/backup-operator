@@ -87,7 +87,7 @@ func FindTestData(uri string) error {
 		return err
 	}
 	if n < 1 {
-		return fmt.Errorf("fount insufficent documents: %d", n)
+		return fmt.Errorf("fount insufficient documents: %d", n)
 	}
 	return nil
 }

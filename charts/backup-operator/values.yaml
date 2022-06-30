@@ -1,6 +1,37 @@
+# Default values for backup-operator.
 # This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
 
 replicaCount: 1
+
 image:
-  repository: ghcr.io/kubism/backup-operator
-  tag: latest
+  repository: ghcr.io/finleap-connect/backup-operator
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "backup-operator"
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+terminationGracePeriodSeconds: 10

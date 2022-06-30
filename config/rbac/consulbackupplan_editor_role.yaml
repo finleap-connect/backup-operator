@@ -5,7 +5,7 @@ metadata:
   name: consulbackupplan-editor-role
 rules:
 - apiGroups:
-  - backup.kubism.io
+  - backup.finleap.cloud
   resources:
   - consulbackupplans
   verbs:
@@ -17,7 +17,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - backup.kubism.io
+  - backup.finleap.cloud
   resources:
   - consulbackupplans/status
   verbs:

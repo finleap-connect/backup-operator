@@ -19,12 +19,9 @@ package controllers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
-	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
-	"golang.org/x/sync/errgroup"
+	backupv1alpha1 "github.com/finleap-connect/backup-operator/api/v1alpha1"
 	batchv1 "k8s.io/api/batch/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -115,12 +112,6 @@ func newMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFu
 	return plan
 }
 
-func mustCreateNewMongoDBBackupPlan(namespace string, updates ...UpdateMongoDBBackupPlanFunc) backupv1alpha1.BackupPlan {
-	plan := newMongoDBBackupPlan(namespace, updates...)
-	Expect(k8sClient.Create(context.Background(), plan)).Should(Succeed())
-	return plan
-}
-
 func mustCreateNewBackupPlan(planType backupv1alpha1.BackupPlan, namespace string) backupv1alpha1.BackupPlan {
 	f := createTypeFuncs[planType.GetKind()]
 	plan := f(namespace)
@@ -131,14 +122,6 @@ func mustCreateNewBackupPlan(planType backupv1alpha1.BackupPlan, namespace strin
 // General backup reconciler tests
 var _ = Describe("BackupPlanReconciler", func() {
 	ctx := context.Background()
-	namespace := ""
-
-	BeforeEach(func() {
-		namespace = mustCreateNamespace()
-	})
-	AfterEach(func() {
-		mustDeleteNamespace(namespace)
-	})
 
 	It("can create BackupPlans", func() {
 		Context("with missing data", func() {
@@ -148,34 +131,34 @@ var _ = Describe("BackupPlanReconciler", func() {
 		})
 		Context("with valid data", func() {
 			for _, planType := range planTypes {
-				plan := mustCreateNewBackupPlan(planType, namespace)
-				defer mustRemoveFinalizers(plan)
+				plan := mustCreateNewBackupPlan(planType, testNamespace)
+				defer mustRemoveFinalizers(ctx, plan)
 			}
 		})
 	})
 	It("can process BackupPlans", func() {
 		Context("which are just created", func() {
 			for _, planType := range planTypes {
-				plan := mustCreateNewBackupPlan(planType, namespace)
-				defer mustRemoveFinalizers(plan)
-				res := mustReconcile(plan)
+				plan := mustCreateNewBackupPlan(planType, testNamespace)
+				defer mustRemoveFinalizers(ctx, plan)
+				res := mustReconcile(ctx, plan)
 				Expect(res.Requeue).To(Equal(false))
 			}
 		})
 		Context("which were deleted", func() {
 			for _, planType := range planTypes {
-				plan := mustCreateNewBackupPlan(planType, namespace)
+				plan := mustCreateNewBackupPlan(planType, testNamespace)
 				defer func() {
 					// If this test fails, we need to make sure the finalizers are removed
 					if err := k8sClient.Get(ctx, namespacedName(plan), plan); err == nil {
-						mustRemoveFinalizers(plan)
+						mustRemoveFinalizers(ctx, plan)
 					}
 				}()
-				res := mustReconcile(plan)
+				res := mustReconcile(ctx, plan)
 				Expect(res.Requeue).To(Equal(false))
 				Expect(k8sClient.Delete(ctx, plan)).Should(Succeed())
 				Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
-				res = mustReconcile(plan)
+				res = mustReconcile(ctx, plan)
 				Expect(res.Requeue).To(Equal(false))
 				// Check if the owned resources were freed
 				var secret corev1.Secret
@@ -183,7 +166,7 @@ var _ = Describe("BackupPlanReconciler", func() {
 					Namespace: plan.GetStatus().Secret.Namespace,
 					Name:      plan.GetStatus().Secret.Name,
 				}, &secret))).Should(Succeed())
-				var cronJob batchv1beta1.CronJob
+				var cronJob batchv1.CronJob
 				Expect(client.IgnoreNotFound(k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: plan.GetStatus().CronJob.Namespace,
 					Name:      plan.GetStatus().CronJob.Name,
@@ -194,10 +177,10 @@ var _ = Describe("BackupPlanReconciler", func() {
 	DescribeTable("can process BackupPlans multiple times",
 		func(count int) {
 			for _, planType := range planTypes {
-				plan := mustCreateNewBackupPlan(planType, namespace)
-				defer mustRemoveFinalizers(plan)
+				plan := mustCreateNewBackupPlan(planType, testNamespace)
+				defer mustRemoveFinalizers(ctx, plan)
 				for i := 0; i < count; i++ {
-					res := mustReconcile(plan)
+					res := mustReconcile(ctx, plan)
 					Expect(res.Requeue).To(Equal(false))
 				}
 			}
@@ -208,9 +191,9 @@ var _ = Describe("BackupPlanReconciler", func() {
 	)
 	It("creates relevant Secret", func() {
 		for _, planType := range planTypes {
-			plan := mustCreateNewBackupPlan(planType, namespace)
-			defer mustRemoveFinalizers(plan)
-			res := mustReconcile(plan)
+			plan := mustCreateNewBackupPlan(planType, testNamespace)
+			defer mustRemoveFinalizers(ctx, plan)
+			res := mustReconcile(ctx, plan)
 			Expect(res.Requeue).To(Equal(false))
 			Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
 			var secret corev1.Secret
@@ -228,154 +211,16 @@ var _ = Describe("BackupPlanReconciler", func() {
 	})
 	It("creates relevant CronJob", func() {
 		for _, planType := range planTypes {
-			plan := mustCreateNewBackupPlan(planType, namespace)
-			defer mustRemoveFinalizers(plan)
-			res := mustReconcile(plan)
+			plan := mustCreateNewBackupPlan(planType, testNamespace)
+			defer mustRemoveFinalizers(ctx, plan)
+			res := mustReconcile(ctx, plan)
 			Expect(res.Requeue).To(Equal(false))
 			Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
-			var cronJob batchv1beta1.CronJob
+			var cronJob batchv1.CronJob
 			Expect(k8sClient.Get(ctx, types.NamespacedName{
 				Namespace: plan.GetStatus().CronJob.Namespace,
 				Name:      plan.GetStatus().CronJob.Name,
 			}, &cronJob)).Should(Succeed())
 		}
-	})
-})
-
-// MongoDB specific tests
-var _ = Describe("MongoDBBackupPlanReconciler", func() {
-	ctx := context.Background()
-	namespace := ""
-
-	BeforeEach(func() {
-		namespace = mustCreateNamespace()
-	})
-	AfterEach(func() {
-		mustDeleteNamespace(namespace)
-	})
-
-	It("works end-to-end", func() {
-		if !shouldRunLongTests {
-			Skip("TEST_LONG not set")
-		}
-		g, _ := errgroup.WithContext(ctx)
-		g.Go(func() error {
-			return helm.Install(namespace, "src", "bitnami/mongodb")
-		})
-		g.Go(func() error {
-			return helm.Install(namespace, "dst", "stable/minio", "--set", fmt.Sprintf("accessKey=%s,secretKey=%s,readinessProbe.initialDelaySeconds=10", accessKeyID, secretAccessKey))
-		})
-		g.Go(func() error {
-			return helm.Install(namespace, "mon", "stable/prometheus-pushgateway")
-		})
-		g.Go(func() error {
-			return helm.Install(namespace, "op", "../../charts/backup-operator")
-		})
-		g.Go(func() error {
-			return kind.LoadDockerImage(workerImage)
-		})
-		Expect(g.Wait()).Should(Succeed())
-		defer func() {
-			_ = helm.Uninstall(namespace, "op") // Make sure it is gone before other tests
-		}()
-		var mongodbSecret corev1.Secret
-		Expect(k8sClient.Get(ctx, types.NamespacedName{
-			Namespace: namespace,
-			Name:      "src-mongodb",
-		}, &mongodbSecret)).Should(Succeed())
-		plan := mustCreateNewMongoDBBackupPlan(namespace, func(p *backupv1alpha1.MongoDBBackupPlan) {
-			p.Spec.Env = []corev1.EnvVar{
-				{
-					Name: "MONGODB_ROOT_PASSWORD",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: mongodbSecret.ObjectMeta.Name,
-							},
-							Key: "mongodb-root-password",
-						},
-					},
-				},
-			}
-			p.Spec.URI = "mongodb://root:$MONGODB_ROOT_PASSWORD@src-mongodb:27017/admin"
-			p.Spec.Destination.S3.Endpoint = "http://dst-minio:9000"
-			p.Spec.Pushgateway.URL = "mon-prometheus-pushgateway:9091"
-		})
-		defer mustRemoveFinalizers(plan)
-		// res := mustReconcile(plan)
-		// Expect(res.Requeue).To(Equal(false))
-		reconciled := false
-		for !reconciled {
-			Expect(k8sClient.Get(ctx, namespacedName(plan), plan)).Should(Succeed())
-			if plan.GetStatus().CronJob != nil {
-				reconciled = true
-			}
-		}
-		var cronJob batchv1beta1.CronJob
-		Expect(k8sClient.Get(ctx, types.NamespacedName{
-			Namespace: plan.GetStatus().CronJob.Namespace,
-			Name:      plan.GetStatus().CronJob.Name,
-		}, &cronJob)).Should(Succeed())
-		spawned := false
-		for !spawned {
-			Expect(k8sClient.Get(ctx, namespacedName(&cronJob), &cronJob)).Should(Succeed())
-			if len(cronJob.Status.Active) > 0 {
-				spawned = true
-			}
-		}
-		var job batchv1.Job
-		job.ObjectMeta.Name = cronJob.Status.Active[0].Name
-		job.ObjectMeta.Namespace = cronJob.Status.Active[0].Namespace
-		done := false
-		for !done {
-			Expect(k8sClient.Get(ctx, namespacedName(&job), &job)).Should(Succeed())
-			Expect(job.Status.Failed).Should(BeNumerically("==", 0))
-			if job.Status.Succeeded == 1 {
-				done = true
-			}
-		}
-		// TODO: test retention?
-		var testjob batchv1.Job
-		testjob.ObjectMeta.Name = "test"
-		testjob.ObjectMeta.Namespace = namespace
-		activeDeadlineSeconds := (int64)(60)
-		testjob.Spec.ActiveDeadlineSeconds = &activeDeadlineSeconds
-		testjob.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyNever
-		testjob.Spec.Template.Spec.Containers = []corev1.Container{
-			{
-				Name:  "test",
-				Image: "minio/mc",
-				Command: []string{"/bin/ash", "-c", fmt.Sprintf(`
-set -euo pipefail
-mc config host add dst http://dst-minio:9000 %s %s
-count=$(mc ls dst/test/%s/%s | wc -l)
-sleep 10
-if [ "$count" -gt "0" ]; then
-  echo "$count objects found"
-else
-  echo "no objects found"
-  exit 1
-fi
-apk add --update curl jq
-app=$(curl -X GET http://mon-prometheus-pushgateway:9091/api/v1/metrics | jq -r ".data[0].backup_last_success_timestamp_seconds.metrics[0].labels.app")
-if [ "$app" = "%s" ]; then
-  echo "expected metrics exist"
-else
-  echo "unexpected app label: $app"
-  exit 2
-fi
-				`, accessKeyID, secretAccessKey, namespace, plan.GetObjectMeta().Name, "mongodb")},
-			},
-		}
-		Expect(k8sClient.Create(ctx, &testjob)).Should(Succeed())
-		done = false
-		for !done {
-			Expect(k8sClient.Get(ctx, namespacedName(&testjob), &testjob)).Should(Succeed())
-			Expect(testjob.Status.Failed).Should(BeNumerically("==", 0))
-			if testjob.Status.Succeeded == 1 {
-				done = true
-			}
-		}
-		Expect(k8sClient.Delete(ctx, plan)).Should(Succeed())
 	})
 })

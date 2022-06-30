@@ -20,11 +20,11 @@ import (
 	"context"
 	"fmt"
 
-	backupv1alpha1 "github.com/kubism/backup-operator/api/v1alpha1"
-	"github.com/kubism/backup-operator/pkg/util"
+	backupv1alpha1 "github.com/finleap-connect/backup-operator/api/v1alpha1"
+	"github.com/finleap-connect/backup-operator/pkg/util"
 
 	"github.com/go-logr/logr"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -47,16 +47,15 @@ type BackupPlanReconciler struct {
 	Type               backupv1alpha1.BackupPlan
 }
 
-// +kubebuilder:rbac:groups=backup.kubism.io,resources=mongodbbackupplans,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.kubism.io,resources=mongodbbackupplans/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=backup.kubism.io,resources=consulbackupplans,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=backup.kubism.io,resources=consulbackupplans/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.finleap.cloud,resources=mongodbbackupplans,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=backup.finleap.cloud,resources=mongodbbackupplans/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=backup.finleap.cloud,resources=consulbackupplans,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=backup.finleap.cloud,resources=consulbackupplans/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=batch,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
-func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *BackupPlanReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues(r.Type.GetKind(), req.NamespacedName)
 
 	var plan backupv1alpha1.BackupPlan = r.Type.New()
@@ -101,7 +100,7 @@ func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 				}
 			}
 			if status.CronJob != nil {
-				if err := r.Delete(ctx, &batchv1beta1.CronJob{
+				if err := r.Delete(ctx, &batchv1.CronJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: status.CronJob.Namespace,
 						Name:      status.CronJob.Name,
@@ -188,7 +187,7 @@ func (r *BackupPlanReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	status.Secret = secretRef
 
 	// Finally create or update the CronJob
-	var cronJob batchv1beta1.CronJob
+	var cronJob batchv1.CronJob
 	// If CronJob does not exist, let's create a new one
 	if status.CronJob != nil {
 		err := r.Get(ctx, types.NamespacedName{
@@ -262,7 +261,7 @@ func (r *BackupPlanReconciler) SetupWithManager(mgr ctrl.Manager, name string) e
 	return ctrl.NewControllerManagedBy(mgr).
 		For(r.Type).
 		Owns(&corev1.Secret{}).
-		Owns(&batchv1beta1.CronJob{}).
+		Owns(&batchv1.CronJob{}).
 		Named(name).
 		Complete(r)
 }

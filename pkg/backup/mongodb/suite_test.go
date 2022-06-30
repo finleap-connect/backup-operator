@@ -20,9 +20,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kubism/backup-operator/pkg/logger"
-	"github.com/kubism/backup-operator/pkg/testutil"
-	"github.com/onsi/ginkgo/reporters"
+	"github.com/finleap-connect/backup-operator/pkg/logger"
+	"github.com/finleap-connect/backup-operator/pkg/testutil"
 	"github.com/ory/dockertest/v3"
 
 	. "github.com/onsi/ginkgo"
@@ -39,8 +38,7 @@ var (
 
 func TestMongoDB(t *testing.T) {
 	RegisterFailHandler(Fail)
-	junitReporter := reporters.NewJUnitReporter("../../../reports/mongodb-junit.xml")
-	RunSpecsWithDefaultAndCustomReporters(t, "MongoDB", []Reporter{junitReporter})
+	RunSpecs(t, "MongoDB")
 }
 
 var _ = BeforeSuite(func(done Done) {

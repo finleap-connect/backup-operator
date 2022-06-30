@@ -19,7 +19,7 @@ package controllers
 import (
 	"path/filepath"
 
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -33,7 +33,7 @@ var (
 	WorkerConfigFilePath = filepath.Join(WorkerConfigMountPath, "plan.json")
 )
 
-func UpdateCronJobSpec(cronJob *batchv1beta1.CronJob, secretRef *corev1.ObjectReference, schedule string, activeDeadlineSeconds int64, image string, env []corev1.EnvVar, subcmd string,
+func UpdateCronJobSpec(cronJob *batchv1.CronJob, secretRef *corev1.ObjectReference, schedule string, activeDeadlineSeconds int64, image string, env []corev1.EnvVar, subcmd string,
 	volumes []corev1.Volume,
 	volumeMounts []corev1.VolumeMount) error {
 	cronJob.Spec.Schedule = schedule

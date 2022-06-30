@@ -19,7 +19,7 @@ package mem
 import (
 	"io/ioutil"
 
-	"github.com/kubism/backup-operator/pkg/backup"
+	"github.com/finleap-connect/backup-operator/pkg/backup"
 )
 
 func NewBufferDestination() (*BufferDestination, error) {

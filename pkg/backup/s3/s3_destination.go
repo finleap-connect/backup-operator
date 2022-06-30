@@ -22,8 +22,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/kubism/backup-operator/pkg/backup"
-	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/finleap-connect/backup-operator/pkg/backup"
+	"github.com/finleap-connect/backup-operator/pkg/logger"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"

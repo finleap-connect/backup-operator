@@ -18,13 +18,14 @@ package mongodb
 
 import (
 	"fmt"
-	"github.com/mongodb/mongo-tools/common/options"
 	"io"
 	"regexp"
 	"time"
 
-	"github.com/kubism/backup-operator/pkg/backup"
-	"github.com/kubism/backup-operator/pkg/logger"
+	"github.com/mongodb/mongo-tools/common/options"
+
+	"github.com/finleap-connect/backup-operator/pkg/backup"
+	"github.com/finleap-connect/backup-operator/pkg/logger"
 	"github.com/mongodb/mongo-tools/mongodump"
 )
 
