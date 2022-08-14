@@ -14,7 +14,7 @@ require (
 	github.com/prometheus/client_golang v1.12.2
 	github.com/spf13/cobra v1.5.0
 	go.mongodb.org/mongo-driver v1.10.0
-	go.uber.org/zap v1.21.0
+	go.uber.org/zap v1.22.0
 	k8s.io/api v0.24.3
 	k8s.io/apimachinery v0.24.3
 	k8s.io/client-go v0.24.3
