@@ -16,7 +16,7 @@ require (
 	go.mongodb.org/mongo-driver v1.10.1
 	go.uber.org/zap v1.22.0
 	k8s.io/api v0.24.3
-	k8s.io/apimachinery v0.24.3
+	k8s.io/apimachinery v0.24.4
 	k8s.io/client-go v0.24.3
 	sigs.k8s.io/controller-runtime v0.12.3
 )
