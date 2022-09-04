@@ -3,7 +3,7 @@ module github.com/finleap-connect/backup-operator
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go v1.44.81
+	github.com/aws/aws-sdk-go v1.44.91
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
 	github.com/hashicorp/consul/api v1.14.0
