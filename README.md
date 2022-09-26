@@ -1,5 +1,11 @@
 # Backup Operator
 
+This project is discontinued.
+
+Feel free to use it, but we will not put any effort in it anymore. 
+Some of our usecases (mongodb backup) can be done by [Velero](https://velero.io/) instead.
+
+
 [![Build status](https://github.com/finleap-connect/backup-operator/actions/workflows/golang.yaml/badge.svg)](https://github.com/finleap-connect/backup-operator/actions/workflows/golang.yaml)
 [![Coverage Status](https://coveralls.io/repos/github/finleap-connect/backup-operator/badge.svg?branch=main)](https://coveralls.io/github/finleap-connect/backup-operator?branch=main)
 [![Go Report Card](https://goreportcard.com/badge/github.com/finleap-connect/backup-operator)](https://goreportcard.com/report/github.com/finleap-connect/backup-operator)
