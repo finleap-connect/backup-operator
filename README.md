@@ -1,7 +1,7 @@
 # Backup Operator
 
+![Coverage](https://img.shields.io/badge/Coverage-1-red)
 [![Build status](https://github.com/finleap-connect/backup-operator/actions/workflows/golang.yaml/badge.svg)](https://github.com/finleap-connect/backup-operator/actions/workflows/golang.yaml)
-[![Coverage Status](https://coveralls.io/repos/github/finleap-connect/backup-operator/badge.svg?branch=main)](https://coveralls.io/github/finleap-connect/backup-operator?branch=main)
 [![Go Report Card](https://goreportcard.com/badge/github.com/finleap-connect/backup-operator)](https://goreportcard.com/report/github.com/finleap-connect/backup-operator)
 [![Go Reference](https://pkg.go.dev/badge/github.com/finleap-connect/backup-operator.svg)](https://pkg.go.dev/github.com/finleap-connect/backup-operator)
 [![GitHub release](https://img.shields.io/github/release/finleap-connect/backup-operator.svg)](https://github.com/finleap-connect/backup-operator/releases)
