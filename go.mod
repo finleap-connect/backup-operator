@@ -12,7 +12,7 @@ require (
 	github.com/onsi/gomega v1.20.1
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/prometheus/client_golang v1.13.0
-	github.com/spf13/cobra v1.5.0
+	github.com/spf13/cobra v1.6.0
 	go.mongodb.org/mongo-driver v1.10.3
 	go.uber.org/zap v1.22.0
 	k8s.io/api v0.25.3
@@ -68,7 +68,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/serf v0.9.7 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
