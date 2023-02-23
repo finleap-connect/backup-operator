@@ -44,13 +44,14 @@ type S3DestinationConf struct {
 	Bucket              string
 	Prefix              string
 	PartSize            int64
+	Region              string
 }
 
 func NewS3Destination(conf *S3DestinationConf) (*S3Destination, error) {
 	newSession, err := session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(conf.AccessKey, conf.SecretKey, ""),
 		Endpoint:         aws.String(conf.Endpoint),
-		Region:           aws.String("us-east-1"),
+		Region:           aws.String(conf.Region),
 		DisableSSL:       aws.Bool(conf.DisableSSL),
 		S3ForcePathStyle: aws.Bool(true),
 	})

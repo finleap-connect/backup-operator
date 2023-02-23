@@ -95,6 +95,7 @@ var mongodbCmd = &cobra.Command{
 			Bucket:              s3c.Bucket,
 			Prefix:              prefix,
 			PartSize:            util.DefaultIfZeroValueInt64(s3c.PartSize, s3manager.MinUploadPartSize),
+			Region:              util.EnvWithDefault("us-east-1", "S3_REGION"),
 		}
 		dst, err := s3.NewS3Destination(conf)
 		if err != nil {
